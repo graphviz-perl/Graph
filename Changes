@@ -9,6 +9,7 @@ Revision history for Perl module Graph
       Have to come back and work that one out!
     - Set all VERSION's to 0.96_01. I suspect a switch to Dist::Zilla
       might be coming soon...
+    - Updated README to acknowledge change in maintainer
     - Reformatted as per CPAN::Changes::Spec
 
 0.96 2013-05-24  Jarkko Hietaniemi  <jhi@iki.fi>

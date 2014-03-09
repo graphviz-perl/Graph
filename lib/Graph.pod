@@ -28,11 +28,6 @@ Graph - graph data structures and algorithms
 
         # And many, many more, see below.
 
-=head1 UNSUPPORTED
-
-Unfortunately, as of release 0.95, this module is unsupported,
-and will no more be maintained.  Sorry about that.
-
 =head1 DESCRIPTION
 
 =head2 Non-Description
@@ -2900,6 +2895,8 @@ Graph::Reader and Graph::Writer in CPAN.
 =head1 AUTHOR
 
 Jarkko Hietaniemi F<jhi@iki.fi>
+
+Now being maintained by Neil Bowers E<lt>neilb@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 

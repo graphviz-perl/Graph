@@ -1,16 +1,4 @@
-***
-*** As of Graph 0.95 the Graph module is unsupported since I have
-*** utterly and completely ran out of time to support it.  It still
-*** mostly works, amazingly enough, but what is broken or unfinished
-*** will remain so. Three year interval between releases should tell
-*** you something.
-***
-*** If someone feels like rewriting Graph, I can offer some ideas.
-*** But the existing code as such is an unmaintainable pile of horrors.
-*** My apologies.
-***
-*** <gandalf>I have no memory of this place.</gandalf>
-***
+README for Perl module Graph
 
 This is Graph, a Perl module for dealing with graphs, the abstract
 data structures.  (If you were looking for pie charts, I'm sorry.)
@@ -31,7 +19,15 @@ For the release notes, read RELEASE.
 If you find bugs, please distill your test case to the absolute minimum
 and report it, preferably via http://rt.cpan.org/NoAuth/Bugs.html?Dist=Graph
 
-Jarkko Hietaniemi
-jhi@iki.fi
+This module was written by
 
+    Jarkko Hietaniemi
+    jhi@iki.fi
+
+Jarkko has moved onto other things, so now I'm maintaining this distribution.
+I have no great plans for it, but will try to address any bugs reported,
+and follow all modern conventions, etc. Pull requests and patches most welcome :-)
+
+Neil Bowers
+neil@cpan.org
 
