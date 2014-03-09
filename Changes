@@ -3,6 +3,7 @@ Revision history for Perl module Graph
 0.96_01 2014-03-09 @NEILB
     - Taken over maintenance from JHI
     - Specified min perl version 5.6.0
+    - Tweaked COPYRIGHT and LICENSE in pod to match usual form
     - Reformatted as per CPAN::Changes::Spec
 
 0.96 2013-05-24  Jarkko Hietaniemi  <jhi@iki.fi>
