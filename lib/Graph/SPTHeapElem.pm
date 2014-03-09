@@ -6,7 +6,7 @@ use Heap071::Elem;
 
 use base 'Heap071::Elem';
 
-$VERSION = 0.01;
+$VERSION = '0.96_01';
 
 sub new {
     my $class = shift;

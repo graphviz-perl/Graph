@@ -12,7 +12,7 @@ require AutoLoader;
 # No names available for export.
 @EXPORT = ( );
 
-$VERSION = '0.71';
+$VERSION = '0.96_01';
 
 
 # Preloaded methods go here.
