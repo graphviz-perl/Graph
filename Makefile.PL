@@ -44,6 +44,21 @@ WriteMakefile(
         : ()
     ),
 
+    ($mm_ver <= 6.45
+        ? ()
+        : (META_MERGE => {
+            'meta-spec' => { version => 2 },
+            resources => {
+                bugtracker  => 'http://rt.cpan.org/Public/Dist/Display.html?Name=Graph',
+                repository  => {
+                    type => 'git',
+                    web  => 'https://github.com/neilbowers/Graph',
+                    url  => 'git://github.com/neilbowers/Graph.git',
+                },
+            },
+          })
+    ),
+
 );
 
 # Some Debian distributions have a broken List::Util (see rt.cpan.org #9568)
