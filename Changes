@@ -4,6 +4,9 @@ Revision history for Perl module Graph
     - Taken over maintenance from JHI
     - Specified min perl version 5.6.0
     - Tweaked COPYRIGHT and LICENSE in pod to match usual form
+    - Added "use warnings", but that results in loads of warnings
+      about functions redefined. So added "no warnings 'redefine';".
+      Have to come back and work that one out!
     - Reformatted as per CPAN::Changes::Spec
 
 0.96 2013-05-24  Jarkko Hietaniemi  <jhi@iki.fi>

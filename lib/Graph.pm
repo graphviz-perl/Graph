@@ -1,6 +1,10 @@
 package Graph;
 
 use strict;
+use warnings;
+
+# Need to get my head around all those redefines! -NEILB
+no warnings 'redefine';
 
 BEGIN {
     if (0) { # SET THIS TO ZERO FOR TESTING AND RELEASES!
