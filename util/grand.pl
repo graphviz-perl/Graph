@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Graph;
 use Graph::Directed;
 use Graph::Undirected;

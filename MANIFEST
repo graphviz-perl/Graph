@@ -155,8 +155,9 @@ t/u_sn_sva.t
 t/u_te_ae.t
 t/u_te_ea.t
 t/u_te_me.t
+t/strict.t
 util/cover.sh
 util/grand.pl
 util/renum.pl
 util/size.pl
-util/srand.pl
+util/srand.sh

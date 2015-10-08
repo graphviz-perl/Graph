@@ -1,6 +1,6 @@
 use Graph::Directed;
 
-use strict;
+use strict; use warnings;
 local $^W = 1;
 
 print "1..34\n";

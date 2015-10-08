@@ -1,4 +1,5 @@
 use lib 'lib';
+use strict; use warnings;
 use Graph;
 use Devel::Size qw(size total_size);
 

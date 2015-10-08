@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Test::More tests => 1196;
 
  # http://rt.cpan.org/NoAuth/Bug.html?id=1179
@@ -44,8 +45,8 @@ use Graph::Undirected;
 # set up square graphs
 for my $size (0..3) {
     print "# size = $size\n";
-    $g=Graph::Directed->new(compat02 => 1);
-    $h=Graph::Undirected->new(compat02 => 1);
+    my $g=Graph::Directed->new(compat02 => 1);
+    my $h=Graph::Undirected->new(compat02 => 1);
     $g=construct($g, $size);
     $h=construct($h, $size);
     test_graph($g, $size);

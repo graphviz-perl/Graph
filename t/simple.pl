@@ -1,5 +1,6 @@
 # Simple classes for testing.
 
+use strict; use warnings;
 sub Foo::new {
     bless { foo => $_[1] }, $_[0];
 }

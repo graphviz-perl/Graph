@@ -1,6 +1,7 @@
 use ExtUtils::MakeMaker;
 
 require 5.006;
+use strict; use warnings;
 use Getopt::Long;
 
 my $mm_ver = $ExtUtils::MakeMaker::VERSION;
@@ -20,7 +21,8 @@ my %PREREQ_PM =
     'List::Util'	=> 0,
     'Scalar::Util'	=> 0,
     'Math::Complex'	=> 0,
-    'Test::More'	=> 0
+    'Test::More'	=> 0,
+    'Devel::Size'      => 0,
     );
 
 if ($] >= 5.008) {

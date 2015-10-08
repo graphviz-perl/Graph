@@ -1,6 +1,6 @@
 use Test::More tests => 4;
 
-use strict;
+use strict; use warnings;
 use Graph;
 
 my $g = Graph::Undirected->new;

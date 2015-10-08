@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Test::More tests => 9;
 package Array;
 use Graph::Attribute array => 0;

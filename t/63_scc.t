@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Test::More tests => 57;
 
 use Graph;
@@ -164,13 +165,13 @@ like($@, qr/Graph::strongly_connected_component_by_index: expected directed grap
     # http://rt.cpan.org/NoAuth/Bug.html?id=1193
     use Graph::Directed;
 
-    $graph = new Graph::Directed;
+    my $graph = new Graph::Directed;
     $graph->add_vertex("a");
     $graph->add_vertex("b");
     $graph->add_vertex("c");
     $graph->add_edge("a","c");
     $graph->add_edge("b","c");
     $graph->add_edge("c","a");
-    @cc = $graph->strongly_connected_components;
+    my @cc = $graph->strongly_connected_components;
     is(@cc, 2);
 }

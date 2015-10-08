@@ -1,3 +1,5 @@
+use strict; use warnings;
+
 my $MANIFEST;
 my %MANIFEST;
 my @MANIFEST;
