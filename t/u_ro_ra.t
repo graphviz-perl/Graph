@@ -1,5 +1,5 @@
 use Graph;
-
+use strict; use warnings;
 use Test::More tests => 2;
 
 my $g = Graph::Undirected->new;

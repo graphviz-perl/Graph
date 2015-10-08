@@ -1,4 +1,4 @@
-use strict;
+use strict; use warnings;
 use Carp;
 use Getopt::Long;
 use Text::Abbrev;

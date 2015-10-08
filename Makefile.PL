@@ -1,6 +1,7 @@
 use ExtUtils::MakeMaker;
 
 require 5.006;
+use strict; use warnings;
 use Getopt::Long;
 
 my $mm_ver = $ExtUtils::MakeMaker::VERSION;

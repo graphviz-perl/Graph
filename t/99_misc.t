@@ -1,4 +1,4 @@
-use strict;
+use strict; use warnings;
 
 use Test::More tests => 27;
 
@@ -103,6 +103,6 @@ my $w = '';
 local $SIG{__WARN__} = sub { $w = shift };
 my $g3 = Graph->new;
 $g3->add_edge(0,1);
-print length($g3->SP_Dijkstra(1,0)), "\n";
+my @dummy = $g3->SP_Dijkstra(1,0);
 is $w, '';
 }

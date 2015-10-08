@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Graph::Directed;
 my $g = Graph::Directed->new();
 

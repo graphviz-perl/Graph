@@ -1,5 +1,5 @@
 use Test::More tests => 18;
-
+use strict; use warnings;
 use Graph;
 my $g = Graph->new;
 

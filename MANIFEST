@@ -158,4 +158,4 @@ util/cover.sh
 util/grand.pl
 util/renum.pl
 util/size.pl
-util/srand.pl
+util/srand.sh

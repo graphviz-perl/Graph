@@ -9,6 +9,7 @@
 - add Graph::Matrix->stringify to help debug
 - fix APSP_Floyd_Warshall logic error when subpaths totalled 0 - fix #3
 - typo fix - thanks @jkeenan (#6)
+- Added "use strict; use warnings;", etc - thanks @manwar (closes #2)
 
 0.9704 2015-10-07  Jarkko Hietaniemi  <jhi@iki.fi>
     - rt.cpan.org 107567: edges() missing on undirected multiedged graph:

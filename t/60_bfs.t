@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Test::More tests => 93;
 
 use Graph::Directed;

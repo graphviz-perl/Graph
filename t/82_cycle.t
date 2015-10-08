@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Graph;
 use Test::More tests => 1;
 

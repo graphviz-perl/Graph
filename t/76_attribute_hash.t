@@ -3,6 +3,7 @@ package Hash;
 use Graph::Attribute hash  => _A;
 sub new { bless {}, shift }
 package main;
+use strict; use warnings;
 my $o = Hash->new();
 ok(!$o->_has_attributes());
 is(my $a = $o->_get_attributes(), undef);

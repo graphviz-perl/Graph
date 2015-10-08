@@ -1,5 +1,6 @@
 use Graph;
 
+use strict; use warnings;
 use Test::More tests => 37;
 
 print "# creating graph\n";

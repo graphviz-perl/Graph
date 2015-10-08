@@ -1,3 +1,4 @@
+use strict; use warnings;
 use Test::More tests => 63;
 
 use Graph;
@@ -120,7 +121,7 @@ like ( $@, qr/both countedged and multiedged/ );
   $g4a->add_edge_get_id("a2","s2");
   $g4a->add_edge_get_id("a2","a1"); # Last.
 
-  @e = $g4a->edges;
+  my @e = $g4a->edges;
   is(@e, 3);
 
   my $g4b = Graph->new(undirected => 1, multiedged => 1);
@@ -129,7 +130,7 @@ like ( $@, qr/both countedged and multiedged/ );
   $g4b->add_edge_get_id("a1","s1");
   $g4b->add_edge_get_id("a2","s2");
 
-  my @e = $g4b->edges;
+  @e = $g4b->edges;
   is(@e, 3);
 }
 

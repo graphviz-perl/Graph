@@ -1,5 +1,5 @@
 use Graph;
-
+use strict; use warnings;
 use Test::More tests => 1;
 
 package MyNode;
@@ -16,7 +16,7 @@ sub _asstring {
 1;
 
 package main;
-
+use strict; use warnings;
 my $gnoref = new Graph;
 my $gwithref = new Graph(refvertexed_stringified=>1);
 my $n1 = new MyNode('name'=>'alpha');
