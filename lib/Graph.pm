@@ -1726,6 +1726,7 @@ sub copy {
 sub _deep_copy_Storable {
     my $g = shift;
     my $safe = new Safe;
+    $safe->permit(qw/:load/);
     local $Storable::Deparse = 1;
     local $Storable::Eval = sub { $safe->reval($_[0]) };
     return Storable::thaw(Storable::freeze($g));
