@@ -2890,7 +2890,7 @@ Graphs, Networks and Algorithms, Dieter Jungnickel, Springer
 =head1 SEE ALSO
 
 Persistent/Serialized graphs?  You want to read/write Graphs?  See the
-Graph::Reader and Graph::Writer in CPAN.
+L<Graph::Reader> and L<Graph::Writer> in CPAN.
 
 =head1 REPOSITORY
 
