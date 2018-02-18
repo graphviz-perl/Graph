@@ -1043,7 +1043,7 @@ If you want also isolated vertices, use is_predecessorless_vertex().
 
     $g->is_successorless_vertex($v)
 
-Return true if the vertex $v has no succcessors (no edges
+Return true if the vertex $v has no successors (no edges
 leaving the vertex), false if it has.
 
 Isolated vertices will return true: if you do not want this,
