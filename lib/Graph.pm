@@ -22,8 +22,13 @@ $VERSION = '0.96_01';
 
 require 5.006; # Weak references are absolutely required.
 
+use version 0.77;
+
 my $can_deep_copy_Storable =
-    eval 'require Storable; require B::Deparse; $Storable::VERSION >= 2.05 && $B::Deparse::VERSION >= 0.61' && !$@;
+    eval { require Storable; 1 } &&
+    eval { require B::Deparse; 1 } &&
+    eval { version->parse($Storable::VERSION) >= version->parse("2.05") &&
+	       version->parse($B::Deparse::VERSION) >= version->parse("0.61") };
 
 sub _can_deep_copy_Storable () {
     return $can_deep_copy_Storable;
