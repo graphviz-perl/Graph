@@ -50,7 +50,7 @@ WriteMakefile(
         : (META_MERGE => {
             'meta-spec' => { version => 2 },
             resources => {
-                bugtracker  => 'http://rt.cpan.org/Public/Dist/Display.html?Name=Graph',
+                bugtracker  => { web => 'https://github.com/neilb/Graph/issues' },
                 repository  => {
                     type => 'git',
                     web  => 'https://github.com/neilb/Graph',
