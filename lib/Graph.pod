@@ -2102,6 +2102,10 @@ possibility of an edge.  Be very careful to adjust also C<edges>
 or C<edges_fill> so that there is a possibility of the filling process
 terminating.
 
+B<NOTE>: a known problem with randomness in openbsd pre-perl-5.20 is that
+using a seed does not give you deterministic randomness. This affects any
+Perl code, not just Graph.
+
 =head2 Attributes
 
 You can attach free-form attributes (key-value pairs, in effect a full

@@ -1,5 +1,10 @@
 Revision history for Perl module Graph
 
+0.9703 2015-09-29  Jarkko Hietaniemi  <jhi@iki.fi>
+    - document (at user level) the openbsd random problem
+    - using the 5.22+ Inf was done the wrong way:
+      https://github.com/neilbowers/Graph/issues/1
+
 0.9702 2015-09-28  Jarkko Hietaniemi  <jhi@iki.fi>
     - rt.cpan.org 107394 $Storable::VERSION may contain underscores
     - follow-up to rt.cpan.org 104687: more docs, fixes, and tests for

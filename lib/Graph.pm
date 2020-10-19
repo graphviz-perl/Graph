@@ -18,7 +18,7 @@ use Graph::AdjacencyMap qw(:flags :fields);
 
 use vars qw($VERSION);
 
-$VERSION = '0.9702';
+$VERSION = '0.9703';
 
 require 5.006; # Weak references are absolutely required.
 
@@ -58,7 +58,7 @@ my $Inf;
 
 BEGIN {
   if ($] >= 5.022) {
-    $Inf = eval 'Inf + 0';
+    $Inf = eval '+"Inf"';
   } else {
     local $SIG{FPE};
     eval { $Inf = exp(999) } ||
