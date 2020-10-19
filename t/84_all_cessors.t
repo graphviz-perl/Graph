@@ -1,4 +1,4 @@
-use Test::More tests => 180;
+use Test::More tests => 181;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -247,3 +247,10 @@ use Graph::Undirected;
     is("@{[sort $u5->all_reachable('a')]}",    "a");
 }
 
+{
+    my $d0  = Graph::Directed->new;
+    $d0->add_edge(0,1);
+    $d0->add_edge(1,0);
+    is_deeply [ my @g = sort $d0->all_successors(0) ], [ 0, 1 ],
+      'all_successors works on false names' or diag explain \@g;
+}

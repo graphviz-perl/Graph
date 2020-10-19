@@ -908,7 +908,7 @@ sub _all_successors {
       }
     }
     for my $v (@init) {
-      delete $seen{$v} unless $g->has_edge($v, $v) || $self{$v};
+      delete $seen{$v} unless $g->has_edge($v, $v) || exists $self{$v};
     }
     return values %seen;
 }

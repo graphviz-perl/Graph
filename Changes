@@ -5,6 +5,7 @@
 - fix complement losing vertices on unconnected graphs - RT#115366
 - fix average_path_length when two vertices given - RT#120611
 - switch to GitHub issues rather than RT
+- fix all_successors with non-truthy names - fix #5
 
 0.9704 2015-10-07  Jarkko Hietaniemi  <jhi@iki.fi>
     - rt.cpan.org 107567: edges() missing on undirected multiedged graph:
