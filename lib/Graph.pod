@@ -147,6 +147,13 @@ Also the following vertex/edge attributes are copied:
   refvertexed/hypervertexed/countvertexed/multivertexed
   hyperedged/countedged/multiedged/omniedged
 
+B<NOTE>: You can get an even shallower copy of a graph by
+
+    my $c = $g->new;
+
+This will copy only the graph properties (directed, and so forth),
+but none of the vertices or edges.
+
 =item deep_copy
 
 =item deep_copy_graph
@@ -226,6 +233,24 @@ Create a complement graph that has the same vertices as the original graph.
 A complement graph has an edge (u,v) if and only if the original
 graph does not have edge (u,v).
 
+=item subgraph
+
+   my $c = $g->subgraph(\@src, \@dst);
+   my $c = $g->subgraph(\@src);
+
+Creates a subgraph of a given graph.  The created subgraph has the
+same graph properties (directedness, and so forth) as the original
+graph, but none of the attributes (graph, vertex, or edge).
+
+A vertex is added to the subgraph if it is in the original graph.
+
+An edge is added to the subgraph if there is an edge in the original
+graph that starts from the C<src> set of vertices and ends in the
+C<dst> set of vertices.
+
+You can leave out C<dst> in which case C<dst> is assumed to be the same:
+this is called a I<vertex-induced subgraph>.
+
 =back
 
 See also L</random_graph> for a random constructor.
@@ -277,8 +302,8 @@ Return true if the edge exists in the graph, false otherwise.
 
     $g->delete_vertex($v)
 
-Delete the vertex from the graph.  Returns the graph, even
-if the vertex did not exist in the graph.
+Delete the vertex from the graph.  Returns the graph, even if the
+vertex did not exist in the graph.
 
 If the graph has been created I<multivertexed> or I<countvertexed>
 and a vertex has been added multiple times, the vertex will require
@@ -288,7 +313,8 @@ at least an equal number of deletions to become completely deleted.
 
     $g->delete_vertices($v1, $v2, ...)
 
-Delete the vertices from the graph.  Returns the graph.
+Delete the vertices from the graph.  Returns the graph, even if none
+of the vertices existed in the graph.
 
 If the graph has been created I<multivertexed> or I<countvertexed>
 and a vertex has been added multiple times, the vertex will require
@@ -309,7 +335,8 @@ at least an equal number of deletions to become completely deleted.
 
     $g->delete_edges($u1, $v1, $u2, $v2, ...)
 
-Delete the edges from the graph.  Returns the graph.
+Delete the edges from the graph.  Returns the graph, even if none
+of the edges existed in the graph.
 
 If the graph has been created I<multivertexed> or I<countedged>
 and an edge has been added multiple times, the edge will require
@@ -330,6 +357,22 @@ you can call the stringification via the method
 =over 4
 
 =item stringify
+
+=back
+
+=head2 Boolean
+
+Graphs have boolifying overload, so you can do things like
+
+    if ($g) { print "The graph is: $g\n" }
+
+which works even if the graph is empty.  In fact, the boolify
+always returns true.  If you want to test for example for vertices,
+test for vertices.
+
+=over 4
+
+=item boolify
 
 =back
 
@@ -404,6 +447,8 @@ Add the edges $a-$b, $b-$c, ..., $x-$y, $y-$z, and $z-$a to the graph.
 Returns the graph.
 
 =item has_cycle
+
+=item has_this_cycle
 
    $g->has_cycle($a, $b, $c, ..., $x, $y, $z)
 
@@ -480,7 +525,7 @@ Return true if the graph is directed and acyclic, false otherwise.
 Return true if the graph is cyclic (contains at least one cycle).
 (This is identical to C<has_a_cycle>.)
 
-To find at least that one cycle, see L</find_a_cycle>.
+To find at least one such cycle, see L</find_a_cycle>.
 
 =item is_acyclic
 
@@ -1623,7 +1668,22 @@ is chosen.
 B<NOTE>: note that all the vertices might not be reachable from the
 selected (explicit or random) start vertex.
 
-The start vertex is be available as the graph attribute
+B<NOTE>: after the first reachable tree from the first start vertex
+has been finished, and if there still are unvisited vertices,
+SPT_Dijkstra will keep on selecting unvisited vertices.
+
+The next roots (in case the first tree doesn't visit all the vertices)
+can be chosen by setting one of the following options to true:
+C<next_root>, C<next_alphabetic>, C<next_numeric>, C<next_random>.
+
+The C<next_root> is the most customizable: the value needs to be
+a subroutine reference which will receive the graph and the unvisited
+vertices as hash reference.  If you want to only visit the first tree,
+use C<next_root => sub { undef }>.  The rest of these options are
+booleans.  If none of them are true, a random unvisited vertex will be
+selected.
+
+The first start vertex is be available as the graph attribute
 C<SPT_Dijkstra_root>).
 
 The result weights of vertices can be retrieved from the result graph by
@@ -1725,6 +1785,10 @@ For either a directed or an undirected graph, return the APSP object
 describing all the possible paths between any two vertices of the
 graph.  If no weight is defined for an edge, 1 (one) is assumed.
 
+Note that weight of 0 (zero) does not mean do not use this edge, it
+means essentially the opposite: an edge that has zero cost, an edge
+that makes the vertices the same.
+
 =over 4
 
 =item APSP_Floyd_Warshall
@@ -1794,7 +1858,9 @@ the graph, from a vertex, between two vertices, and to a vertex.
 In scalar context return the I<longest shortest> path length over all
 the vertex pairs of the graph.  In list context return the vertices
 along a I<longest shortest> path.  Note that there might be more than
-one such path; this interfaces return a random one of them.
+one such path; this interface returns a random one of them.
+
+B<NOTE>: this returns the I<longest shortest> path, B<not> the I<longest> path.
 
 =item diameter
 
@@ -1804,6 +1870,8 @@ one such path; this interfaces return a random one of them.
 
 The longest path over all the vertex pairs is known as the
 I<graph diameter>.
+
+For an unconnected graph, returns C<undef>.
 
 =item shortest_path
 
@@ -1833,6 +1901,8 @@ The I<graph center> is the set of vertices for which the I<vertex
 eccentricity> is equal to the I<graph radius>.  The vertices are
 returned in random order.  By specifying a delta value you can widen
 the criterion from strict equality (handy for non-integer edge weights).
+
+For an unconnected graph, returns an empty list.
 
 =item vertex_eccentricity
 
@@ -2481,7 +2551,7 @@ Returns a subgraph representing the ball of $radius around node $n
 =back
 
 The "expect" methods can be used to test a graph and croak if the
-graph is not as expected.
+graph call is not as expected.
 
 =over 4
 
@@ -2491,9 +2561,15 @@ graph is not as expected.
 
 =item expect_directed
 
+=item expect_hyperedged
+
+=item expect_hypervertexed
+
 =item expect_multiedged
 
 =item expect_multivertexed
+
+=item expect_no_args
 
 =item expect_non_multiedged
 

@@ -13,9 +13,6 @@ require AutoLoader;
 
 @EXPORT = ( );
 
-$VERSION = '0.96_01';
-
-
 # Preloaded methods go here.
 
 # new will usually be superceded by child,
@@ -115,7 +112,7 @@ This class can be inherited to provide an oject with the
 ability to be heaped.  If the object is implemented as
 a hash, and if it can deal with a key of I<heap>, leaving
 it unchanged for use by the heap routines, then the following
-implemetation will work.
+implementation will work.
 
   package myObject;
 

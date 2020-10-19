@@ -56,12 +56,15 @@ sub new {
 
 sub is_transitive {
     my $g = shift;
+    $g->expect_no_args(@_);
     Graph::TransitiveClosure::Matrix::is_transitive($g);
 }
 
 1;
 __END__
 =pod
+
+=head1 NAME
 
 Graph::TransitiveClosure - create and query transitive closure of graph
 
@@ -84,10 +87,6 @@ Graph::TransitiveClosure - create and query transitive closure of graph
 
     # is_reachable(u, v) is always reflexive.
     $tcg->is_reachable($u, $v)
-
-    # The reflexivity of is_transitive(u, v) depends of the reflexivity
-    # of the transitive closure.
-    $tcg->is_transitive($u, $v)
 
     # You can check any graph for transitivity.
     $g->is_transitive()

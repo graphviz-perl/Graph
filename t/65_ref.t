@@ -110,7 +110,7 @@ for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
 	ok(!$g1->has_vertex($i));
 	ok( $g1->has_vertex($j));
 	ok(!$g1->has_edge($i, $j));
-	ok(!$g1->delete_vertex($j));
+	ok($g1->delete_vertex($j));
 	print "# g1 = $g1\n";
 	ok(!$g1->has_vertex($i));
 	ok(!$g1->has_vertex($j));
@@ -128,7 +128,7 @@ for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
 	ok(!$g2->has_vertex($i));
 	ok( $g2->has_vertex($j));
 	ok(!$g2->has_edge($i, $j));
-	ok(!$g2->delete_vertex($j));
+	ok($g2->delete_vertex($j));
 	print "# g2 = $g2\n";
 	ok(!$g2->has_vertex($i));
 	ok(!$g2->has_vertex($j));

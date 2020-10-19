@@ -18,5 +18,5 @@ is( $g->[1], 6 );
 ok( $g->delete_vertex('a') );
 is( $g->[1], 7 );
 ok( $g->delete_vertex('b') );
-is( $g->[1], 8 );
+is( $g->[1], 8 ); # delete vertex
 

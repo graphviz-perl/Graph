@@ -1,10 +1,21 @@
-use Test::More tests => 59;
+use Test::More tests => 65;
 
 use Graph;
 use Graph::Directed;
 use Graph::Undirected;
 
 my $g = Graph->new(undirected => 1);
+
+is($g->diameter, undef);
+is_deeply([sort $g->center_vertices], []);
+
+$g->add_vertex('a');
+is($g->diameter, undef);
+is_deeply([sort $g->center_vertices], []);
+
+$g->add_vertex('b');
+is($g->diameter, undef);
+is_deeply([sort $g->center_vertices], []);
 
 $g->add_edge(qw(e a));
 $g->add_edge(qw(a r));

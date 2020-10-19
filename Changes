@@ -1,5 +1,21 @@
 Revision history for Perl module Graph
 
+0.97 2015-09-22  Jarkko Hietaniemi  <jhi@iki.fi>
+    - rt.cpan.org 104687 diameter and centre of a one vertex graph
+    - rt.cpan.org 107195 [PATCH] fix POD: add missing NAME header
+    - rt.cpan.org 107194 [PATCH] fix a spelling mistake
+    - rt.cpan.org #94046 Loading graph produces a warning with Perl 5.16.3
+    - rt.cpan.org 62626 Graph::TransitiveClosure::Matrix contradictory wrt reflexive
+    - rt.cpan.org 71793 Problem with APSP and default weight 1
+    - rt.cpan.org 79143 Graph scalar context override causes problems
+    - rt.cpan.org 92427 Graph::delete_vertex should not use _edges_at (in all cases)
+    - rt.cpan.org 85238 bug in edges() method?
+    - rt.cpan.org 93278 SPT_Dijkstra sometimes returns a wrong answer
+    - rt.cpan.org 78465 find_a_cycle and has_cycle are broken
+    - rt.cpan.org 92204 (longest path is not calculated correctly in this case)
+    - rt.cpan.org 65497 induced subgraph method
+    - plus various doc and code nits found while looking at the above
+
 0.96_01 2014-03-09 @NEILB
     - Taken over maintenance from JHI
     - Specified min perl version 5.6.0

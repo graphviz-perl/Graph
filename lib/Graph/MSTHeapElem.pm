@@ -6,8 +6,6 @@ use Heap071::Elem;
 
 use base 'Heap071::Elem';
 
-$VERSION = '0.96_01';
-
 sub new {
     my $class = shift;
     bless { u => $_[0], v => $_[1], w => $_[2] }, $class;

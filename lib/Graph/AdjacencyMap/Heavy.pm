@@ -31,6 +31,7 @@ sub __set_path {
 	(  $m->[ _s ]                   ||= { });
     my @p = $p;
     my @k;
+    @_ = sort @_ if ($m->[ _f ] & _UNORD);
     while (@_) {
 	my $k = shift;
 	my $q = ref $k && ($f & _REF) && overload::Method($k, '""') ? overload::StrVal($k) : $k;
@@ -60,6 +61,7 @@ sub __set_path_node {
 sub set_path {
     my $m = shift;
     my $f = $m->[ _f ];
+    return if @_ == 0 && !($f & _HYPER);
     if (@_ > 1 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ == 2) { @_ = sort @_ }
         else { $m->__arg(\@_) }

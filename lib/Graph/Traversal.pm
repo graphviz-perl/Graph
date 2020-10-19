@@ -286,13 +286,13 @@ sub next {
 	print "next.0 - @next\n" if DEBUG;
 	my %next; @next{ @next } = @next;
 	print "next.1 - @next\n" if DEBUG;
-	@next = keys %next;
+	@next = values %next;
 	my @all = @next;
 	print "all = @all\n" if DEBUG;
 	for my $s (keys %next) {
 	    delete $next{$s} if exists $self->{seen}->{$s};
 	}
-	@next = keys %next;
+	@next = values %next;
 	print "next.2 - @next\n" if DEBUG;
 	if (@next) {
 	    @next = $self->{ next_successor }->( $self, \%next );

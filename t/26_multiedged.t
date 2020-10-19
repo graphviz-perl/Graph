@@ -1,4 +1,4 @@
-use Test::More tests => 57;
+use Test::More tests => 59;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -113,3 +113,22 @@ eval 'my $g3 = Graph->new( multiedged => 1, countedged => 1 )';
 
 like ( $@, qr/both countedged and multiedged/ );
 
+{
+  my $g4a = Graph->new(undirected => 1, multiedged => 1);
+
+  $g4a->add_edge_get_id("a1","s1");
+  $g4a->add_edge_get_id("a2","s2");
+  $g4a->add_edge_get_id("a2","a1"); # Last.
+
+  @e = $g4a->edges;
+  is(@e, 3);
+
+  my $g4b = Graph->new(undirected => 1, multiedged => 1);
+
+  $g4b->add_edge_get_id("a2","a1");  # First.
+  $g4b->add_edge_get_id("a1","s1");
+  $g4b->add_edge_get_id("a2","s2");
+
+  my @e = $g4b->edges;
+  is(@e, 3);
+}

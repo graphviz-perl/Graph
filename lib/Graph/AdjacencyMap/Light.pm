@@ -34,6 +34,7 @@ sub _new {
 
 sub set_path {
     my $m = shift;
+    return if @_ == 0 && !($m->[ _f ] & _HYPER);
     my ($n, $f, $a, $i, $s, $p) = @$m;
     if ($a == 2) {
 	@_ = sort @_ if ($f & _UNORD);

@@ -10,7 +10,7 @@ is( $g->add_vertex("c"), $g );
 
 eval '$g->add_vertex("d", "e")';
 like($@,
-     qr/Graph::add_vertex: use add_vertices for more than one vertex/);
+     qr/Graph::add_vertex: expected hypervertexed graph/);
 
 eval '$g->add_vertex(undef)';
 like($@,

@@ -1,4 +1,4 @@
-use Test::More tests => 20;
+use Test::More tests => 30;
 
 use Graph::Undirected;
 use Graph::Directed;
@@ -36,3 +36,27 @@ is($g0, 'a=b,a=c,a=d,a=e,a=f,b=c,b=d,b=e,b=f,c=d,c=e,c=f,d=e,d=f,e=f')
 is($g1, 'a-b,a-c,a-d,a-e,a-f,b-c,b-d,b-e,b-f,c-b,d-b,d-c,d-e,d-f,e-b,e-c,e-f,f-b,f-c')
     for 1..10;
 
+{
+  my $null = Graph->new;
+  ok($null, "boolify wins over stringify for empty graph");
+  ok($g0, "boolify");
+}
+
+{
+  # Inspired by
+  # rt.cpan.org 93278: SPT_Dijkstra sometimes returns a wrong answer
+  use Graph::Directed;
+  my $null = Graph::Directed->new;
+  for ( 1..5 ) {  # Adds _NOTHING_ -- but dies.
+    eval { $null->add_vertex };
+    like($@, qr/Graph::add_vertex: expected hypervertexed graph/);
+  }
+  is($null, "");
+
+  my $hyper = Graph::Directed->new(hypervertexed => 1);
+  $hyper->add_vertex for 1..5;  # Adds the "empty vertex", five times.
+  is($hyper->vertices, 1);
+
+  $hyper->add_vertex($_) for 1..5;
+  is($hyper->vertices, 6);
+}

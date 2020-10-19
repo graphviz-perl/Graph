@@ -112,6 +112,7 @@ t/81_dump.t
 t/82_cycle.t
 t/83_bitmatrix.t
 t/84_all_cessors.t
+t/85_subgraph.t
 t/99_misc.t
 t/MyDGraph.pm
 t/MyGraph.pm
