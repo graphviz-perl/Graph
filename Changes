@@ -1,5 +1,14 @@
 Revision history for Perl module Graph
 
+0.9702 2015-09-28  Jarkko Hietaniemi  <jhi@iki.fi>
+    - rt.cpan.org 107394 $Storable::VERSION may contain underscores
+    - follow-up to rt.cpan.org 104687: more docs, fixes, and tests for
+      diameter/radius/shortest_path/center_vertices/vertex_eccentricity
+      for corner cases like empty graph, single-vertex graphs, and
+      in general unconnected graphs
+    - for perl 5.22 or later one should be able to use Inf for Infinity
+    - openbsd before perl 5.20 had nondeterministic rand()
+
 0.97 2015-09-22  Jarkko Hietaniemi  <jhi@iki.fi>
     - rt.cpan.org 104687 diameter and centre of a one vertex graph
     - rt.cpan.org 107195 [PATCH] fix POD: add missing NAME header
