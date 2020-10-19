@@ -1822,7 +1822,7 @@ sub complete_graph {
 sub complement_graph {
     my $g = shift;
     my $c = $g->new( directed => $g->directed );
-    my @v = $g->vertices05;
+    $c->add_vertices(my @v = $g->vertices05);
     for (my $i = 0; $i <= $#v; $i++ ) {
 	for (my $j = 0; $j <= $#v; $j++ ) {
 	    next if $i >= $j;

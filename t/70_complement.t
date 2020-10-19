@@ -1,4 +1,4 @@
-use Test::More tests => 29;
+use Test::More tests => 32;
 
 use Graph;
 use Graph::Directed;
@@ -39,7 +39,7 @@ ok(!$c1->has_edge(qw(c a)));
 ok( $c1->has_edge(qw(c b)));
 
 is($g1, "a=b,a=c");
-is($c1, "b=c");
+is($c1, "b=c,a");
 
 my $g2 = Graph::Directed->new(countedged => 1);
 $g2->add_edge(qw(a b));
@@ -55,3 +55,9 @@ for my $u (qw(a b c)) {
     }
 }
 
+my $g3 = Graph::Undirected->new();
+$g3->add_edge(qw(a b));
+is scalar($g3->vertices), 2;
+my $c3 = $g3->complement_graph;
+is scalar($c3->vertices), 2;
+is scalar($c3->edges), 0;
