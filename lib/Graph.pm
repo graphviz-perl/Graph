@@ -3463,7 +3463,7 @@ sub SP_Dijkstra {
 	$seen{$p}++;
 	last if keys %seen == $V || $u eq $v;
     }
-    @path = () if @path && $path[-1] ne $u;
+    return if !@path or $path[-1] ne $u;
     return reverse @path;
 }
 

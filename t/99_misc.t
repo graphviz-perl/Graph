@@ -1,6 +1,6 @@
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 27;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -97,3 +97,12 @@ ok(abs($betweenness{e} - 60.3333333333333) <= $eps);
 ok(abs($betweenness{t} - 17.1666666666667) <= $eps);
 is($betweenness{x}, 0.0);
 is($betweenness{u}, 3.0);
+
+{
+my $w = '';
+local $SIG{__WARN__} = sub { $w = shift };
+my $g3 = Graph->new;
+$g3->add_edge(0,1);
+print length($g3->SP_Dijkstra(1,0)), "\n";
+is $w, '';
+}
