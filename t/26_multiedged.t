@@ -1,4 +1,4 @@
-use Test::More tests => 59;
+use Test::More tests => 63;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -131,4 +131,17 @@ like ( $@, qr/both countedged and multiedged/ );
 
   my @e = $g4b->edges;
   is(@e, 3);
+}
+
+{
+    # rt.cpan.org 107567 edges() missing on undirected multiedged graph
+    my $graph = Graph->new(undirected => 1, multiedged => 1);
+    $graph->add_vertex(0);
+    $graph->add_vertex(1);
+    $graph->add_edge(1,0);
+    is($graph, "0=1");
+    my @edges = $graph->edges;
+    is(scalar @edges, 1);
+    is_deeply(@edges, [1, 0]);
+    is($graph->edges, 1);
 }

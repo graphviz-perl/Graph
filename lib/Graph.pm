@@ -18,12 +18,18 @@ use Graph::AdjacencyMap qw(:flags :fields);
 
 use vars qw($VERSION);
 
-$VERSION = '0.9703';
+$VERSION = '0.9704';
 
 require 5.006; # Weak references are absolutely required.
 
 my $can_deep_copy_Storable =
-    eval 'require Storable; require B::Deparse; $Storable::VERSION =~ s/_\d+$//;$B::Deparse::VERSION =~ s/_\d+$//; $Storable::VERSION >= 2.05 && $B::Deparse::VERSION >= 0.61' && !$@;
+  eval {
+    require Storable;
+    require B::Deparse;
+    Storable->VERSION(2.05);
+    B::Deparse->VERSION(0.61);
+    1;
+  };
 
 sub _can_deep_copy_Storable () {
     return $can_deep_copy_Storable;

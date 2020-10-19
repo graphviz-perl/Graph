@@ -1,5 +1,11 @@
 Revision history for Perl module Graph
 
+0.9704 2015-10-07  Jarkko Hietaniemi  <jhi@iki.fi>
+    - rt.cpan.org 107567: edges() missing on undirected multiedged graph:
+      was broken in 0.96, had been fixed somewhere there and here,
+      added the test case
+    - rt.cpan.org 107600: no modify Storable $VERSION
+
 0.9703 2015-09-29  Jarkko Hietaniemi  <jhi@iki.fi>
     - document (at user level) the openbsd random problem
     - using the 5.22+ Inf was done the wrong way:
