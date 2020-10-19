@@ -52,8 +52,8 @@ WriteMakefile(
                 bugtracker  => 'http://rt.cpan.org/Public/Dist/Display.html?Name=Graph',
                 repository  => {
                     type => 'git',
-                    web  => 'https://github.com/neilbowers/Graph',
-                    url  => 'git://github.com/neilbowers/Graph.git',
+                    web  => 'https://github.com/neilb/Graph',
+                    url  => 'git://github.com/neilb/Graph.git',
                 },
             },
           })
