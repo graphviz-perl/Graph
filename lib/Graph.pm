@@ -18,12 +18,12 @@ use Graph::AdjacencyMap qw(:flags :fields);
 
 use vars qw($VERSION);
 
-$VERSION = '0.97';
+$VERSION = '0.9701';
 
 require 5.006; # Weak references are absolutely required.
 
 my $can_deep_copy_Storable =
-    eval 'require Storable; require B::Deparse; $B::Deparse::VERSION =~ s/_\d+$//; $Storable::VERSION >= 2.05 && $B::Deparse::VERSION >= 0.61' && !$@;
+    eval 'require Storable; require B::Deparse; $Storable::VERSION =~ s/_\d+$//;$B::Deparse::VERSION =~ s/_\d+$//; $Storable::VERSION >= 2.05 && $B::Deparse::VERSION >= 0.61' && !$@;
 
 sub _can_deep_copy_Storable () {
     return $can_deep_copy_Storable;
@@ -57,11 +57,15 @@ sub _P () { 7 } # Predecessors.
 my $Inf;
 
 BEGIN {
-    local $SIG{FPE}; 
+  if ($] >= 5.022) {
+    $Inf = eval 'Inf + 0';
+  } else {
+    local $SIG{FPE};
     eval { $Inf = exp(999) } ||
 	eval { $Inf = 9**9**9 } ||
 	    eval { $Inf = 1e+999 } ||
 		{ $Inf = 1e+99 };  # Close enough for most practical purposes.
+  }
 }
 
 sub Infinity () { $Inf }
@@ -3744,7 +3748,7 @@ sub vertex_eccentricity {
 		$max = $l;
 	    }
 	}
-	return $max;
+	return defined $max ? $max : Infinity();
     } else {
 	return Infinity();
     }
@@ -3769,6 +3773,7 @@ sub shortest_path {
 		    @min = $t->path_vertices($u, $v);
 		}
 	    }
+            print "min/1 = @min\n";
 	    return wantarray ? @min : $min;
 	}
     } else {
@@ -3783,10 +3788,13 @@ sub shortest_path {
 		    @min = $t->path_vertices($u, $v);
 		}
 	    }
+            print "min/2 = @min\n";
 	    return wantarray ? @min : $min;
 	} else {
 	    my ($min, $max, $minp, $maxp) = $g->_minmax_path(@_);
-	    return defined $minp ? (wantarray ? @$minp : $min) : undef;
+	    return defined $minp
+              ? (wantarray ? @$minp : $min)
+              : wantarray ? () : undef;
 	}
     }
 }

@@ -71,8 +71,14 @@ my $g4c = Graph->random_graph(vertices => 10, random_seed => 1235);
 my $g4d = Graph->random_graph(vertices => 10, random_seed => 1235);
 my $g4e = Graph->random_graph(vertices => 10);
 
-is  ($g4a, $g4b);
-is  ($g4c, $g4d);
+SKIP: {
+  # http://undeadly.org/cgi?action=article&sid=20141118170028
+  # http://www.openbsd.org/plus58.html
+  skip("openbsd rand() was undeterministic before Perl 5.20", 2)
+    if $^O eq 'openbsd' && $] < 5.020;
+  is  ($g4a, $g4b);
+  is  ($g4c, $g4d);
+}
 isnt($g4a, $g4c);
 isnt($g4a, $g4d);
 isnt($g4a, $g4e);

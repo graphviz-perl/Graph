@@ -1871,7 +1871,7 @@ B<NOTE>: this returns the I<longest shortest> path, B<not> the I<longest> path.
 The longest path over all the vertex pairs is known as the
 I<graph diameter>.
 
-For an unconnected graph, returns C<undef>.
+For an unconnected graph, single-vertex, or empty graph, returns C<undef>.
 
 =item shortest_path
 
@@ -1883,12 +1883,17 @@ of the graph.  In list context return the vertices along a shortest
 path.  Note that there might be more than one such path; this
 interface returns a random one of them.
 
+For an unconnected, single-vertex, or empty graph, returns C<undef>
+or an empty list.
+
 =item radius
 
     my $gr = $g->radius;
 
 The I<shortest longest> path over all the vertex pairs is known as the
 I<graph radius>.  See also L</diameter>.
+
+For an unconnected, single-vertex, or empty graph, returns Infinity.
 
 =item center_vertices
 
@@ -1902,14 +1907,15 @@ eccentricity> is equal to the I<graph radius>.  The vertices are
 returned in random order.  By specifying a delta value you can widen
 the criterion from strict equality (handy for non-integer edge weights).
 
-For an unconnected graph, returns an empty list.
+For an unconnected, single-vertex, or empty graph, returns an empty list.
 
 =item vertex_eccentricity
 
     my $ve = $g->vertex_eccentricity($v);
 
 The longest path to a vertex is known as the I<vertex eccentricity>.
-If the graph is unconnected, returns Inf.
+
+If the graph is unconnected, single-vertex, or empty graph, returns Inf.
 
 =back
 
