@@ -1,14 +1,16 @@
 package Graph::SPTHeapElem;
 
 use strict;
-use vars qw($VERSION @ISA);
-use Heap071::Elem;
-
-use base 'Heap071::Elem';
+use warnings;
 
 sub new {
     my $class = shift;
     bless { u => $_[0], v => $_[1], w => $_[2] }, $class;
+}
+
+sub heap {
+    my $self = shift;
+    @_ ? ($self->{heap} = shift) : $self->{heap};
 }
 
 sub cmp {

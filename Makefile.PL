@@ -20,7 +20,8 @@ my %PREREQ_PM =
     'List::Util'	=> 0,
     'Scalar::Util'	=> 0,
     'Math::Complex'	=> 0,
-    'Test::More'	=> 0
+    'Test::More'	=> 0,
+    'Heap'	        => '0.80',
     );
 
 if ($] >= 5.008) {

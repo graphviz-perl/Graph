@@ -44,7 +44,7 @@ use Graph::MSTHeapElem;
 use Graph::SPTHeapElem;
 use Graph::Undirected;
 
-use Heap071::Fibonacci;
+use Heap::Fibonacci;
 use List::Util qw(shuffle first);
 use Scalar::Util qw(weaken);
 
@@ -2428,7 +2428,7 @@ sub _heap_walk {
     my ($g, $h, $add, $etc) = splice @_, 0, 4; # Leave %opt in @_.
 
     my ($opt, $unseenh, $unseena, $r, $next, $code, $attr) = $g->_root_opt(@_);
-    my $HF = Heap071::Fibonacci->new;
+    my $HF = Heap::Fibonacci->new;
 
     while (defined $r) {
         # print "r = $r\n";

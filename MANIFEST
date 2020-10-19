@@ -5,8 +5,6 @@ Makefile.PL
 README
 RELEASE
 TODO
-lib/Heap071/Elem.pm
-lib/Heap071/Fibonacci.pm
 lib/Graph.pm
 lib/Graph.pod
 lib/Graph/AdjacencyMap.pm
