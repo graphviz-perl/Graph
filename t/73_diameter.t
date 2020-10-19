@@ -1,4 +1,4 @@
-use Test::More tests => 77;
+use Test::More tests => 78;
 
 use Graph;
 use Graph::Directed;
@@ -216,4 +216,10 @@ is($k->vertex_eccentricity('r'), 2);
     $g->add_edge(qw(c d));
 
     is($g->vertex_eccentricity('a'), Graph::Infinity);
+}
+
+{
+    my $g = Graph->new(undirected => 1);
+    $g->add_path(1,2,3);
+    is($g->average_path_length(1, 2), 1);
 }

@@ -3,6 +3,7 @@
 - depend on Heap 0.80 instead of local fork. Heap::Elem is really an interface not superclass.
 - fix uninitialised value warning in SP_Dijkstra - RT#118539
 - fix complement losing vertices on unconnected graphs - RT#115366
+- fix average_path_length when two vertices given - RT#120611
 
 0.9704 2015-10-07  Jarkko Hietaniemi  <jhi@iki.fi>
     - rt.cpan.org 107567: edges() missing on undirected multiedged graph:

@@ -1847,8 +1847,10 @@ Returns the predecessor of vertex $v in the all-pairs shortest paths.
 
     my $apl = $g->average_path_length(undef, $v); # To $v.
 
-Return the average (shortest) path length over all the vertex pairs of
-the graph, from a vertex, between two vertices, and to a vertex.
+Return the average (shortest) path length over all the non-zero paths
+between vertex pairs of the graph's transitive closure. Depending on
+the arguments, this can be from a vertex, between two vertices, or to
+a vertex. An undefined (or not-given) vertex will match all.
 
 =item longest_path
 

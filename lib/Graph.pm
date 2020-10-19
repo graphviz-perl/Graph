@@ -3840,23 +3840,14 @@ sub average_path_length {
     my @A = @_;
     my $d = 0;
     my $m = 0;
-    my $n = $g->for_shortest_paths(sub {
-				       my ($t, $u, $v, $n) = @_;
-				       my $l = $t->path_length($u, $v);
-				       if ($l) {
-					   my $c = @A == 0 ||
-					       (@A == 1 && $u eq $A[0]) ||
-						   ((@A == 2) &&
-						    (defined $A[0] &&
-						     $u eq $A[0]) ||
-						    (defined $A[1] &&
-						     $v eq $A[1]));
-					   if ($c) {
-					       $d += $l;
-					       $m++;
-					   }
-				       }
-				   });
+    $g->for_shortest_paths(sub {
+        my ($t, $u, $v, $n) = @_;
+        return unless my $l = $t->path_length($u, $v);
+        return if defined $A[0] && $u ne $A[0];
+        return if defined $A[1] && $v ne $A[1];
+        $d += $l;
+        $m++;
+    });
     return $m ? $d / $m : undef;
 }
 
