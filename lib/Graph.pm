@@ -3998,11 +3998,12 @@ sub subgraph_by_radius
 
 sub clustering_coefficient {
     my ($g) = @_;
+    return unless my @v = $g->vertices;
     my %clustering;
 
     my $gamma = 0;
 
-    for my $n ($g->vertices()) {
+    for my $n (@v) {
 	my $gamma_v = 0;
 	my @neigh = $g->successors($n);
 	my %c;
@@ -4023,7 +4024,7 @@ sub clustering_coefficient {
 	}
     }
 
-    $gamma /= $g->vertices();
+    $gamma /= @v;
 
     return wantarray ? ($gamma, %clustering) : $gamma;
 }

@@ -1,6 +1,6 @@
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 26;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -64,6 +64,8 @@ is($ub2, "a=b,a=c,b=d,b=e");
 is($ub3, "a=b,a=c,b=d,b=e,c=f,c=g");
 
 my $g2 = Graph->new;
+is_deeply [ $g2->clustering_coefficient ], [],
+  'clustering_coefficient with no vertices = empty list';
 
 for my $p (qw(zero
 	      one

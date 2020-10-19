@@ -2545,11 +2545,14 @@ and based on the algorithm from:
 
 Returns the clustering coefficient gamma as described in
 
-    Duncan J. Watts and Steven Strogatz, Collective dynamics of 'small-world' networks, http://audiophile.tam.cornell.edu/SS_nature_smallworld.pdf
+    Duncan J. Watts and Steven Strogatz, Collective dynamics of 'small-world' networks, https://web.archive.org/web/20120616204225/http://audiophile.tam.cornell.edu/SS_nature_smallworld.pdf
 
 In scalar context returns just the average gamma, in list context
 returns the average gamma and a hash of vertices to clustering
 coefficients.
+
+Returns an empty list (and therefore undefined in scalar context) if
+the graph has no vertices.
 
 =item subgraph_by_radius
 
