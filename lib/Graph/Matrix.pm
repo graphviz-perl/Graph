@@ -25,6 +25,20 @@ sub get {
     $m->[0]->[$i]->[$j];
 }
 
+sub stringify {
+    my ($m) = @_;
+    my @V = sort keys %{ $m->[1] };
+    my $top = join ' ', map sprintf('%4s', $_), 'to:', @V;
+    my @indices = map $m->[1]{$_}, @V;
+    my @rows;
+    for my $n (@V) {
+        my $this_row = $m->[0][ $m->[1]->{$n} ];
+        my @vals = map $this_row->[ $_ ], @indices;
+        push @rows, join ' ', map sprintf('%4s', $_), $n, @vals;
+    }
+    join '', map "$_\n", $top, @rows;
+}
+
 1;
 __END__
 =pod
@@ -68,6 +82,11 @@ Return the value at the edge from $u to $v.
 =item set($u, $v, $val)
 
 Set the edge from $u to $v to value $val.
+
+=item stringify
+
+Returns a string roughly representing the matrix, with the C<$u> down
+the left-hand side, and C<$v> across the top.
 
 =back
 
