@@ -1,4 +1,5 @@
 - document clustering_coefficient return empty list on no vertices - RT#114094
+- apply lazy-load patch from Stephen Loyd - RT#123236
 
 0.9704 2015-10-07  Jarkko Hietaniemi  <jhi@iki.fi>
     - rt.cpan.org 107567: edges() missing on undirected multiedged graph:

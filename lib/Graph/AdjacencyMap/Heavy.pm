@@ -14,8 +14,6 @@ use base 'Graph::AdjacencyMap';
 
 require overload; # for de-overloading
 
-require Data::Dumper;
-
 sub __set_path {
     my $m = shift;
     my $f = $m->[ _f ];
