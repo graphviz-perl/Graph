@@ -1,4 +1,4 @@
-use Test::More tests => 227;
+use Test::More tests => 231;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -315,7 +315,7 @@ my $t0tcfw = Graph->TransitiveClosure_Floyd_Warshall($g0);
 
 is($t0, $t0tcfw);
 
-my $t3apspfw = Graph::APSP_Floyd_Warshall($g3);
+my $t3apspfw = $g3->APSP_Floyd_Warshall;
 
 is($t3, $t3apspfw);
 
@@ -399,5 +399,26 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     is ("@{[sort $tc2->path_vertices(0,1)]}", "0 1");
     is ("@{[sort $tc2->path_vertices(0,2)]}", "0 1 2");
     is ("@{[sort $tc2->path_vertices(1,2)]}", "1 2");
+}
 
+{
+    # From Jon Freeman.
+    my @example = ( [ 1, 3, -2 ],
+                    [ 3, 4, 2 ],
+                    [ 4, 2, -1 ],
+                    [ 2, 1, 4 ],
+                    [ 2, 3, 3 ] );
+    my $g = Graph::Directed->new;
+    $g->add_weighted_edge(@$_) for @example;
+    my $apsp = $g->APSP_Floyd_Warshall();
+    # The output from APSP_Floyd_Warshall was non-deterministically
+    # incorrect for two of the possible vertex pairs due to an "|| 1"
+    # instead of defined-or across the 1-3-4 path which had "distance" 2+-2=0
+    my @bad_edges = ( [1, 2, -1, [1,3,4,2]], [2, 4, 4, [2,1,3,4]] );
+    foreach my $e (@bad_edges) {
+        my ($u, $v, $length, $path) = @$e;
+        my @spvs = $apsp->path_vertices($u, $v);
+        is_deeply \@spvs, $path, "APSP $u $v" or diag explain \@spvs;
+        is $apsp->path_length($u, $v), $length, "length $u $v";
+    }
 }

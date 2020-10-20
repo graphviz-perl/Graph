@@ -140,8 +140,11 @@ sub _new {
 			# $d1a = $dm->get($v, $u) || 1;
 			# $d1b = $dm->get($u, $w) || 1;
 			$d0  = $didiv->[$diw];
-			$d1a = $didiv->[$diu] || 1;
-			$d1b = $didiu->[$diw] || 1;
+			# no override sum-zero paths which can happen with negative weights
+			$d1a = $didiv->[$diu];
+			$d1a = 1 unless defined $d1a;
+			$d1b = $didiu->[$diw];
+			$d1b = 1 unless defined $d1b;
 		    } else {
 			$d1a = 1;
 			$d1b = 1;
