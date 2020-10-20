@@ -156,6 +156,5 @@ t/u_te_me.t
 TODO
 util/cover.sh
 util/grand.pl
-util/renum.pl
 util/size.pl
 util/srand.sh

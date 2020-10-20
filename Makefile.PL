@@ -1,20 +1,13 @@
+use strict; use warnings;
 use ExtUtils::MakeMaker;
 
 require 5.006;
-use strict; use warnings;
-use Getopt::Long;
 
 my $mm_ver = $ExtUtils::MakeMaker::VERSION;
 if ($mm_ver =~ /_/) { # dev version
     $mm_ver = eval $mm_ver;
     die $@ if $@;
 }
-
-my $renum;
-
-GetOptions('renumber' => \$renum);
-
-do 'util/renum.pl' if $renum;
 
 my %PREREQ_PM =
     (
