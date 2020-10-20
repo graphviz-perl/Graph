@@ -112,36 +112,8 @@ sub _new {
 			$aiaiv |= $aiaiu;
 		    }
 		} else {
-		    if ($want_reflexive) {
-			$aiaiv |= $aiaiu;
-			vec($aiaiv, $aiu, 1) = 1;
-			# See XXX above.
-			# for my $w (@V) {
-			#     my $aiw = $ai{$w};
-			#     if (
-			# 	# $am->get($u, $w)
-			#	vec($aiaiu, $aiw, 1)
-			#	|| ($u eq $w)) {
-			#	# $am->set($v, $w)
-			#	vec($aiaiv, $aiw, 1) = 1
-			#	    ;
-			#     }
-			# }
-		    } else {
-			$aiaiv |= $aiaiu;
-			# See XXX above.
-			# for my $w (@V) {
-			#    my $aiw = $ai{$w};
-			#    if (
-			#	# $am->get($u, $w)
-			#	vec($aiaiu, $aiw, 1)
-			#       ) {
-			#	# $am->set($v, $w)
-			#	vec($aiaiv, $aiw, 1) = 1
-			#	    ;
-			#     }
-			# }
-		    }
+		    $aiaiv |= $aiaiu;
+		    vec($aiaiv, $aiu, 1) = 1 if $want_reflexive;
 		}
 		if ($aiaiv ne $aivivo) {
 		    $ai[$aiv] = $aiaiv;
