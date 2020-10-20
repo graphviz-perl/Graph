@@ -1,10 +1,5 @@
 Changes
 DESIGN
-MANIFEST
-Makefile.PL
-README
-RELEASE
-TODO
 lib/Graph.pm
 lib/Graph.pod
 lib/Graph/AdjacencyMap.pm
@@ -15,8 +10,8 @@ lib/Graph/AdjacencyMatrix.pm
 lib/Graph/Attribute.pm
 lib/Graph/BitMatrix.pm
 lib/Graph/Directed.pm
-lib/Graph/MSTHeapElem.pm
 lib/Graph/Matrix.pm
+lib/Graph/MSTHeapElem.pm
 lib/Graph/SPTHeapElem.pm
 lib/Graph/TransitiveClosure.pm
 lib/Graph/TransitiveClosure/Matrix.pm
@@ -25,6 +20,10 @@ lib/Graph/Traversal/BFS.pm
 lib/Graph/Traversal/DFS.pm
 lib/Graph/Undirected.pm
 lib/Graph/UnionFind.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+RELEASE
 t/00_use.t
 t/01_isa.t
 t/02_trap.t
@@ -112,9 +111,6 @@ t/83_bitmatrix.t
 t/84_all_cessors.t
 t/85_subgraph.t
 t/99_misc.t
-t/MyDGraph.pm
-t/MyGraph.pm
-t/MyUGraph.pm
 t/g02_00directed.t
 t/g02_01undirected.t
 t/g02_02multiple.t
@@ -125,6 +121,9 @@ t/g02_06transpose.t
 t/g02_07complete.t
 t/g02_08complement.t
 t/g02_09scc.t
+t/MyDGraph.pm
+t/MyGraph.pm
+t/MyUGraph.pm
 t/pod-coverage.t
 t/pod.t
 t/simple.pl
@@ -132,9 +131,9 @@ t/u_an_uf.t
 t/u_at1.t
 t/u_at2.t
 t/u_at3.t
-t/u_bill.t
 t/u_bb_rv.t
 t/u_bf.t
+t/u_bill.t
 t/u_bo_ap1.t
 t/u_bo_ap2.t
 t/u_bo_apx.t
@@ -154,6 +153,7 @@ t/u_sn_sva.t
 t/u_te_ae.t
 t/u_te_ea.t
 t/u_te_me.t
+TODO
 util/cover.sh
 util/grand.pl
 util/renum.pl
