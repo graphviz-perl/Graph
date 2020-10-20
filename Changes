@@ -1,3 +1,5 @@
+- metadata list test-deps as not runtime
+
 0.9705 2020-10-20
 - document clustering_coefficient return empty list on no vertices - RT#114094
 - apply lazy-load patch from Stephen Loyd - RT#123236

@@ -9,14 +9,11 @@ if ($mm_ver =~ /_/) { # dev version
     die $@ if $@;
 }
 
-my %PREREQ_PM =
-    (
+my %PREREQ_PM = (
     'List::Util'	=> 0,
     'Scalar::Util'	=> 0,
-    'Math::Complex'	=> 0,
-    'Test::More'	=> 0,
     'Heap'	        => '0.80',
-    );
+);
 
 if ($] >= 5.008) {
     $PREREQ_PM{'Storable'} = '2.05';
@@ -51,9 +48,16 @@ WriteMakefile(
                     url  => 'git://github.com/neilb/Graph.git',
                 },
             },
-          })
+            prereqs => {
+                test => {
+                    requires => {
+                        'Test::More'	=> 0,
+                        'Math::Complex'	=> 0,
+                    },
+                },
+            },
+        })
     ),
-
 );
 
 # Some Debian distributions have a broken List::Util (see rt.cpan.org #9568)
