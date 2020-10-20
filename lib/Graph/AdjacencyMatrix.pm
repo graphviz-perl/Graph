@@ -16,26 +16,17 @@ sub new {
     my ($class, $g, %opt) = @_;
     my $n;
     my @V = $g->vertices;
-    my $want_distance;
-    if (exists $opt{distance_matrix}) {
-	$want_distance = $opt{distance_matrix};
-	delete $opt{distance_matrix};
-    }
+    my $want_distance = delete $opt{distance_matrix};
     my $d = Graph::_defattr();
     if (exists $opt{attribute_name}) {
-	$d = $opt{attribute_name};
+	$d = delete $opt{attribute_name};
 	$want_distance++;
     }
-    delete $opt{attribute_name};
-    my $want_transitive = 0;
-    if (exists $opt{is_transitive}) {
-	$want_transitive = $opt{is_transitive};
-	delete $opt{is_transitive};
-    }
+    my $want_transitive = delete $opt{is_transitive};
     Graph::_opt_unknown(\%opt);
     if ($want_distance) {
 	$n = Graph::Matrix->new($g);
-	for my $v (@V) { $n->set($v, $v, 0) }
+	$n->set($_, $_, 0) for @V;
     }
     my $m = Graph::BitMatrix->new($g, connect_edges => $want_distance);
     my $self = bless [ $m, $n, \@V ], $class;
