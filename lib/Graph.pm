@@ -23,6 +23,7 @@ require 5.006; # Weak references are absolutely required.
 my $can_deep_copy_Storable;
 sub _can_deep_copy_Storable () {
     return $can_deep_copy_Storable if defined $can_deep_copy_Storable;
+    return $can_deep_copy_Storable = 0 if $] < 5.010; # no :load tag Safe 5.8
     eval {
         require Storable;
         require B::Deparse;
@@ -1744,7 +1745,7 @@ sub copy {
 sub _deep_copy_Storable {
     my $g = shift;
     require Safe;   # For deep_copy().
-    my $safe = new Safe;
+    my $safe = Safe->new;
     $safe->permit(qw/:load/);
     local $Storable::Deparse = 1;
     local $Storable::Eval = sub { $safe->reval($_[0]) };
