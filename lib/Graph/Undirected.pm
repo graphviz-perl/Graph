@@ -3,6 +3,7 @@ package Graph::Undirected;
 use Graph;
 use base 'Graph';
 use strict;
+use warnings;
 
 =pod
 

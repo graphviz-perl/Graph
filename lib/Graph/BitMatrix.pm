@@ -1,6 +1,7 @@
 package Graph::BitMatrix;
 
 use strict;
+use warnings;
 
 # $SIG{__DIE__ } = sub { use Carp; confess };
 # $SIG{__WARN__} = sub { use Carp; confess };

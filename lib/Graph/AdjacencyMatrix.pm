@@ -1,6 +1,7 @@
 package Graph::AdjacencyMatrix;
 
 use strict;
+use warnings;
 
 use Graph::BitMatrix;
 use Graph::Matrix;

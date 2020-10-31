@@ -1,6 +1,7 @@
 package Graph::Traversal::BFS;
 
 use strict;
+use warnings;
 
 use Graph::Traversal;
 use base 'Graph::Traversal';

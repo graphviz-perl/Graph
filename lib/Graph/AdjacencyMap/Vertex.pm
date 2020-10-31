@@ -5,6 +5,7 @@ package Graph::AdjacencyMap::Vertex;
 # ALMOST GUARANTEED TO CHANGE OR GO AWAY IN FUTURE RELEASES.
 
 use strict;
+use warnings;
 
 # $SIG{__DIE__ } = sub { use Carp; confess };
 # $SIG{__WARN__} = sub { use Carp; confess };

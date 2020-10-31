@@ -1,6 +1,7 @@
 package Graph::AdjacencyMap;
 
 use strict;
+use warnings;
 
 require Exporter;
 use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);

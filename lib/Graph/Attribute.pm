@@ -1,6 +1,7 @@
 package Graph::Attribute;
 
 use strict;
+use warnings;
 
 sub _F () { 0 }
 sub _COMPAT02 () { 0x00000001 }

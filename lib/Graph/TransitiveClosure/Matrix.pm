@@ -1,6 +1,7 @@
 package Graph::TransitiveClosure::Matrix;
 
 use strict;
+use warnings;
 
 use Graph::AdjacencyMatrix;
 use Graph::Matrix;

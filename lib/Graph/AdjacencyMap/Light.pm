@@ -5,6 +5,7 @@ package Graph::AdjacencyMap::Light;
 # ALMOST GUARANTEED TO CHANGE OR GO AWAY IN FUTURE RELEASES.
 
 use strict;
+use warnings;
 
 use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';

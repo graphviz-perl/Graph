@@ -1,6 +1,7 @@
 package Graph::UnionFind;
 
 use strict;
+use warnings;
 
 sub _PARENT  () { 0 }
 sub _RANK    () { 1 }

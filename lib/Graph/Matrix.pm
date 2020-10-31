@@ -4,6 +4,7 @@ package Graph::Matrix;
 # $SIG{__WARN__} = sub { use Carp; confess };
 
 use strict;
+use warnings;
 
 sub new {
     my ($class, $g) = @_;
