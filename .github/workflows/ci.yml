@@ -1,0 +1,74 @@
+name: CI Makefile
+
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+    branches: '*'
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - perl-version: '5.30'
+            release-test: true
+            coverage: true
+          - perl-version: '5.10'
+    container:
+      image: perl:${{ matrix.perl-version }}
+    name: Perl ${{ matrix.perl-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Regular tests # before others to make sure they work the the declared dependencies
+        run: |
+          cpanm --installdeps .
+          perl Makefile.PL
+          make
+          make test
+
+      - name: Run release tests
+        if: ${{ matrix.release-test }}
+        env:
+          RELEASE_TESTING: 1
+        run: |
+          cpanm -n --installdeps --with-develop .
+          cpanm Test::Pod::Coverage Test::Pod
+          perl Makefile.PL
+          make
+          make test
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: perl -V
+        run: |
+          perl -V
+      - name: Run tests
+        run: |
+          curl -L https://cpanmin.us | perl - -n --installdeps .
+          perl Makefile.PL
+          make
+          make test
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Set git to use LF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - uses: actions/checkout@v2
+      - name: perl -V
+        run: |
+          perl -V
+      - name: Run tests
+        run: |
+          cpanm --installdeps .
+          perl Makefile.PL
+          make
+          make test
