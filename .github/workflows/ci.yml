@@ -17,7 +17,7 @@ jobs:
         include:
           - perl-version: '5.30'
             os: ubuntu-latest
-            #release-test: true # none yet
+            release-test: true
             #coverage: true # needs the secret configured to work
     container: perl:${{ matrix.perl-version }}
     steps:

@@ -125,8 +125,6 @@ t/g02_09scc.t
 t/MyDGraph.pm
 t/MyGraph.pm
 t/MyUGraph.pm
-t/pod-coverage.t
-t/pod.t
 t/simple.pl
 t/u_an_uf.t
 t/u_at1.t
