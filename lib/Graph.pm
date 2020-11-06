@@ -94,20 +94,21 @@ use Graph::Attribute array => _A, map => 'graph';
 
 sub _COMPAT02 () { 0x00000001 }
 
+sub _stringify_vertex {
+    return "$_[0]" unless ref($_[0]) eq 'ARRAY';
+    "[" . join(" ", @{ $_[0] }) . "]";
+}
+
 sub stringify {
     my $g = shift;
     my $u = $g->is_undirected;
     my $e = $u ? '=' : '-';
     my @e =
 	map {
-	    my @v =
-		map {
-		    ref($_) eq 'ARRAY' ? "[" . join(" ", @$_) . "]" : "$_"
-		}
-	    @$_;
+	    my @v = map _stringify_vertex($_), @$_;
 	    join($e, $u ? sort { "$a" cmp "$b" } @v : @v) } $g->edges05;
     my @s = sort { "$a" cmp "$b" } @e;
-    push @s, sort { "$a" cmp "$b" } $g->isolated_vertices;
+    push @s, sort { "$a" cmp "$b" } map _stringify_vertex($_), $g->isolated_vertices;
     join(",", @s);
 }
 

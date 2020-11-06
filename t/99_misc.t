@@ -1,6 +1,6 @@
 use strict; use warnings;
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -30,6 +30,16 @@ is($db0, "b");
 is($db1, "b-d,b-e");
 is($db2, "b-d,b-e");
 is($db3, "b-d,b-e");
+
+{
+  my $gh = Graph->new(hypervertexed => 1);
+  $gh->add_vertex(@$_) for (
+      ['a'], [qw(a c)], [qw(a b c)], [qw(a c e)], [qw(a c d)], [],
+  );
+  $gh->add_edge('a', 'b');
+  $gh->add_edge('c', 'd');
+  is $gh, "a-b,c-d,[],[a b c],[a c d],[a c e],[a c],[a],[b],[c],[d],[e]";
+}
 
 my $g1 = Graph::Undirected->new;
 

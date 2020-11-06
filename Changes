@@ -1,4 +1,5 @@
 - update metadata for Test::More version dep
+- stringify hypervertices right
 
 0.9707 2020-10-31
 - can't use Safe, ergo Storable, on 5.8
