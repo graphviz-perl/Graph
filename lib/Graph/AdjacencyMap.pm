@@ -467,6 +467,10 @@ Set the path by @ids.
 
 Set the path in the Map by the multi id.
 
+=item rename_path($from, $to)
+
+Rename the path.
+
 =back
 
 =head1 AUTHOR AND COPYRIGHT

@@ -603,6 +603,15 @@ even (0th, 2nd, 4th, ...) items are start vertices and the odd
 (1st, 3rd, 5th, ...) are the corresponding end vertices.
 Returns the graph.
 
+=item rename_vertex
+
+    $g->rename_vertex('d', 'e')
+
+Renames a vertex. It retains all of its edges. Throws exception if
+doesn't exist.
+
+Returns the graph.
+
 =back
 
 =head2 Accessors

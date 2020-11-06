@@ -1711,6 +1711,12 @@ sub add_edges {
     return $g;
 }
 
+sub rename_vertex {
+    my $g = shift;
+    $g->[ $_ ]->rename_path(@_) for _V, _E;
+    return $g;
+}
+
 ###
 # More constructors.
 #

@@ -157,6 +157,20 @@ sub del_path {
     return 0;
 }
 
+sub rename_path {
+    my ($m, $from, $to) = @_;
+    my ($n, $f, $a, $i, $s, $p) = @$m;
+    return 0 unless exists $s->{ $from };
+    $s->{ $to } = delete $s->{ $from };
+    if ($a == 2) {
+	$_->{ $to } = delete $_->{ $from }
+	    for map $p->{ $_ }, keys %{ $s->{ $to } };
+    } else {
+	$i->{ $s->{ $to } } = $to;
+    }
+    return 1;
+}
+
 sub __successors {
     my $E = shift;
     return wantarray ? () : 0 unless defined $E->[ _s ];

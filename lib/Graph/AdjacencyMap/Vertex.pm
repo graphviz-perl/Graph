@@ -148,6 +148,15 @@ sub del_path {
     return 1;
 }
 
+sub rename_path {
+    my ($m, $from, $to) = @_;
+    my ($e, $n, $p, $k, $l) = $m->__get_path_node( $from );
+    return unless $e;
+    $m->[ _i ]{ ref $n ? $n->[ _ni ] : $n } = $to;
+    $p->[ -1 ]->{ $to } = delete $p->[ -1 ]->{ $l };
+    return 1;
+}
+
 sub del_path_by_multi_id {
     my $m = shift;
     my $f = $m->[ _f ];
