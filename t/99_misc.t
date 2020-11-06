@@ -7,12 +7,9 @@ use Graph::Undirected;
 
 my $g0 = Graph::Directed->new;
 
-$g0->add_edge(qw(a b));
-$g0->add_edge(qw(a c));
-$g0->add_edge(qw(b d));
-$g0->add_edge(qw(b e));
-$g0->add_edge(qw(c f));
-$g0->add_edge(qw(c g));
+my @E = ([qw(a b)], [qw(a c)], [qw(b d)], [qw(b e)], [qw(c f)], [qw(c g)]);
+
+$g0->add_edge(@$_) for @E;
 
 my $da0 = $g0->subgraph_by_radius('a', 0);
 my $da1 = $g0->subgraph_by_radius('a', 1);
