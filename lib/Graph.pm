@@ -485,7 +485,7 @@ sub _add_edge {
 	    push @e, $V->[ _s ]->{ $v };
 	}
     } else {
-	my $h = $g->[ _V ]->_is_HYPER;
+	my $h = $V->_is_HYPER;
 	for my $v ( @_ ) {
 	    my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
 	    $g->add_vertex( @v ) unless $V->has_path( @v );
@@ -529,7 +529,7 @@ sub _vertex_ids {
 	    push @e, $V->[ _s ]->{ $v };
 	}
     } else {
-	my $h = $g->[ _V ]->_is_HYPER;
+	my $h = $V->_is_HYPER;
 	for my $v ( @_ ) {
 	    my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
 	    return () unless $V->has_path( @v );
