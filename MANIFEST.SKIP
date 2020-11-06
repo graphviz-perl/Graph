@@ -1,0 +1,51 @@
+# Avoid version control files.
+,v$
+\B\.cvsignore$
+\B\.git\b
+\B\.gitignore\b
+\B\.svn\b
+\bCVS\b
+\bRCS\b
+
+# Avoid Makemaker generated and utility files.
+\bblib
+\bblibdirs$
+\bpm_to_blib$
+\bMakefile$
+\bMakeMaker-\d
+
+# Avoid Module::Build generated and utility files.
+\b_build
+\bBuild$
+\bBuild.bat$
+
+# Avoid Devel::Cover generated files
+\bcover_db
+
+# Avoid temp and backup files.
+~$
+\#$
+\.#
+\.bak$
+\.old$
+\.rej$
+\.tmp$
+
+# Avoid OS-specific files/dirs
+#   Mac OSX metadata
+\B\.DS_Store
+#   Mac OSX SMB mount metadata files
+\B\._
+
+# Avoid UltraEdit files.
+\.prj$
+\.pui$
+
+^MYMETA\.
+
+^Graph-.*
+\.swp$
+
+^\.github/
+^MANIFEST\.SKIP$
+^xt/
