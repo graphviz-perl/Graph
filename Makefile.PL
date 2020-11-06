@@ -51,7 +51,7 @@ WriteMakefile(
             prereqs => {
                 test => {
                     requires => {
-                        'Test::More'	=> 0,
+                        'Test::More'	=> '0.82', # explain
                         'Math::Complex'	=> 0,
                     },
                 },
