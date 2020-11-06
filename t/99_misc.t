@@ -1,6 +1,6 @@
 use strict; use warnings;
 
-use Test::More tests => 31;
+use Test::More tests => 34;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -46,6 +46,8 @@ for ({}, {countvertexed => 1}, {hypervertexed => 1}) {
   $gr->add_edge(@$_) for @E;
   $gr->rename_vertex('b', 'b1');
   is $gr->subgraph_by_radius('a', 3), "a-b1,a-c,b1-d,b1-e,c-f,c-g";
+  $gr->rename_vertices(sub { uc $_[0] });
+  is $gr->subgraph_by_radius('A', 3), "A-B1,A-C,B1-D,B1-E,C-F,C-G";
 }
 
 my $g1 = Graph::Undirected->new;

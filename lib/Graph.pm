@@ -1717,6 +1717,23 @@ sub rename_vertex {
     return $g;
 }
 
+sub rename_vertices {
+    my ($g, $code) = @_;
+    my %seen;
+    for ($g->vertices) {
+        my $from;
+        if (ref) {
+            next if @$_ > 1;
+            ($from) = @$_;
+        } else {
+            $from = $_;
+        }
+        next if $seen{$from}++;
+        $g->rename_vertex($from, $code->($from));
+    }
+    return $g;
+}
+
 ###
 # More constructors.
 #

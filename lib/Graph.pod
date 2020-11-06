@@ -612,6 +612,14 @@ doesn't exist.
 
 Returns the graph.
 
+=item rename_vertices
+
+    $g->rename_vertices(sub { uc $_[0] })
+
+Calls a function for each vertex-name, renaming it to the return value.
+
+Returns the graph.
+
 =back
 
 =head2 Accessors
