@@ -22,9 +22,8 @@ jobs:
     container: perl:${{ matrix.perl-version }}
     steps:
       - uses: actions/checkout@v2
-      - run: cpanm -n --installdeps .
-      - name: perl -V
-        run: perl -V
+      - run: cpanm -n --with-recommends --installdeps .
+      - run: perl -V
       - name: Run release tests # before others as may install useful stuff
         if: ${{ matrix.release-test }}
         env:
@@ -56,7 +55,6 @@ jobs:
       - uses: perl-actions/install-with-cpanm@v1
         with:
           args: -n --installdeps .
-      - name: perl -V
-        run: perl -V
+      - run: perl -V
       - name: Run tests
         run: prove -l -j4 t

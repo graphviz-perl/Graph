@@ -60,6 +60,9 @@ WriteMakefile(
                         'Test::More'	=> '0.82', # explain
                         'Math::Complex'	=> 0,
                     },
+                    recommends => {
+                        'App::Prove' => '3.00', # prove -j4
+                    },
                 },
             },
         })
