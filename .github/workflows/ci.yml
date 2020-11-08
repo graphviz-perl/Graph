@@ -18,7 +18,7 @@ jobs:
           - perl-version: '5.30'
             os: ubuntu-latest
             release-test: true
-            #coverage: true # needs the secret configured to work
+            coverage: true
     container: perl:${{ matrix.perl-version }}
     steps:
       - uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
       - name: Run tests (with coverage)
         if: ${{ matrix.coverage }}
         env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cpanm -n Devel::Cover::Report::Coveralls
           cover -test -report Coveralls
