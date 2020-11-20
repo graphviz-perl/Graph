@@ -189,40 +189,17 @@ sub _new {
 sub new {
     my ($class, $g, %opt) = @_;
     my %am_opt = (distance_matrix => 1);
-    if (exists $opt{attribute_name}) {
-	$am_opt{attribute_name} = $opt{attribute_name};
-	delete $opt{attribute_name};
-    }
-    if ($opt{distance_matrix}) {
-	$am_opt{distance_matrix} = $opt{distance_matrix};
-    }
-    delete $opt{distance_matrix};
-    if (exists $opt{path}) {
-	$opt{path_length}   = $opt{path};
-	$opt{path_vertices} = $opt{path};
-	delete $opt{path};
-    }
-    my $want_path_length;
-    if (exists $opt{path_length}) {
-	$want_path_length = $opt{path_length};
-	delete $opt{path_length};
-    }
-    my $want_path_vertices;
-    if (exists $opt{path_vertices}) {
-	$want_path_vertices = $opt{path_vertices};
-	delete $opt{path_vertices};
-    }
-    my $want_reflexive;
-    if (exists $opt{reflexive}) {
-	$want_reflexive = $opt{reflexive};
-	delete $opt{reflexive};
-    }
-    my $want_transitive;
-    if (exists $opt{is_transitive}) {
-	$want_transitive = $opt{is_transitive};
-	$am_opt{is_transitive} = $want_transitive;
-	delete $opt{is_transitive};
-    }
+    $am_opt{attribute_name} = delete $opt{attribute_name}
+	if exists $opt{attribute_name};
+    $am_opt{distance_matrix} = delete $opt{distance_matrix}
+	if $opt{distance_matrix};
+    $opt{path_length} = $opt{path_vertices} = delete $opt{path}
+	if exists $opt{path};
+    my $want_path_length = delete $opt{path_length};
+    my $want_path_vertices = delete $opt{path_vertices};
+    my $want_reflexive = delete $opt{reflexive};
+    $am_opt{is_transitive} = my $want_transitive = delete $opt{is_transitive}
+	if exists $opt{is_transitive};
     die "Graph::TransitiveClosure::Matrix::new: Unknown options: @{[map { qq['$_' => $opt{$_}]} keys %opt]}"
 	if keys %opt;
     $want_reflexive = 1 unless defined $want_reflexive;
