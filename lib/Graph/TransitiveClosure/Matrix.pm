@@ -7,7 +7,7 @@ use Graph::AdjacencyMatrix;
 use Graph::Matrix;
 
 sub _new {
-    my ($g, $class, $opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices) = @_;
+    my ($g, $class, $opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices, $want_path_count) = @_;
     my $m = Graph::AdjacencyMatrix->new($g, %$opt);
     my @V = $g->vertices;
     my $am = $m->adjacency_matrix;
@@ -124,6 +124,8 @@ sub _new {
 	    if ($want_path && !$want_transitive) {
 		for my $w (@V) {
 		    my $aiw = $ai{$w};
+		    my $diw = $di{$w};
+		    $didiv->[$diw] ||= 0 if $want_path_count; # force defined
 		    next unless
 			# See XXX above.
 			# $am->get($v, $u)
@@ -133,7 +135,10 @@ sub _new {
 			# $am->get($u, $w)
 			vec($aiaiu, $aiw, 1)
 			    ;
-		    my $diw = $di{$w};
+		    if ($want_path_count) {
+			$didiv->[$diw]++ if $w ne $u and $w ne $v and $u ne $v;
+			next;
+		    }
 		    my ($d0, $d1a, $d1b);
 		    if (defined $dm) {
 			# See XXX above.
@@ -196,6 +201,7 @@ sub new {
     $opt{path_length} = $opt{path_vertices} = delete $opt{path}
 	if exists $opt{path};
     my $want_path_length = delete $opt{path_length};
+    my $want_path_count = delete $opt{path_count};
     my $want_path_vertices = delete $opt{path_vertices};
     my $want_reflexive = delete $opt{reflexive};
     $am_opt{is_transitive} = my $want_transitive = delete $opt{is_transitive}
@@ -203,12 +209,12 @@ sub new {
     die "Graph::TransitiveClosure::Matrix::new: Unknown options: @{[map { qq['$_' => $opt{$_}]} keys %opt]}"
 	if keys %opt;
     $want_reflexive = 1 unless defined $want_reflexive;
-    my $want_path = $want_path_length || $want_path_vertices;
+    my $want_path = $want_path_length || $want_path_vertices || $want_path_count;
     # $g->expect_dag if $want_path;
     _new($g, $class,
 	 \%am_opt,
 	 $want_transitive, $want_reflexive,
-	 $want_path, $want_path_vertices);
+	 $want_path, $want_path_vertices, $want_path_count);
 }
 
 sub has_vertices {
@@ -367,6 +373,14 @@ they can be retrieved using the path_length() method.
 By default the paths are not computed, only the boolean transitivity.
 By using true for C<path_vertices> also the paths will be computed,
 they can be retrieved using the path_vertices() method.
+
+=item path_count => boolean
+
+As an alternative to setting C<path_length>, if this is true then the
+matrix will store the quantity of paths between the two vertices. This
+is still retrieved using the path_length() method. The path vertices
+will not be available. You should probably only use this on a DAG,
+and not with C<reflexive>.
 
 =back
 
