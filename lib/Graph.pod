@@ -1747,7 +1747,7 @@ See L</"Clearing cached results">.
 Return as a graph the single-source shortest paths of the graph using
 Bellman-Ford's algorithm.  The graph can contain negative edges but
 not negative cycles (negative cycles cause the algorithm to abort
-with an error message C<Graph::SPT_Bellman_Ford: negative cycle exists/>).
+with an error message C<Graph::SPT_Bellman_Ford: negative cycle exists>).
 
 You can choose the start vertex of the result with either a single
 vertex argument or with $opt{ first_root }, otherwise a random vertex
@@ -1772,7 +1772,7 @@ can be retrieved by
 vertex can have several successors.  You can first find the
 C<neighbors()> vertices and then remove the predecessor vertex.)
 
-If you want to find the shortes path between two vertices,
+If you want to find the shortest path between two vertices,
 see L</SP_Bellman_Ford>.
 
 =item SSSP_Bellman_Ford
