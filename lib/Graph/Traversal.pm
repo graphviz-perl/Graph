@@ -578,7 +578,7 @@ The parameters C<first_root> and C<next_successor> have a 'hierarchy'
 of how they are determined: if they have been explicitly defined, use
 that value.  If not, use the value of C<next_alphabetic>, if that has
 been defined.  If not, use the value of C<next_numeric>, if that has
-been defined.  If not, the next vertex to be visited is chose randomly.
+been defined.  If not, the next vertex to be visited is chosen randomly.
 
 =head2 Methods
 

@@ -484,7 +484,7 @@
       affect the result graph but it of course affected the
       resulting vertex 'weight' attributes.
 
-    - Add tests to t/70_spt.t for the vertex and egde attributes
+    - Add tests to t/70_spt.t for the vertex and edge attributes
       of the SPT_Dijkstra() and SPT_Bellman_Ford() results.
 
     - Minor documentation tweaks, most importantly clarify the

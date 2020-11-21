@@ -113,7 +113,7 @@ I<connected components> of the graph (see L</is_connected>,
 L</connected_components>, L</connected_component_by_vertex>,
 L</connected_component_by_index>, and L</same_connected_components>).
 If C<unionfind> is used, adding edges (and vertices) becomes slower,
-but connectedness queries become faster.  You B<must not> delete egdes or
+but connectedness queries become faster.  You B<must not> delete edges or
 vertices of an unionfind graph, only add them.  You can test a graph for
 "union-findness" with
 
