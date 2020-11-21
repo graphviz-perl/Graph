@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 85;
+use Test::More tests => 86;
 
 use Graph;
 my $g = Graph->new;
@@ -108,6 +108,7 @@ is( $g->vertices, 3 );
 ok($g->set_vertex_attributes('a',
 		             { 'color' => 'pearl', 'weight' => 'heavy' }));
 $attr = $g->get_vertex_attributes('a');
+is_deeply [ $g->get_vertex_attributes('z') ], [ undef ];
 is(scalar keys %$attr, 2);
 is($attr->{color},  'pearl');
 is($attr->{weight}, 'heavy');

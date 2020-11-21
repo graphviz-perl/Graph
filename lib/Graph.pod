@@ -2181,7 +2181,8 @@ reserved for the internal use of the Graph module.
 
     $attr = $g->get_vertex_attributes($v)
 
-Return all the attributes of the vertex as an anonymous hash.
+Return all the attributes of the vertex as an anonymous hash, or C<undef>
+if no such vertex.
 
 =item get_vertex_attribute_names
 
@@ -2293,7 +2294,8 @@ reserved for the internal use of the Graph module.
 
     $attr = $g->get_edge_attributes($u, $v)
 
-Return all the attributes of the edge as an anonymous hash.
+Return all the attributes of the edge as an anonymous hash, or C<undef>
+if no such edge.
 
 =item get_edge_attribute_names
 

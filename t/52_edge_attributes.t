@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 101;
+use Test::More tests => 102;
 
 use Graph;
 my $g = Graph->new;
@@ -38,6 +38,7 @@ my @val  = $g->get_edge_attribute_values("a", "b");
 is( scalar keys %$attr, 1 );
 is( scalar @name,       1 );
 is( scalar @val,        1 );
+is_deeply [ $g->get_edge_attributes("a", "z") ], [ undef ];
 
 is( $attr->{color}, "green" );
 is( $name[0],       "color" );

@@ -1373,7 +1373,7 @@ sub has_vertex_attribute_by_id {
 sub get_vertex_attributes {
     my $g = shift;
     $g->expect_non_multivertexed;
-    return unless $g->has_vertex( @_ );
+    return undef unless $g->has_vertex( @_ );
     my $a = $g->[ _V ]->_get_path_attrs( @_ );
     ($g->is_compat02) ? (defined $a ? %{ $a } : ()) : $a;
 }
@@ -1552,7 +1552,7 @@ sub has_edge_attribute_by_id {
 sub get_edge_attributes {
     my $g = shift;
     $g->expect_non_multiedged;
-    return unless $g->has_edge( @_ );
+    return undef unless $g->has_edge( @_ );
     my $a = $g->[ _E ]->_get_path_attrs( $g->_vertex_ids( @_ ) );
     ($g->is_compat02) ? (defined $a ? %{ $a } : ()) : $a;
 }
