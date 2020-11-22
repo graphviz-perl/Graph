@@ -1742,6 +1742,16 @@ sub as_hashes {
     ( \%n, \%e );
 }
 
+sub ingest {
+    my ($g, $g2) = @_;
+    for my $v ($g2->vertices) {
+        $g->set_vertex_attributes($v, $g2->get_vertex_attributes($v));
+        $g->set_edge_attributes(@$_, $g2->get_edge_attributes(@$_))
+            for $g2->edges_from($v);
+    }
+    $g;
+}
+
 ###
 # More constructors.
 #

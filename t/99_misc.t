@@ -1,6 +1,6 @@
 use strict; use warnings;
 
-use Test::More tests => 35;
+use Test::More tests => 36;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -39,6 +39,18 @@ is($db0, "b");
 is($db1, "b-d,b-e");
 is($db2, "b-d,b-e");
 is($db3, "b-d,b-e");
+
+{
+    my $gi0 = Graph->new;
+    $gi0->set_edge_attribute(qw(a b), weight => 1);
+    my $gi1 = Graph->new;
+    $gi1->set_vertex_attribute('x', shape => 1);
+    $gi1->set_edge_attribute(qw(x y), weight => 2);
+    is_deeply [ $gi0->ingest($gi1)->as_hashes ], [
+        { x => { shape => 1 }, map +($_ => {}), qw(a b y) },
+        { a => { b => { weight => 1 } }, x => { y => { weight => 2 } } },
+    ];
+}
 
 {
   my $gh = Graph->new(hypervertexed => 1);

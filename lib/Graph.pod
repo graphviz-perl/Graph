@@ -620,6 +620,13 @@ Calls a function for each vertex-name, renaming it to the return value.
 
 Returns the graph.
 
+=item ingest
+
+    $g->ingest($g2)
+
+Ingests all the vertices and edges of the given graph, including
+attributes. Returns the ingesting graph.
+
 =back
 
 =head2 Accessors
