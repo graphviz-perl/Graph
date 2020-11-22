@@ -1,6 +1,6 @@
 use strict; use warnings;
 
-use Test::More tests => 34;
+use Test::More tests => 35;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -10,6 +10,15 @@ my $g0 = Graph::Directed->new;
 my @E = ([qw(a b)], [qw(a c)], [qw(b d)], [qw(b e)], [qw(c f)], [qw(c g)]);
 
 $g0->add_edge(@$_) for @E;
+
+is_deeply [ $g0->as_hashes ], [
+    { map +($_ => {}), qw(a b c d e f g) },
+    {
+      a => { map +($_ => {}), qw(b c) },
+      b => { map +($_ => {}), qw(d e) },
+      c => { map +($_ => {}), qw(f g) },
+    },
+];
 
 my $da0 = $g0->subgraph_by_radius('a', 0);
 my $da1 = $g0->subgraph_by_radius('a', 1);

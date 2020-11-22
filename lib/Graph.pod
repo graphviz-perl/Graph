@@ -1266,6 +1266,14 @@ Return the self-loop vertices of the graph.
 In scalar context return the number of self-loop vertices.
 See L</is_self_loop_vertex> for the definition of a self-loop vertex.
 
+=item as_hashes
+
+    ($nodes, $edges) = $g->as_hashes
+
+Return hash-refs which map vertices to their attributes, and for edges,
+a two-level hash mapping the predecessor to its successors, mapped to
+the attributes.
+
 =back
 
 =head2 Connected Graphs and Their Components

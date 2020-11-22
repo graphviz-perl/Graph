@@ -1,5 +1,6 @@
 - add path_count option to TransitiveClosure
 - get_{edge,vertex}_attributes undef if no such entity, in list context
+- as_hashes method
 
 0.9708 2020-11-06
 - update metadata for Test::More version dep

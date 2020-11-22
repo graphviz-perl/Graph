@@ -1734,6 +1734,14 @@ sub rename_vertices {
     return $g;
 }
 
+sub as_hashes {
+    my ($g) = @_;
+    my %e;
+    $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {} for $g->edges;
+    my %n = map +( $_ => $g->get_vertex_attributes($_) || {} ), $g->vertices;
+    ( \%n, \%e );
+}
+
 ###
 # More constructors.
 #
