@@ -99,6 +99,10 @@ Graph::TransitiveClosure - create and query transitive closure of graph
     my $tcg = Graph::TransitiveClosure->new($g, path_vertices => 1);
     $tcg->path_vertices($u, $v)
 
+    # see how many paths exist from $u to $v
+    my $tcg = Graph::TransitiveClosure->new($g, path_count => 1);
+    $tcg->path_length($u, $v)
+
     # Both path_length and path_vertices.
     my $tcg = Graph::TransitiveClosure->new($g, path => 1);
     $tcg->path_vertices($u, $v)
