@@ -6,6 +6,11 @@ use warnings;
 use Graph::AdjacencyMatrix;
 use Graph::Matrix;
 
+sub _A() { 0 } # adjacency
+sub _D() { 1 } # distance
+sub _P() { 2 } # predecessors
+sub _V() { 3 } # vertices
+
 sub _new {
     my ($g, $class, $opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices, $want_path_count) = @_;
     my $m = Graph::AdjacencyMatrix->new($g, %$opt);
@@ -220,7 +225,7 @@ sub new {
 sub has_vertices {
     my $tc = shift;
     for my $v (@_) {
-	return 0 unless exists $tc->[3]->{ $v };
+	return 0 unless exists $tc->[ _V ]->{ $v };
     }
     return 1;
 }
@@ -229,7 +234,7 @@ sub is_reachable {
     my ($tc, $u, $v) = @_;
     return undef unless $tc->has_vertices($u, $v);
     return 1 if $u eq $v;
-    $tc->[0]->get($u, $v);
+    $tc->[ _A ]->get($u, $v);
 }
 
 sub is_transitive {
@@ -238,7 +243,7 @@ sub is_transitive {
     } else {		# A TC graph.
 	my ($tc, $u, $v) = @_;
 	return undef unless $tc->has_vertices($u, $v);
-	$tc->[0]->get($u, $v);
+	$tc->[ _A ]->get($u, $v);
     }
 }
 
@@ -251,14 +256,14 @@ sub path_length {
     my ($tc, $u, $v) = @_;
     return undef unless $tc->has_vertices($u, $v);
     return 0 if $u eq $v;
-    $tc->[1]->get($u, $v);
+    $tc->[ _D ]->get($u, $v);
 }
 
 sub path_predecessor {
     my ($tc, $u, $v) = @_;
     return undef if $u eq $v;
     return undef unless $tc->has_vertices($u, $v);
-    $tc->[2]->get($u, $v);
+    $tc->[ _P ]->get($u, $v);
 }
 
 sub path_vertices {
@@ -270,7 +275,7 @@ sub path_vertices {
 	last unless defined($u = $tc->path_predecessor($u, $v));
 	push @v, $u;
     }
-    $tc->[2]->set($u, $v, [ @v ]) if @v;
+    $tc->[ _P ]->set($u, $v, [ @v ]) if @v;
     return @v;
 }
 
