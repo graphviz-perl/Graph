@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 59;
+use Test::More tests => 60;
 
 use Graph;
 my $g = Graph->new(multivertexed => 1);
@@ -113,3 +113,9 @@ my $h = Graph->new(multivertexed => 1);
 eval { $h->set_vertex_attribute("foo", "color", "gold") };
 like($@, qr/set_vertex_attribute: expected non-multivertexed/);
 
+$h->ingest($g);
+is_deeply(($h->as_hashes)[0], {
+    a => { hot => { color => 'pearl' } },
+    b => { cool => { weight => 43 } },
+    c => { cool => { weight => 44 } }
+});
