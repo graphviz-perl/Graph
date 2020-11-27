@@ -320,7 +320,7 @@ Graph::TransitiveClosure::Matrix - create and query transitive closure of graph
     # is_reachable(u, v) is always reflexive.
     $tcm->is_reachable($u, $v)
 
-    # The reflexivity of is_transitive(u, v) depends of the reflexivity
+    # The reflexivity of is_transitive(u, v) depends on the reflexivity
     # of the transitive closure.
     $tcg->is_transitive($u, $v)
 

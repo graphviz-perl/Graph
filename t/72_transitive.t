@@ -85,22 +85,11 @@ ok(!$g1->is_transitive);
 
 my $t1 = Graph::TransitiveClosure->new($g1);
 
-ok( $t1->has_edge(qw(a a)));
-ok( $t1->has_edge(qw(a b)));
-ok( $t1->has_edge(qw(a c)));
-ok( $t1->has_edge(qw(d c)));
-ok( $t1->has_edge(qw(b a)));
-ok( $t1->has_edge(qw(b b)));
-ok( $t1->has_edge(qw(b c)));
-ok( $t1->has_edge(qw(b d)));
-ok( $t1->has_edge(qw(c a)));
-ok( $t1->has_edge(qw(c b)));
-ok( $t1->has_edge(qw(c c)));
-ok( $t1->has_edge(qw(c d)));
-ok( $t1->has_edge(qw(d a)));
-ok( $t1->has_edge(qw(d b)));
-ok( $t1->has_edge(qw(d c)));
-ok( $t1->has_edge(qw(d d)));
+ok $t1->has_edge(@$_) for (
+    [qw(a a)], [qw(a b)], [qw(a c)], [qw(d c)], [qw(b a)], [qw(b b)],
+    [qw(b c)], [qw(b d)], [qw(c a)], [qw(c b)], [qw(c c)], [qw(c d)],
+    [qw(d a)], [qw(d b)], [qw(d c)], [qw(d d)],
+);
 
 ok( $t1->is_transitive);
 
