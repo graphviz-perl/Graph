@@ -5,11 +5,13 @@ use warnings;
 
 use Graph::AdjacencyMatrix;
 use Graph::Matrix;
+use Scalar::Util qw(weaken);
 
 sub _A() { 0 } # adjacency
 sub _D() { 1 } # distance
 sub _P() { 2 } # predecessors
 sub _V() { 3 } # vertices
+sub _G() { 4 } # the original graph (OG)
 
 sub _new {
     my ($g, $class, $opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices, $want_path_count) = @_;
@@ -193,7 +195,8 @@ sub _new {
 	$pm->[0] = \@pi;
 	$pm->[1] = \%pi;
     }
-    bless [ $am, $dm, $pm, \%V ], $class;
+    weaken(my $og = $g);
+    bless [ $am, $dm, $pm, \%V, $og ], $class;
 }
 
 sub new {
@@ -277,6 +280,19 @@ sub path_vertices {
     }
     $tc->[ _P ]->set($u, $v, [ @v ]) if @v;
     return @v;
+}
+
+sub all_paths {
+    my ($tc, $u, $v) = @_;
+    return if $u eq $v;
+    my @found;
+    push @found, [$u, $v] if $tc->[ _G ]->has_edge($u, $v);
+    push @found,
+        map [$u, @$_],
+        map $tc->all_paths($_, $v),
+        grep $tc->is_reachable($_, $v),
+        grep $_ ne $v, $tc->[ _G ]->successors($u);
+    @found;
 }
 
 1;
@@ -429,6 +445,10 @@ Return the list of vertices in the transitive closure matrix.
 
 Return the predecessor of vertex $v in the transitive closure path
 going back to vertex $u.
+
+=item all_paths($u, $v)
+
+Return list of array-refs with all the paths from $u to $v.
 
 =back
 

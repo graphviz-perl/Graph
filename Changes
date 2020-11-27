@@ -1,3 +1,5 @@
+- all_paths method
+
 0.9709 2020-11-22
 - add path_count option to TransitiveClosure
 - get_{edge,vertex}_attributes undef if no such entity, in list context

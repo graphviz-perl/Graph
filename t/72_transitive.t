@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 243;
+use Test::More tests => 255;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -449,5 +449,34 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     foreach my $e (@counts) {
         my ($u, $v, $count) = @$e;
         is $path_counts->path_length($u, $v), $count, "count $u $v";
+    }
+}
+
+{
+    my @example = ( [ 1, 2 ],
+                    [ 1, 3 ],
+                    [ 1, 4 ], # direct link to two away
+                    [ 3, 4 ] );
+    my $g = Graph::Directed->new;
+    $g->add_edge(@$_) for @example;
+    my $tcg = $g->transitive_closure;
+    my @paths = (
+	[ 1, 2, [[1,2]] ],
+	[ 1, 3, [[1,3]] ],
+	[ 1, 4, [[1,3,4], [1,4]] ],
+	[ 2, 1, [] ],
+	[ 2, 3, [] ],
+	[ 2, 4, [] ],
+	[ 3, 1, [] ],
+	[ 3, 2, [] ],
+	[ 3, 4, [[3,4]] ],
+	[ 4, 1, [] ],
+	[ 4, 2, [] ],
+	[ 4, 3, [] ],
+    );
+    foreach my $t (@paths) {
+        my ($u, $v, $paths) = @$t;
+        my $got = [ sort { $a->[1] <=> $b->[1] } $g->all_paths($u, $v) ];
+        is_deeply $got, $paths, "paths $u $v" or diag explain $got;
     }
 }

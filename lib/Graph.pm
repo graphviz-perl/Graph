@@ -3687,6 +3687,12 @@ sub path_vertices {
     $tcm->path_vertices(@_);
 }
 
+sub all_paths {
+    my $g = shift;
+    my $tcm = $g->transitive_closure_matrix;
+    $tcm->all_paths(@_);
+}
+
 sub is_reachable {
     my $g = shift;
     my $tcm = $g->transitive_closure_matrix;

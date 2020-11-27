@@ -1864,9 +1864,11 @@ Return the list of vertices along the shortest path.
 
 Returns the predecessor of vertex $v in the all-pairs shortest paths.
 
-=back
+=item all_paths
 
-=over 8
+    my @paths = $apsp->all_paths($u, $v);
+
+Return list of array-refs with all the paths from $u to $v.
 
 =item average_path_length
 
