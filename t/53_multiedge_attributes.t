@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 63;
+use Test::More tests => 64;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -57,6 +57,7 @@ $attr = $g->get_edge_attributes_by_id("a", "b", "hot");
 is_deeply $attr, { color => "green", taste => "rhubarb" };
 is_deeply \@name, [ "color", "taste" ];
 is_deeply \@val, [ "green", "rhubarb" ];
+is_deeply(($g->as_hashes)[1], { a => { b => { hot => { color => "green", taste => "rhubarb" } } } });
 
 ok( $g->delete_edge_attribute_by_id("a", "b", "hot", "color" ) );
 

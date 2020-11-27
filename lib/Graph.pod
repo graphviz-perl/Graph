@@ -1285,6 +1285,8 @@ If C<multivertexed> is true, the vertices hash will have the second-level
 values be the multivertex's ID, and the third level will be attributes
 as above.
 
+If C<multiedged> is true, similar will be true for the edges hash.
+
 =back
 
 =head2 Connected Graphs and Their Components

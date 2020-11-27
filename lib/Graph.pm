@@ -1747,7 +1747,17 @@ sub as_hashes {
     } else {
         %n = map +($_ => $g->get_vertex_attributes($_) || {}), $g->vertices;
     }
-    $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {} for $g->edges;
+    if ($g->is_multiedged) {
+        for my $e ($g->edges) {
+            $e{ $e->[0] }{ $e->[1] } = {
+                map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
+                    $g->get_multiedge_ids(@$e)
+            };
+        }
+    } else {
+        $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {}
+            for $g->edges;
+    }
     ( \%n, \%e );
 }
 

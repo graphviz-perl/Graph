@@ -1,5 +1,5 @@
 - all_paths method
-- as_hashes handle multivertexed right
+- as_hashes handle multivertexed, multiedged right
 
 0.9709 2020-11-22
 - add path_count option to TransitiveClosure
