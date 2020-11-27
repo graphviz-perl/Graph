@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 256;
+use Test::More tests => 262;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -38,6 +38,9 @@ my $r0 = Graph::TransitiveClosure->new($g0->deep_copy, reflexive => 0);
 ok(!$r0->has_edge(qw(a a)));
 ok( $r0->has_edge(qw(a b)));
 ok( $r0->has_edge(qw(a c)));
+ok !$r0->transitive_closure_matrix->is_transitive(qw(a a)), 'r0 !is_transitive a a';
+ok $r0->transitive_closure_matrix->is_transitive(qw(a c)), 'r0 is_transitive a c';
+ok !$r0->transitive_closure_matrix->is_transitive(qw(d a)), 'r0 !is_transitive d a';
 ok(!$r0->has_edge(qw(d c)));
 ok(!$r0->has_edge(qw(b a)));
 ok(!$r0->has_edge(qw(b b)));
@@ -59,6 +62,9 @@ my $r1 = Graph::TransitiveClosure->new($g0->deep_copy, reflexive => 1);
 ok( $r1->has_edge(qw(a a)));
 ok( $r1->has_edge(qw(a b)));
 ok( $r1->has_edge(qw(a c)));
+ok $r1->transitive_closure_matrix->is_transitive(qw(a a)), 'r1 is_transitive a a';
+ok $r1->transitive_closure_matrix->is_transitive(qw(a c)), 'r1 is_transitive a c';
+ok !$r1->transitive_closure_matrix->is_transitive(qw(d a)), 'r1 !is_transitive d a';
 ok(!$r1->has_edge(qw(d c)));
 ok(!$r1->has_edge(qw(b a)));
 ok( $r1->has_edge(qw(b b)));
