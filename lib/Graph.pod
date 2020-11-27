@@ -1281,6 +1281,10 @@ Return hash-refs which map vertices to their attributes, and for edges,
 a two-level hash mapping the predecessor to its successors, mapped to
 the attributes.
 
+If C<multivertexed> is true, the vertices hash will have the second-level
+values be the multivertex's ID, and the third level will be attributes
+as above.
+
 =back
 
 =head2 Connected Graphs and Their Components

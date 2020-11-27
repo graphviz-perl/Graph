@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 58;
+use Test::More tests => 59;
 
 use Graph;
 my $g = Graph->new(multivertexed => 1);
@@ -57,6 +57,7 @@ $attr = $g->get_vertex_attributes_by_id("a", "hot");
 is_deeply $attr, { color => "green", taste => "rhubarb" };
 is_deeply \@name, [ "color", "taste" ];
 is_deeply \@val, [ "green", "rhubarb" ];
+is_deeply(($g->as_hashes)[0], { a => { hot => { color => "green", taste => "rhubarb" } } });
 
 ok( $g->delete_vertex_attribute_by_id("a", "hot", "color" ) );
 

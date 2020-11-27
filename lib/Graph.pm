@@ -1736,9 +1736,18 @@ sub rename_vertices {
 
 sub as_hashes {
     my ($g) = @_;
-    my %e;
+    my (%n, %e);
+    if ($g->is_multivertexed) {
+        for my $v ($g->vertices) {
+            $n{$v} = {
+                map +($_ => $g->get_vertex_attributes_by_id($v, $_) || {}),
+                    $g->get_multivertex_ids($v)
+            };
+        }
+    } else {
+        %n = map +($_ => $g->get_vertex_attributes($_) || {}), $g->vertices;
+    }
     $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {} for $g->edges;
-    my %n = map +( $_ => $g->get_vertex_attributes($_) || {} ), $g->vertices;
     ( \%n, \%e );
 }
 
