@@ -12,7 +12,7 @@ $g0->add_edge(qw(c d));
 
 ok(!$g0->is_transitive);
 
-my $t0 = Graph::TransitiveClosure->new($g0);
+my $t0 = Graph::TransitiveClosure->new($g0->deep_copy);
 
 ok( $t0->has_edge(qw(a a)));
 ok( $t0->has_edge(qw(a b)));
@@ -33,7 +33,7 @@ ok( $t0->has_edge(qw(d d)));
 
 ok( $t0->is_transitive);
 
-my $r0 = Graph::TransitiveClosure->new($g0, reflexive => 0);
+my $r0 = Graph::TransitiveClosure->new($g0->deep_copy, reflexive => 0);
 
 ok(!$r0->has_edge(qw(a a)));
 ok( $r0->has_edge(qw(a b)));
@@ -54,7 +54,7 @@ ok(!$r0->has_edge(qw(d d)));
 
 ok( $r0->is_transitive);
 
-my $r1 = Graph::TransitiveClosure->new($g0, reflexive => 1);
+my $r1 = Graph::TransitiveClosure->new($g0->deep_copy, reflexive => 1);
 
 ok( $r1->has_edge(qw(a a)));
 ok( $r1->has_edge(qw(a b)));
@@ -83,7 +83,7 @@ $g1->add_edge(qw(c d));
 
 ok(!$g1->is_transitive);
 
-my $t1 = Graph::TransitiveClosure->new($g1);
+my $t1 = Graph::TransitiveClosure->new($g1->deep_copy);
 
 ok $t1->has_edge(@$_) for (
     [qw(a a)], [qw(a b)], [qw(a c)], [qw(d c)], [qw(b a)], [qw(b b)],
@@ -99,7 +99,7 @@ $g2->add_weighted_edge(qw(b c 1));
 
 ok(!$g2->is_transitive);
 
-my $t2 = Graph::TransitiveClosure->new($g2, path => 1);
+my $t2 = Graph::TransitiveClosure->new($g2->deep_copy, path => 1);
 
 is($t2->path_length(qw(a a)), 0);
 is($t2->path_length(qw(a b)), 3);
@@ -127,9 +127,9 @@ my $g3 = Graph->new;
 $g3->add_edge(qw(a b));
 $g3->add_edge(qw(b c));
 
-ok(!$g3->is_transitive);
+ok(!$g3->deep_copy->is_transitive);
 
-my $t3 = Graph::TransitiveClosure->new($g3, path => 1);
+my $t3 = Graph::TransitiveClosure->new($g3->deep_copy, path => 1);
 
 is($t3->path_length(qw(a a)), 0);
 is($t3->path_length(qw(a b)), 1);
@@ -301,11 +301,11 @@ is($g3->path_predecessor(qw(c c)), undef);
 
 # TransitiveClosure_Floyd_Warshall is just an alias for TransitiveClosure.
 
-my $t0tcfw = Graph->TransitiveClosure_Floyd_Warshall($g0);
+my $t0tcfw = Graph->TransitiveClosure_Floyd_Warshall($g0->deep_copy);
 
 is($t0, $t0tcfw);
 
-my $t3apspfw = $g3->APSP_Floyd_Warshall;
+my $t3apspfw = $g3->deep_copy->APSP_Floyd_Warshall;
 
 is($t3, $t3apspfw);
 
@@ -355,11 +355,11 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     $g->add_edges( qw( a b b c ) );
     $g->add_vertex( 'd' );
 
-    my $t0 = $g->TransitiveClosure_Floyd_Warshall(reflexive => 0);
+    my $t0 = $g->deep_copy->TransitiveClosure_Floyd_Warshall(reflexive => 0);
     ok( $t0->has_vertex( 'a' ) );
     ok(!$t0->has_vertex( 'd' ) );
 
-    my $t1 = $g->TransitiveClosure_Floyd_Warshall(reflexive => 1);
+    my $t1 = $g->deep_copy->TransitiveClosure_Floyd_Warshall(reflexive => 1);
     ok( $t1->has_vertex( 'a' ) );
     ok( $t1->has_vertex( 'd' ) );
 }
@@ -378,13 +378,13 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     $graph->add_weighted_edge(0,1,1);
     $graph->add_weighted_edge(1,2,1);
 
-    my $tc1=new Graph::TransitiveClosure($graph);
+    my $tc1=new Graph::TransitiveClosure($graph->deep_copy);
 
     is ("@{[sort $tc1->path_vertices(0,1)]}", "0 1");
     is ("@{[sort $tc1->path_vertices(0,2)]}", "0 1 2");
     is ("@{[sort $tc1->path_vertices(1,2)]}", "1 2");
 
-    my $tc2=new Graph::TransitiveClosure($graph,path_length=>1,path_vertices=>1);
+    my $tc2=new Graph::TransitiveClosure($graph->deep_copy,path_length=>1,path_vertices=>1);
 
     is ("@{[sort $tc2->path_vertices(0,1)]}", "0 1");
     is ("@{[sort $tc2->path_vertices(0,2)]}", "0 1 2");
