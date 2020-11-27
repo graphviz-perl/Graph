@@ -3272,13 +3272,7 @@ sub _biconnectivity_dfs {
 
 sub _biconnectivity_compute {
     my ($g) = @_;
-    my %state;
-    @{$state{BC}} = ();
-    @{$state{BR}} = ();
-    %{$state{V2BC}} = ();
-    %{$state{BC2V}} = ();
-    @{$state{AP}} = ();
-    $state{dfs} = 0;
+    my %state = (BC=>[], BR=>[], V2BC=>{}, BC2V=>{}, AP=>[], dfs=>0);
     my @u = _shuffle $g->vertices;
     for my $u (@u) {
       unless (exists $state{num}->{$u}) {
