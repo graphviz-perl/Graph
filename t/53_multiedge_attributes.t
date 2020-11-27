@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 74;
+use Test::More tests => 63;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -35,13 +35,9 @@ my $attr = $g->get_edge_attributes_by_id("a", "b", "hot");
 my @name = $g->get_edge_attribute_names_by_id("a", "b", "hot");
 my @val  = $g->get_edge_attribute_values_by_id("a", "b", "hot");
 
-is( scalar keys %$attr, 1 );
-is( scalar @name,       1 );
-is( scalar @val,        1 );
-
-is( $attr->{color}, "green" );
-is( $name[0],       "color" );
-is( $val[0],        "green" );
+is_deeply $attr, { color => "green" };
+is_deeply \@name, [ "color" ];
+is_deeply \@val, [ "green" ];
 
 ok( $g->set_edge_attribute_by_id("a", "b", "hot", "taste", "rhubarb") );
 
@@ -58,16 +54,9 @@ $attr = $g->get_edge_attributes_by_id("a", "b", "hot");
 @name = sort $g->get_edge_attribute_names_by_id("a", "b", "hot");
 @val  = sort $g->get_edge_attribute_values_by_id("a", "b", "hot");
 
-is( scalar keys %$attr, 2 );
-is( scalar @name,       2 );
-is( scalar @val,        2 );
-
-is( $attr->{color}, "green" );
-is( $attr->{taste}, "rhubarb" );
-is( $name[0],       "color" );
-is( $val[0],        "green" );
-is( $name[1],       "taste" );
-is( $val[1],        "rhubarb" );
+is_deeply $attr, { color => "green", taste => "rhubarb" };
+is_deeply \@name, [ "color", "taste" ];
+is_deeply \@val, [ "green", "rhubarb" ];
 
 ok( $g->delete_edge_attribute_by_id("a", "b", "hot", "color" ) );
 
@@ -86,9 +75,9 @@ $attr = $g->get_edge_attributes_by_id("a", "b", "hot");
 @name = $g->get_edge_attribute_names_by_id("a", "b", "hot");
 @val  = $g->get_edge_attribute_values_by_id("a", "b", "hot");
 
-is( scalar keys %$attr, 0 );
-is( scalar @name,       0 );
-is( scalar @val,        0 );
+is_deeply $attr, undef;
+is_deeply \@name, [];
+is_deeply \@val, [];
 
 is( $g->edges, 0 ); # No "a", "b" anymore.
 
@@ -122,9 +111,7 @@ is($u->get_edge_weight_by_id('b', 'a', 'hot'), 123);
 ok($u->set_edge_attributes_by_id('a', 'b', 'hot',
 		           { 'color' => 'pearl', 'weight' => 'heavy' }));
 $attr = $u->get_edge_attributes_by_id('a', 'b', 'hot');
-is(scalar keys %$attr, 2);
-is($attr->{color},  'pearl');
-is($attr->{weight}, 'heavy');
+is_deeply $attr, { color => "pearl", weight => 'heavy' };
 
 ok( $g->set_edge_weight_by_id("a", "b", "hot", 42));
 is( $g->get_edge_weight_by_id("a", "b", "hot"), 42);
@@ -136,5 +123,5 @@ is( $g->get_edge_weight_by_id("a", "b", "hot"), undef);
 
 my $h = Graph->new(multiedged => 1);
 
-eval '$h->set_edge_attribute("foo", "bar", "color", "gold")';
+eval { $h->set_edge_attribute("foo", "bar", "color", "gold") };
 like($@, qr/set_edge_attribute: expected non-multiedged/);
