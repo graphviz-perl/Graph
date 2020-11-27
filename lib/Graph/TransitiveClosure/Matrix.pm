@@ -241,13 +241,11 @@ sub is_reachable {
 }
 
 sub is_transitive {
-    if (@_ == 1) {	# Any graph.
-	__PACKAGE__->new($_[0], is_transitive => 1);	# Scary.
-    } else {		# A TC graph.
-	my ($tc, $u, $v) = @_;
-	return undef unless $tc->has_vertices($u, $v);
-	$tc->[ _A ]->get($u, $v);
-    }
+    return __PACKAGE__->new($_[0], is_transitive => 1) if @_ == 1; # Any graph
+    # A TC graph
+    my ($tc, $u, $v) = @_;
+    return undef unless $tc->has_vertices($u, $v);
+    $tc->[ _A ]->get($u, $v);
 }
 
 sub vertices {
