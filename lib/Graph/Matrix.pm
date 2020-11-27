@@ -35,7 +35,7 @@ sub stringify {
     for my $n (@V) {
         my $this_row = $m->[0][ $m->[1]->{$n} ];
         my @vals = map $this_row->[ $_ ], @indices;
-        push @rows, join ' ', map sprintf('%4s', $_), $n, @vals;
+        push @rows, join ' ', map sprintf('%4s', defined()?$_:''), $n, @vals;
     }
     join '', map "$_\n", $top, @rows;
 }

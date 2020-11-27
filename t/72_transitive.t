@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 255;
+use Test::More tests => 256;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -460,6 +460,13 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     my $g = Graph::Directed->new;
     $g->add_edge(@$_) for @example;
     my $tcg = $g->transitive_closure;
+    is $tcg->transitive_closure_matrix->[1]->stringify, <<'EOF';
+ to:    1    2    3    4
+   1    0    1    1    1
+   2         0          
+   3              0    1
+   4                   0
+EOF
     my @paths = (
 	[ 1, 2, [[1,2]] ],
 	[ 1, 3, [[1,3]] ],
