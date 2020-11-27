@@ -1770,8 +1770,15 @@ sub ingest {
         } else {
             $g->set_vertex_attributes($v, $g2->get_vertex_attributes($v));
         }
-        $g->set_edge_attributes(@$_, $g2->get_edge_attributes(@$_))
-            for $g2->edges_from($v);
+        if ($g->is_multiedged) {
+            for my $e ($g2->edges_from($v)) {
+                $g->set_edge_attributes_by_id(@$e, $_, $g2->get_edge_attributes_by_id(@$e, $_))
+                    for $g2->get_multiedge_ids(@$e);
+            }
+        } else {
+            $g->set_edge_attributes(@$_, $g2->get_edge_attributes(@$_))
+                for $g2->edges_from($v);
+        }
     }
     $g;
 }

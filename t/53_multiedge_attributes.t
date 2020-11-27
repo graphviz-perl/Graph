@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 64;
+use Test::More tests => 65;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -126,3 +126,11 @@ my $h = Graph->new(multiedged => 1);
 
 eval { $h->set_edge_attribute("foo", "bar", "color", "gold") };
 like($@, qr/set_edge_attribute: expected non-multiedged/);
+
+$h->ingest($g);
+my $got = ($h->as_hashes)[1];
+is_deeply $got, {
+    c => { d => { hot => { weight => 45 } } },
+    d => { e => { hot => { weight => 46 } } },
+    e => { f => { hot => { weight => 44 } } }
+} or diag explain $got;
