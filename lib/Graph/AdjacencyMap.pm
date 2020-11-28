@@ -371,19 +371,8 @@ sub __arg {
     my $m = shift;
     my $f = $m->[ _f ];
     my @a = @{$_[0]};
-    if ($f & _UNIQ) {
-	my %u;
-	if ($f & _UNORD) {
-	    @u{ @a } = @a;
-	    @a = values %u;
-	} else {
-	    my @u;
-	    for my $e (@a) {
-		push @u, $e if $u{$e}++ == 0;
-	    }
-	    @a = @u;
-	}
-    }
+    my %u;
+    @a = grep !$u{$_}++, @a if $f & _UNIQ;
     # Alphabetic or numeric sort, does not matter as long as it unifies.
     @{$_[0]} = ($f & _UNORD) ? sort @a : @a;
 }
