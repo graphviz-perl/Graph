@@ -3,12 +3,12 @@ package Graph;
 use strict;
 use warnings;
 
+sub __carp_confess { require Carp; Carp::confess(@_) }
 BEGIN {
     if (0) { # SET THIS TO ZERO FOR TESTING AND RELEASES!
 	$SIG{__DIE__ } = \&__carp_confess;
 	$SIG{__WARN__} = \&__carp_confess;
     }
-    sub __carp_confess { require Carp; Carp::confess(@_) }
 }
 
 use Graph::AdjacencyMap qw(:flags :fields);
@@ -171,13 +171,10 @@ sub _opt_get {
 
 sub _opt_unknown {
     my ($opt) = @_;
-    if (my @opt = keys %$opt) {
-	my $f = (caller(1))[3];
-	require Carp;
-	Carp::confess(sprintf
-		      "$f: Unknown option%s: @{[map { qq['$_'] } sort @opt]}",
-		      @opt > 1 ? 's' : '');
-    }
+    return unless my @opt = keys %$opt;
+    __carp_confess sprintf
+        "@{[(caller(1))[3]]}: Unknown option%s: @{[map { qq['$_'] } sort @opt]}",
+        @opt > 1 ? 's' : '';
 }
 
 sub new {
@@ -239,29 +236,22 @@ sub new {
 	 unionfind     => _UNIONFIND,
 	);
 
-    if (exists $opt{vertices_unsorted}) { # Graph 0.20103 compat.
-	my $unsorted = $opt{vertices_unsorted};
-	delete $opt{vertices_unsorted};
-	require Carp;
-	Carp::confess("Graph: vertices_unsorted must be true")
-	    unless $unsorted;
-    }
+    # Graph 0.20103 compat.
+    __carp_confess "Graph: vertices_unsorted must be true"
+	if exists $opt{vertices_unsorted} and !delete $opt{vertices_unsorted};
 
     my @V;
     if ($opt{vertices}) {
-	require Carp;
-	Carp::confess("Graph: vertices should be an array ref")
-	    unless ref $opt{vertices} eq 'ARRAY';
+	__carp_confess "Graph: vertices should be an array ref"
+	    if ref $opt{vertices} ne 'ARRAY';
 	@V = @{ $opt{vertices} };
 	delete $opt{vertices};
     }
 
     my @E;
     if ($opt{edges}) {
-	unless (ref $opt{edges} eq 'ARRAY') {
-	    require Carp;
-	    Carp::confess("Graph: edges should be an array ref of array refs");
-	}
+        __carp_confess "Graph: edges should be an array ref of array refs"
+	    if ref $opt{edges} ne 'ARRAY';
 	@E = @{ $opt{edges} };
 	delete $opt{edges};
     }
@@ -282,29 +272,22 @@ sub new {
 	my @but;
 	push @but, 'unordered' if ($vflags & _UNORD);
 	push @but, 'unique'    if ($vflags & _UNIQ);
-	require Carp;
-	Carp::confess(sprintf "Graph: not hypervertexed but %s",
-		      join(' and ', @but));
+	__carp_confess sprintf "Graph: not hypervertexed but %s",
+		      join(' and ', @but);
     }
 
     unless (defined $eflags) {
 	$eflags = ($gflags & _COMPAT02) ? _COUNT : 0;
     }
 
-    if (!($vflags & _HYPER) && ($vflags & _UNIQ)) {
-	require Carp;
-	Carp::confess("Graph: not hypervertexed but uniqvertexed");
-    }
+    __carp_confess "Graph: not hypervertexed but uniqvertexed"
+	if !($vflags & _HYPER) && ($vflags & _UNIQ);
 
-    if (($vflags & _COUNT) && ($vflags & _MULTI)) {
-	require Carp;
-	Carp::confess("Graph: both countvertexed and multivertexed");
-    }
+    __carp_confess "Graph: both countvertexed and multivertexed"
+	if ($vflags & _COUNT) && ($vflags & _MULTI);
 
-    if (($eflags & _COUNT) && ($eflags & _MULTI)) {
-	require Carp;
-	Carp::confess("Graph: both countedged and multiedged");
-    }
+    __carp_confess "Graph: both countedged and multiedged"
+	if ($eflags & _COUNT) && ($eflags & _MULTI);
 
     my $g = bless [ ], ref $class || $class;
 
@@ -323,10 +306,8 @@ sub new {
 
     if (@E) {
 	for my $e (@E) {
-	    unless (ref $e eq 'ARRAY') {
-		require Carp;
-		Carp::confess("Graph: edges should be array refs");
-	    }
+	    __carp_confess "Graph: edges should be array refs"
+		if ref $e ne 'ARRAY';
 	    $g->add_edge(@$e);
 	}
     }
@@ -382,32 +363,13 @@ sub _union_find_add_vertex {
 
 sub add_vertex {
     my $g = shift;
-    if (@_ != 1) {
-      $g->expect_hypervertexed;
-    }
-    if ($g->is_multivertexed) {
-	return $g->add_vertex_by_id(@_, _GEN_ID);
-    }
-    my @r;
+    $g->expect_hypervertexed if @_ != 1;
+    return $g->add_vertex_by_id(@_, _GEN_ID) if $g->is_multivertexed;
+    __carp_confess "Graph::add_vertex: undef vertex" if grep !defined, @_;
     if (@_ > 1) {
-	unless ($g->is_countvertexed || $g->is_hypervertexed) {
-	    require Carp;
-	    Carp::croak("Graph::add_vertex: use add_vertices for more than one vertex or use hypervertexed");
-	}
-	for my $v ( @_ ) {
-	    if (defined $v) {
-		$g->[ _V ]->set_path( $v ) unless $g->has_vertex( $v );
-	    } else {
-		require Carp;
-		Carp::croak("Graph::add_vertex: undef vertex");
-	    }
-	}
-    }
-    for my $v ( @_ ) {
-	unless (defined $v) {
-	    require Carp;
-	    Carp::croak("Graph::add_vertex: undef vertex");
-	}
+	__carp_confess "Graph::add_vertex: use add_vertices for more than one vertex or use hypervertexed"
+	    unless $g->is_countvertexed || $g->is_hypervertexed;
+	$g->[ _V ]->set_path( $_ ) for grep !$g->has_vertex( $_ ), @_;
     }
     $g->[ _V ]->set_path( @_ );
     $g->[ _G ]++;
@@ -507,10 +469,8 @@ sub add_edge {
       $g->expect_hyperedged;
     }
     if ($g->is_multiedged) {
-	unless (@_ == 2 || $g->is_hyperedged) {
-	    require Carp;
-	    Carp::croak("Graph::add_edge: use add_edges for more than one edge");
-	}
+	__carp_confess "Graph::add_edge: use add_edges for more than one edge"
+	    unless @_ == 2 || $g->is_hyperedged;
 	return $g->add_edge_by_id(@_, _GEN_ID);
     }
     my @e = $g->_add_edge( @_ );
@@ -1699,13 +1659,9 @@ sub add_edges {
 	if (ref $u eq 'ARRAY') {
 	    $g->add_edge( @$u );
 	} else {
-	    if (@_) {
-		my $v = shift @_;
-		$g->add_edge( $u, $v );
-	    } else {
-		require Carp;
-		Carp::croak("Graph::add_edges: missing end vertex");
-	    }
+	    __carp_confess "Graph::add_edges: missing end vertex" if !@_;
+	    my $v = shift @_;
+	    $g->add_edge( $u, $v );
 	}
     }
     return $g;
@@ -1915,9 +1871,8 @@ sub complement_graph {
 sub subgraph {
   my ($g, $src, $dst) = @_;
   $dst = $src unless defined $dst;
-  unless (ref $src eq 'ARRAY' && ref $dst eq 'ARRAY') {
-    Carp::croak("Graph::subgraph: need src and dst array references");
-  }
+  __carp_confess "Graph::subgraph: need src and dst array references"
+    unless ref $src eq 'ARRAY' && ref $dst eq 'ARRAY';
   my $s = $g->new;
   my @u = grep { $g->has_vertex($_) } @$src;
   my @v = grep { $g->has_vertex($_) } @$dst;
@@ -2304,10 +2259,8 @@ sub random_graph {
     my $class = (@_ % 2) == 0 ? 'Graph' : shift;
     my %opt = _get_options( \@_ );
     my $random_edge;
-    unless (exists $opt{vertices} && defined $opt{vertices}) {
-	require Carp;
-	Carp::croak("Graph::random_graph: argument 'vertices' missing or undef");
-    }
+    __carp_confess "Graph::random_graph: argument 'vertices' missing or undef"
+	unless defined $opt{vertices};
     if (exists $opt{random_seed}) {
 	srand($opt{random_seed});
 	delete $opt{random_seed};
@@ -2318,11 +2271,9 @@ sub random_graph {
     }
     my @V;
     if (my $ref = ref $opt{vertices}) {
-	if ($ref eq 'ARRAY') {
-	    @V = @{ $opt{vertices} };
-	} else {
-	    Carp::croak("Graph::random_graph: argument 'vertices' illegal");
-	}
+	__carp_confess "Graph::random_graph: argument 'vertices' illegal"
+	    if $ref ne 'ARRAY';
+	@V = @{ $opt{vertices} };
     } else {
 	@V = 0..($opt{vertices} - 1);
     }
@@ -2330,9 +2281,8 @@ sub random_graph {
     my $V = @V;
     my $C = $V * ($V - 1) / 2;
     my $E;
-    if (exists $opt{edges} && exists $opt{edges_fill}) {
-	Carp::croak("Graph::random_graph: both arguments 'edges' and 'edges_fill' specified");
-    }
+    __carp_confess "Graph::random_graph: both arguments 'edges' and 'edges_fill' specified"
+	if exists $opt{edges} && exists $opt{edges_fill};
     $E = exists $opt{edges_fill} ? $opt{edges_fill} * $C : $opt{edges};
     delete $opt{edges};
     delete $opt{edges_fill};
@@ -2345,10 +2295,8 @@ sub random_graph {
     my $p = $E / $C;
     $random_edge = sub { $p } unless defined $random_edge;
     # print "V = $V, E = $E, C = $C, p = $p\n";
-    if ($p > 1.0 && !($g->countedged || $g->multiedged)) {
-	require Carp;
-	Carp::croak("Graph::random_graph: needs to be countedged or multiedged ($E > $C)");
-    }
+    __carp_confess "Graph::random_graph: needs to be countedged or multiedged ($E > $C)"
+	if $p > 1.0 && !($g->countedged || $g->multiedged);
     my @V1 = @V;
     my @V2 = @V;
     # Shuffle the vertex lists so that the pairs at
@@ -2786,27 +2734,21 @@ my %_cache_type =
 sub _check_cache {
     my ($g, $type, $code) = splice @_, 0, 3;
     my $c = $_cache_type{$type};
-    if (defined $c) {
-	my $a = $g->get_graph_attribute($c);
-	unless (defined $a && $a->[ 0 ] == $g->[ _G ]) {
-	    $a->[ 0 ] = $g->[ _G ];
-	    $a->[ 1 ] = $code->( $g, @_ );
-	    $g->set_graph_attribute($c, $a);
-	}
-	return $a->[ 1 ];
-    } else {
-	Carp::croak("Graph: unknown cache type '$type'");
+    __carp_confess "Graph: unknown cache type '$type'" if !defined $c;
+    my $a = $g->get_graph_attribute($c);
+    unless (defined $a && $a->[ 0 ] == $g->[ _G ]) {
+	$a->[ 0 ] = $g->[ _G ];
+	$a->[ 1 ] = $code->( $g, @_ );
+	$g->set_graph_attribute($c, $a);
     }
+    return $a->[ 1 ];
 }
 
 sub _clear_cache {
     my ($g, $type) = @_;
     my $c = $_cache_type{$type};
-    if (defined $c) {
-	$g->delete_graph_attribute($c);
-    } else {
-	Carp::croak("Graph: unknown cache type '$type'");
-    }
+    __carp_confess "Graph: unknown cache type '$type'" if !defined $c;
+    $g->delete_graph_attribute($c);
 }
 
 sub connectivity_clear_cache {
@@ -3467,10 +3409,8 @@ sub _SPT_add {
     for my $s ( grep { exists $unseen->{ $_ } } $g->successors( $r ) ) {
 	my $t = $g->get_edge_attribute( $r, $s, $attr );
 	$t = 1 unless defined $t;
-	if ($t < 0) {
-	    require Carp;
-	    Carp::croak("Graph::SPT_Dijkstra: edge $r-$s is negative ($t)");
-	}
+	__carp_confess "Graph::SPT_Dijkstra: edge $r-$s is negative ($t)"
+	    if $t < 0;
 	if (!defined($etc->{ $s }) || ($etc_r + $t) < $etc->{ $s }) {
 	    my $etc_s = $etc->{ $s } || 0;
 	    $etc->{ $s } = $etc_r + $t;
@@ -3579,10 +3519,8 @@ sub _SPT_Bellman_Ford {
 	my ($u, $v) = @$e;
 	if (defined $d{ $u } && defined $d{ $v }) {
 	    my $d = $g->get_edge_attribute($u, $v, $attr);
-	    if (defined $d && $d{ $v } > $d{ $u } + $d) {
-		require Carp;
-		Carp::croak("Graph::SPT_Bellman_Ford: negative cycle exists");
-	    }
+	    __carp_confess "Graph::SPT_Bellman_Ford: negative cycle exists"
+		if defined $d && $d{ $v } > $d{ $u } + $d;
 	}
     }
 
@@ -3978,10 +3916,7 @@ sub __factorial {
 
 sub _factorial {
     my $n = int(shift);
-    if ($n < 0) {
-	require Carp;
-	Carp::croak("factorial of a negative number");
-    }
+    __carp_confess "factorial of a negative number" if $n < 0;
     __factorial($n) unless exists $_factorial{$n};
     return $_factorial{$n};
 }

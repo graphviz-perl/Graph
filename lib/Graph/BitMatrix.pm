@@ -3,8 +3,8 @@ package Graph::BitMatrix;
 use strict;
 use warnings;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 sub _V () { 2 } # Graph::_V()
 sub _E () { 3 } # Graph::_E()

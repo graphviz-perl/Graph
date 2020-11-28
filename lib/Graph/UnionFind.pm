@@ -28,8 +28,7 @@ sub _parent {
     } elsif (@_ == 3) {
 	$_[0]->{ $_[1] }->[ _PARENT ] = $_[2];
     } else {
-	require Carp;
-	Carp::croak(__PACKAGE__ . "::_parent: bad arity");
+	Graph::__carp_confess(__PACKAGE__ . "::_parent: bad arity");
     }
 }
 
@@ -40,8 +39,7 @@ sub _rank {
     } elsif (@_ == 3) {
 	$_[0]->{ $_[1] }->[ _RANK ] = $_[2];
     } else {
-	require Carp;
-	Carp::croak(__PACKAGE__ . "::_rank: bad arity");
+	Graph::__carp_confess(__PACKAGE__ . "::_rank: bad arity");
     }
 }
 

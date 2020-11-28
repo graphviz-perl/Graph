@@ -7,8 +7,8 @@ package Graph::AdjacencyMap::Vertex;
 use strict;
 use warnings;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
@@ -33,10 +33,7 @@ sub __set_path {
     my $m = shift;
     my $f = $m->[ _f ];
     my $id = pop if ($f & _MULTI);
-    if (@_ != 1) {
-	require Carp;
-	Carp::confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_);
-    }
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_) if @_ != 1;
     my $p;
     $p = $m->[ _s ] ||= { };
     my @p = $p;
@@ -72,12 +69,7 @@ sub set_path {
 sub __has_path {
     my $m = shift;
     my $f = $m->[ _f ];
-    if (@_ != 1) {
-	require Carp;
-	Carp::confess(sprintf
-		      "Graph::AdjacencyMap: arguments %d expected 1\n",
-		      scalar @_);
-    }
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_) if @_ != 1;
     my $p = $m->[ _s ];
     return unless defined $p;
     my @p = $p;
@@ -123,11 +115,9 @@ sub _get_path_count {
 
 sub __attr {
     my $m = shift;
-    if (@_ && ref $_[0] && @{ $_[0] } != $m->[ _a ]) {
-	require Carp;
-	Carp::confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected %d",
-		      scalar @{ $_[0] }, $m->[ _a ]);
-    }
+    return unless @_ && ref $_[0] && @{ $_[0] } != $m->[ _a ];
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected %d",
+		  scalar @{ $_[0] }, $m->[ _a ]);
 }
 
 sub _get_id_path {

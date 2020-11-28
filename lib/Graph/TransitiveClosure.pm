@@ -4,8 +4,8 @@ use strict;
 use warnings;
 
 # COMMENT THESE OUT FOR TESTING AND PRODUCTION.
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 use base 'Graph';
 use Graph::TransitiveClosure::Matrix;

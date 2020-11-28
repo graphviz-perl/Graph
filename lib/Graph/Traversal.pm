@@ -3,8 +3,8 @@ package Graph::Traversal;
 use strict;
 use warnings;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 sub DEBUG () { 0 }
 
@@ -150,19 +150,16 @@ sub configure {
 		     has_a_cycle find_a_cycle
 		    ) };
     if (keys %attr) {
-	require Carp;
 	my @attr = sort keys %attr;
-	Carp::croak(sprintf "Graph::Traversal: unknown attribute%s @{[map { qq['$_'] } @attr]}\n", @attr == 1 ? '' : 's');
+	Graph::__carp_confess(sprintf "Graph::Traversal: unknown attribute%s @{[map { qq['$_'] } @attr]}\n", @attr == 1 ? '' : 's');
     }
 }
 
 sub new {
     my $class = shift;
     my $g = shift;
-    unless (ref $g && $g->isa('Graph')) {
-	require Carp;
-	Carp::croak("Graph::Traversal: first argument is not a Graph");
-    }
+    Graph::__carp_confess("Graph::Traversal: first argument is not a Graph")
+	unless ref $g && $g->isa('Graph');
     my $self = { graph => $g, state => { } };
     bless $self, $class;
     $self->reset;

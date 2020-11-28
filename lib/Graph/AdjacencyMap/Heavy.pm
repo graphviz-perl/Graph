@@ -7,8 +7,8 @@ package Graph::AdjacencyMap::Heavy;
 use strict;
 use warnings;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
@@ -19,11 +19,8 @@ sub __set_path {
     my $m = shift;
     my $f = $m->[ _f ];
     my $id = pop if ($f & _MULTI);
-    if (@_ != $m->[ _a ] && !($f & _HYPER)) {
-	require Carp;
-	Carp::confess(sprintf "Graph::AdjacencyMap::Heavy: arguments %d expected %d",
-		      scalar @_, $m->[ _a ]);
-    }
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Heavy: arguments %d expected %d",
+	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
     my $p;
     $p = ($f & _HYPER) ?
 	(( $m->[ _s ] ||= [ ] )->[ @_ ] ||= { }) :
@@ -74,11 +71,8 @@ sub set_path {
 sub __has_path {
     my $m = shift;
     my $f = $m->[ _f ];
-    if (@_ != $m->[ _a ] && !($f & _HYPER)) {
-	require Carp;
-	Carp::confess(sprintf "Graph::AdjacencyMap::Heavy: arguments %d expected %d",
-		      scalar @_, $m->[ _a ]);
-    }
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Heavy: arguments %d expected %d",
+	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
     if (@_ > 1 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ == 2) { @_ = sort @_ }
         else { $m->__arg(\@_) }
@@ -175,21 +169,16 @@ sub _get_path_count {
 
 sub __attr {
     my $m = shift;
-    if (@_) {
-	if (ref $_[0] && @{ $_[0] }) {
-	    if (@{ $_[0] } != $m->[ _a ]) {
-		require Carp;
-		Carp::confess(sprintf
-			      "Graph::AdjacencyMap::Heavy: arguments %d expected %d\n",
-			      scalar @{ $_[0] }, $m->[ _a ]);
-	    }
-	    my $f = $m->[ _f ];
-	    if (@{ $_[0] } > 1 && ($f & _UNORDUNIQ)) {
-		if (($f & _UNORDUNIQ) == _UNORD && @{ $_[0] } == 2) {
-		    @{ $_[0] } = sort @{ $_[0] }
-		} else { $m->__arg(\@_) }
-	    }
-	}
+    return unless @_ and ref $_[0] && @{ $_[0] };
+    Graph::__carp_confess(sprintf
+		  "Graph::AdjacencyMap::Heavy: arguments %d expected %d\n",
+		  scalar @{ $_[0] }, $m->[ _a ])
+	if @{ $_[0] } != $m->[ _a ];
+    my $f = $m->[ _f ];
+    if (@{ $_[0] } > 1 && ($f & _UNORDUNIQ)) {
+	if (($f & _UNORDUNIQ) == _UNORD && @{ $_[0] } == 2) {
+	    @{ $_[0] } = sort @{ $_[0] }
+	} else { $m->__arg(\@_) }
     }
 }
 
