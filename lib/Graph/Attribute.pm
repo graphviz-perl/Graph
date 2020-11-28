@@ -91,23 +91,16 @@ sub get_attribute {
 sub delete_attribute {
     my $g = shift;
     my $a = pop;
-    my $p = $g->_get_attributes;
-    if (defined $p) {
-	delete $p->{ $a };
-	return 1;
-    } else {
-	return 0;
-    }
+    return 0 unless defined(my $p = $g->_get_attributes);
+    delete $p->{ $a };
+    return 1;
 }
 
 sub delete_attributes {
     my $g = shift;
-    if ($g->_has_attributes) {
-	$g->_delete_attributes;
-	return 1;
-    } else {
-	return 0;
-    }
+    return 0 if !$g->_has_attributes;
+    $g->_delete_attributes;
+    return 1;
 }
 
 sub get_attribute_names {

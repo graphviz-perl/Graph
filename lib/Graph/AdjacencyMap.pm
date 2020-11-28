@@ -316,11 +316,10 @@ sub _del_path_attrs {
 	return unless defined $p && defined $k;
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	delete $p->[-1]->{ $l }->[ _nm ]->{ $id };
-	unless (keys %{ $p->[-1]->{ $l }->[ _nm ] } ||
-		(defined $p->[-1]->{ $l }->[ _na ] &&
-		 keys %{ $p->[-1]->{ $l }->[ _na ] })) {
-	    delete $p->[-1]->{ $l };
-	}
+	delete $p->[-1]->{ $l }
+	    unless keys %{ $p->[-1]->{ $l }->[ _nm ] } ||
+		   (defined $p->[-1]->{ $l }->[ _na ] &&
+		    keys %{ $p->[-1]->{ $l }->[ _na ] });
     } else {
 	my ($e, $n) = $m->__get_path_node( @_ );
 	return undef unless $e;

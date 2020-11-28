@@ -172,7 +172,7 @@ sub paths {
 
 =head1 NAME
 
-Graph::AdjacencyMap - create and a map of graph vertices or edges
+Graph::AdjacencyMap::Vertex - create and a map of graph vertices or edges
 
 =head1 SYNOPSIS
 

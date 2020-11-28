@@ -133,14 +133,8 @@ use overload
 sub _opt {
     my ($opt, $flags, %flags) = @_;
     while (my ($flag, $FLAG) = each %flags) {
-	if (exists $opt->{$flag}) {
-	    $$flags |= $FLAG if $opt->{$flag};
-	    delete $opt->{$flag};
-	}
-	if (exists $opt->{my $non = "non$flag"}) {
-	    $$flags &= ~$FLAG if $opt->{$non};
-	    delete $opt->{$non};
-	}
+	$$flags |= $FLAG if delete $opt->{$flag};
+	$$flags &= ~$FLAG if delete $opt->{"non$flag"};
     }
 }
 
@@ -163,10 +157,8 @@ sub _get_union_find {
 
 sub _opt_get {
     my ($opt, $key, $var) = @_;
-    if (exists $opt->{$key}) {
-	$$var = $opt->{$key};
-	delete $opt->{$key};
-    }
+    return if !exists $opt->{$key};
+    $$var = delete $opt->{$key};
 }
 
 sub _opt_unknown {
@@ -200,10 +192,7 @@ sub new {
     _opt_get(\%opt, undirected   => \$opt{omniedged});
     _opt_get(\%opt, omnidirected => \$opt{omniedged});
 
-    if (exists $opt{directed}) {
-	$opt{omniedged} = !$opt{directed};
-	delete $opt{directed};
-    }
+    $opt{omniedged} = !delete $opt{directed} if exists $opt{directed};
 
     my $vnonomni =
 	$opt{nonomnivertexed} ||
@@ -244,16 +233,14 @@ sub new {
     if ($opt{vertices}) {
 	__carp_confess "Graph: vertices should be an array ref"
 	    if ref $opt{vertices} ne 'ARRAY';
-	@V = @{ $opt{vertices} };
-	delete $opt{vertices};
+	@V = @{ delete $opt{vertices} };
     }
 
     my @E;
     if ($opt{edges}) {
         __carp_confess "Graph: edges should be an array ref of array refs"
 	    if ref $opt{edges} ne 'ARRAY';
-	@E = @{ $opt{edges} };
-	delete $opt{edges};
+	@E = @{ delete $opt{edges} };
     }
 
     _opt_unknown(\%opt);
@@ -465,9 +452,7 @@ sub _union_find_add_edge {
 
 sub add_edge {
     my $g = shift;
-    if (@_ != 2) {
-      $g->expect_hyperedged;
-    }
+    $g->expect_hyperedged if @_ != 2;
     if ($g->is_multiedged) {
 	__carp_confess "Graph::add_edge: use add_edges for more than one edge"
 	    unless @_ == 2 || $g->is_hyperedged;
@@ -934,9 +919,7 @@ sub all_neighbours {
       last if @v == $o;  # Leave if no growth.
       $o = @v;
     }
-    for my $v (@init) {
-      delete $n{$v} unless $g->has_edge($v, $v);
-    }
+    delete @n{ grep !$g->has_edge($_, $_), @init };
     return values %n;
 }
 
@@ -2258,17 +2241,10 @@ BEGIN {
 sub random_graph {
     my $class = (@_ % 2) == 0 ? 'Graph' : shift;
     my %opt = _get_options( \@_ );
-    my $random_edge;
     __carp_confess "Graph::random_graph: argument 'vertices' missing or undef"
 	unless defined $opt{vertices};
-    if (exists $opt{random_seed}) {
-	srand($opt{random_seed});
-	delete $opt{random_seed};
-    }
-    if (exists $opt{random_edge}) {
-	$random_edge = $opt{random_edge};
-	delete $opt{random_edge};
-    }
+    srand delete $opt{random_seed} if exists $opt{random_seed};
+    my $random_edge = delete $opt{random_edge} if exists $opt{random_edge};
     my @V;
     if (my $ref = ref $opt{vertices}) {
 	__carp_confess "Graph::random_graph: argument 'vertices' illegal"
@@ -2665,14 +2641,13 @@ sub delete_attributes {
 sub topological_sort {
     my $g = shift;
     my %opt = _get_options( \@_ );
-    my $eic = $opt{ empty_if_cyclic };
+    my $eic = delete $opt{ empty_if_cyclic };
     my $hac;
     if ($eic) {
 	$hac = $g->has_a_cycle;
     } else {
 	$g->expect_dag;
     }
-    delete $opt{ empty_if_cyclic };
     my $t = Graph::Traversal::DFS->new($g, %opt);
     my @s = $t->dfs;
     $hac ? () : reverse @s;

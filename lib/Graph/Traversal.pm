@@ -287,9 +287,7 @@ sub next {
 	@next = values %next;
 	my @all = @next;
 	print "all = @all\n" if DEBUG;
-	for my $s (keys %next) {
-	    delete $next{$s} if exists $self->{seen}->{$s};
-	}
+	delete @next{ grep exists $self->{seen}{$_}, keys %next };
 	@next = values %next;
 	print "next.2 - @next\n" if DEBUG;
 	if (@next) {

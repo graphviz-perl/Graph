@@ -19,11 +19,7 @@ sub new {
     my %V; @V{ @V } = 0 .. $#V;
     my $bm = bless [ [ ( $Z ) x $V ], \%V ], $class;
     my $bm0 = $bm->[0];
-    my $connect_edges;
-    if (exists $opt{connect_edges}) {
-	$connect_edges = $opt{connect_edges};
-	delete $opt{connect_edges};
-    }
+    my $connect_edges = delete $opt{connect_edges};
     $connect_edges = 1 unless defined $connect_edges;
     Graph::_opt_unknown(\%opt);
     if ($connect_edges) {
