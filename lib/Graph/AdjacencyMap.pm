@@ -50,8 +50,7 @@ sub _V () { 2 }  # Graph::_V()
 
 sub _new {
     my $class = shift;
-    my $map = bless [ 0, @_ ], $class;
-    return $map;
+    bless [ 0, @_ ], $class;
 }
 
 sub _ids {
@@ -323,13 +322,10 @@ sub _del_path_attrs {
     } else {
 	my ($e, $n) = $m->__get_path_node( @_ );
 	return undef unless $e;
-	if (ref $n) {
-	    $e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
-	    $#$n = _na - 1;
-	    return $e;
-	} else {
-	    return 0;
-	}
+	return 0 if !ref $n;
+	$e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
+	$#$n = _na - 1;
+	return $e;
     }
 }
 
@@ -350,12 +346,9 @@ sub _del_path_attr {
     } else {
 	my ($e, $n) = $m->__get_path_node( @_ );
 	return undef unless $e;
-	if (ref $n && $#$n == _na && exists $n->[ _na ]->{ $attr }) {
-	    delete $n->[ _na ]->{ $attr };
-	    return 1;
-	} else {
-	    return 0;
-	}
+	return 0 if !(ref $n && $#$n == _na && exists $n->[ _na ]->{ $attr });
+	delete $n->[ _na ]->{ $attr };
+	return 1;
     }
 }
 
@@ -381,22 +374,19 @@ sub _successors {
     my $E = shift;
     my $g = shift;
     my $V = $g->[ _V ];
-    map { my @v = @{ $_->[ 1 ] };
-	  shift @v;
-	  map { $V->_get_id_path($_) } @v } $g->_edges_from( @_ );
+    map +(
+	map $V->_get_id_path($_), @{ $_->[ 1 ] }[ 1 .. $#{$_->[ 1 ]} ]
+    ), $g->_edges_from( @_ );
 }
 
 sub _predecessors {
     my $E = shift;
     my $g = shift;
     my $V = $g->[ _V ];
-    if (wantarray) {
-	map { my @v = @{ $_->[ 1 ] };
-	      pop @v;
-	      map { $V->_get_id_path($_) } @v } $g->_edges_to( @_ );
-    } else {
-	return $g->_edges_to( @_ );
-    }
+    return $g->_edges_to( @_ ) if !wantarray;
+    map +(
+	map $V->_get_id_path($_), @{ $_->[ 1 ] }[ 0 .. $#{$_->[ 1 ]}-1 ]
+    ), $g->_edges_to( @_ );
 }
 
 1;
