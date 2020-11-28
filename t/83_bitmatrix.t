@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 25;
+use Test::More tests => 27;
 
 use Graph;
 
@@ -47,6 +47,10 @@ is( $m->get(qw(x x)), undef );
 
 is("@{[sort $m->vertices]}", "a b c d");
 
-eval 'Graph::BitMatrix->new($g, nonesuch => 1)';
-like($@, qr/Graph::BitMatrix::new: Unknown option: 'nonesuch' /);
+$m->set_row(qw(b a c));
+is("@{[$m->get_row(qw(b a b c d))]}", "1 0 1 1");
+$m->unset_row(qw(b c d));
+is("@{[$m->get_row(qw(b a b c d))]}", "1 0 0 0");
 
+eval { Graph::BitMatrix->new($g, nonesuch => 1) };
+like($@, qr/Graph::BitMatrix::new: Unknown option: 'nonesuch' /);
