@@ -831,64 +831,36 @@ sub predecessors {
 	Graph::AdjacencyMap::_predecessors($E, $g, @_);
 }
 
-sub _all_successors {
-    my $g = shift;
-    my @init = @_;
+sub _all_cessors {
+    my ($g, $method, @init) = @_;
     my %todo;
     @todo{@init} = @init;
     my %seen;
     my %init = %todo;
     my %self;
     while (keys %todo) {
-      my @todo = values %todo;
-      for my $t (@todo) {
-	$seen{$t} = delete $todo{$t};
-	for my $s ($g->successors($t)) {
-	  $self{$s} = $s if exists $init{$s};
-	  $todo{$s} = $s unless exists $seen{$s};
-	}
+      for my $t (values %todo) {
+        $seen{$t} = delete $todo{$t};
+        for my $v ($g->$method($t)) {
+	  $self{$v} = $v if exists $init{$v};
+	  $todo{$v} = $v unless exists $seen{$v};
+        }
       }
     }
-    for my $v (@init) {
-      delete $seen{$v} unless $g->has_edge($v, $v) || exists $self{$v};
-    }
+    delete @seen{ grep !($g->has_edge($_, $_) || exists $self{$_}), @init };
     return values %seen;
 }
 
 sub all_successors {
     my $g = shift;
     $g->expect_directed;
-    return $g->_all_successors(@_);
-}
-
-sub _all_predecessors {
-    my $g = shift;
-    my @init = @_;
-    my %todo;
-    @todo{@init} = @init;
-    my %seen;
-    my %init = %todo;
-    my %self;
-    while (keys %todo) {
-      my @todo = values %todo;
-      for my $t (@todo) {
-	$seen{$t} = delete $todo{$t};
-	for my $p ($g->predecessors($t)) {
-	  $self{$p} = $p if exists $init{$p};
-	  $todo{$p} = $p unless exists $seen{$p};
-	}
-      }
-    }
-    for my $v (@init) {
-      delete $seen{$v} unless $g->has_edge($v, $v) || $self{$v};
-    }
-    return values %seen;
+    return $g->_all_cessors('successors', @_);
 }
 
 sub all_predecessors {
     my $g = shift;
     $g->expect_directed;
-    return $g->_all_predecessors(@_);
+    return $g->_all_cessors('predecessors', @_);
 }
 
 sub neighbours {
@@ -911,8 +883,8 @@ sub all_neighbours {
     my %n;
     my $o = 0;
     while (1) {
-      my @p = $g->_all_predecessors(@v);
-      my @s = $g->_all_successors(@v);
+      my @p = $g->_all_cessors('predecessors', @v);
+      my @s = $g->_all_cessors('successors', @v);
       @n{@p} = @p;
       @n{@s} = @s;
       @v = values %n;
