@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 262;
+use Test::More tests => 266;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -368,6 +368,15 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     my $t1 = $g->deep_copy->TransitiveClosure_Floyd_Warshall(reflexive => 1);
     ok( $t1->has_vertex( 'a' ) );
     ok( $t1->has_vertex( 'd' ) );
+
+    # test caching of TCM
+    my $t0c = $g->TransitiveClosure_Floyd_Warshall(reflexive => 0);
+    ok( $t0c->has_vertex( 'a' ) );
+    ok(!$t0c->has_vertex( 'd' ) );
+
+    my $t1c = $g->TransitiveClosure_Floyd_Warshall(reflexive => 1);
+    ok( $t1c->has_vertex( 'a' ) );
+    ok( $t1c->has_vertex( 'd' ) );
 }
 
 {
