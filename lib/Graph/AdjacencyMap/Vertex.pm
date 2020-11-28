@@ -210,7 +210,7 @@ Return true if the Map has the path by ids, false if not.
 
 =item has_path_by_multi_id($id)
 
-Return true ifd the a Map has the path by a multi(vertex) id, false if not.
+Return true if the Map has the path by a multi(vertex) id, false if not.
 
 =item paths
 
