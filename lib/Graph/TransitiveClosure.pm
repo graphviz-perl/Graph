@@ -22,37 +22,37 @@ sub new {
 	# No delete $opt{ attribute_name } since we need to pass it on.
     }
     $opt{ reflexive } = 1 unless exists $opt{ reflexive };
-    my $tcm = $g->new( $opt{ reflexive } ?
+    my $tcg = $g->new( $opt{ reflexive } ?
 		       ( vertices => [ $g->vertices ] ) : ( ) );
-    my $tcg = $g->get_graph_attribute('_tcg');
-    if (defined $tcg && $tcg->[ 0 ] == $g->[ _G ]) {
-	$tcg = $tcg->[ 1 ];
+    my $tcm = $g->get_graph_attribute('_tcm');
+    if (defined $tcm && $tcm->[ 0 ] == $g->[ _G ]) {
+	$tcm = $tcm->[ 1 ];
     } else {
-	$tcg = Graph::TransitiveClosure::Matrix->new($g, %opt);
-	$g->set_graph_attribute('_tcg', [ $g->[ _G ], $tcg ]);
+	$tcm = Graph::TransitiveClosure::Matrix->new($g, %opt);
+	$g->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     }
-    my $tcg00 = $tcg->[0]->[0];
-    my $tcg11 = $tcg->[1]->[1];
-    for my $u ($tcg->vertices) {
-	my $tcg00i = $tcg00->[ $tcg11->{ $u } ];
-	for my $v ($tcg->vertices) {
+    my $tcm00 = $tcm->[0]->[0];
+    my $tcm11 = $tcm->[1]->[1];
+    for my $u ($tcm->vertices) {
+	my $tcm00i = $tcm00->[ $tcm11->{ $u } ];
+	for my $v ($tcm->vertices) {
 	    next if $u eq $v && ! $opt{ reflexive };
-	    my $j = $tcg11->{ $v };
+	    my $j = $tcm11->{ $v };
 	    if (
-		# $tcg->is_transitive($u, $v)
-		# $tcg->[0]->get($u, $v)
-		vec($tcg00i, $j, 1)
+		# $tcm->is_transitive($u, $v)
+		# $tcm->[0]->get($u, $v)
+		vec($tcm00i, $j, 1)
 	       ) {
 		my $val = $g->_get_edge_attribute($u, $v, $attr);
-		$tcm->_set_edge_attribute($u, $v, $attr,
+		$tcg->_set_edge_attribute($u, $v, $attr,
 					  defined $val ? $val :
 					  $u eq $v ?
 					  0 : 1);
 	    }
 	}
     }
-    $tcm->set_graph_attribute('_tcm', $tcg);
-    bless $tcm, $class;
+    $tcg->set_graph_attribute('_tcm', $tcm);
+    bless $tcg, $class;
 }
 
 sub is_transitive {
@@ -151,11 +151,5 @@ Return true if the Graph $g is transitive.
 Return the transitive closure matrix of the transitive closure object.
 
 =back
-
-=head2 INTERNALS
-
-The transitive closure matrix is stored as an attribute of the graph
-called C<_tcm>, and any methods not found in the graph class are searched
-in the transitive closure matrix class. 
 
 =cut
