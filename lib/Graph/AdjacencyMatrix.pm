@@ -48,18 +48,31 @@ sub new {
     my $n0 = $n->[0];
     my $n1 = $n->[1];
     my $undirected = $g->is_undirected;
+    my $multiedged = $g->multiedged;
     for my $e (keys %{ $Ei }) {
 	my ($i0, $j0) = @{ $Ei->{ $e } };
 	my $i1 = $V{ $Vi->{ $i0 } };
 	my $j1 = $V{ $Vi->{ $j0 } };
 	my $u = $V[ $i1 ];
 	my $v = $V[ $j1 ];
-	$n0->[ $i1 ]->[ $j1 ] =
-	    $g->get_edge_attribute($u, $v, $d);
-	$n0->[ $j1 ]->[ $i1 ] =
-	    $g->get_edge_attribute($v, $u, $d) if $undirected;
+	$n0->[ $i1 ]->[ $j1 ] = $multiedged
+	    ? _multiedged_distances($g, $u, $v, $d)
+	    : $g->get_edge_attribute($u, $v, $d);
+	$n0->[ $j1 ]->[ $i1 ] = $multiedged
+	    ? _multiedged_distances($g, $v, $u, $d)
+	    : $g->get_edge_attribute($v, $u, $d) if $undirected;
     }
     $self;
+}
+
+sub _multiedged_distances {
+    my ($g, $u, $v, $attr) = @_;
+    my %r;
+    for my $id ($g->get_multiedge_ids($u, $v)) {
+	my $w = $g->get_edge_attribute_by_id($u, $v, $id, $attr);
+	$r{$id} = $w if defined $w;
+    }
+    keys %r ? \%r : undef;
 }
 
 sub adjacency_matrix { $_[0]->[ _AM ] }
@@ -105,6 +118,11 @@ Graph::AdjacencyMatrix - create and query the adjacency matrix of graph G
 
     my $am = Graph::AdjacencyMatrix->new($g, ...);
     my @V  = $am->vertices();
+
+    $g = Graph->new(multiedged => 1);
+    $g->add_...(); # build $g
+    $am = Graph::AdjacencyMatrix->new($g, distance_matrix => 1);
+    $am->distance($u, $v) # returns hash-ref of ID => distance
 
 =head1 DESCRIPTION
 
@@ -166,6 +184,11 @@ Return true if the vertex $v is adjacent to vertex $u, or false if not.
 
 Return the distance between the vertices $u and $v, or C<undef> if
 the vertices are not adjacent.
+
+If the underlying graph is multiedged, returns hash-ref of ID mapped
+to distance. If a given edge ID does not have the attribute defined,
+it will not be represented. If no edge IDs have the attribute, C<undef>
+will be returned.
 
 =item adjacency_matrix
 

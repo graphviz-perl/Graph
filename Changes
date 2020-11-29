@@ -1,5 +1,6 @@
 - bug-fix: set_edge_attribute_by_id add_edge_by_id if not exist
 - connected_component_by_index behaves same with/without unionfind
+- AdjacencyMatrix handle multiedged
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

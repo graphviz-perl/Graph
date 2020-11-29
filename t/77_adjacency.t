@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 14;
+use Test::More tests => 18;
 
 use Graph;
 use Graph::AdjacencyMatrix;
@@ -43,4 +43,16 @@ is( $m->distance(3, 2), undef);
 $m = Graph::AdjacencyMatrix->new($g, distance_matrix => 1);
 
 is( $m->distance(2, 3), 45);
+is( $m->distance(3, 2), undef);
+
+# I for one welcome our new multiedged overlords!
+$g = Graph->new(vertices => [0..9], multiedged => 1);
+$g->set_edge_attribute_by_id(2, 3, 'c', 'other', 'hello');
+$m = Graph::AdjacencyMatrix->new($g, distance_matrix => 1);
+is_deeply $m->distance(2, 3), undef;
+is( $m->distance(3, 2), undef);
+$g->add_weighted_edge_by_id(2, 3, 'a', 45);
+$g->add_weighted_edge_by_id(2, 3, 'b', 47);
+$m = Graph::AdjacencyMatrix->new($g, distance_matrix => 1);
+is_deeply $m->distance(2, 3), { a => 45, b => 47 };
 is( $m->distance(3, 2), undef);
