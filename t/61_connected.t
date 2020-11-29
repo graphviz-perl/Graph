@@ -1,295 +1,98 @@
 use strict; use warnings;
-use Test::More tests => 209;
+use Test::More tests => 264;
+
+my %undirected_map = map +($_ => $_), qw(
+    is_connected
+    connected_components
+    connected_component_by_vertex
+    connected_component_by_index
+    same_connected_components
+    connected_graph
+);
+my %directed_map = qw(
+    is_connected is_weakly_connected
+    connected_components weakly_connected_components
+    connected_component_by_vertex weakly_connected_component_by_vertex
+    connected_component_by_index weakly_connected_component_by_index
+    same_connected_components same_weakly_connected_components
+    connected_graph weakly_connected_graph
+);
 
 use Graph::Undirected;
 use Graph::Directed;
 
-my $g0 = Graph::Undirected->new;
+test_graph(Graph::Undirected->new, \%undirected_map);
+test_graph(Graph::Undirected->new(unionfind => 1), \%undirected_map);
+test_graph(Graph::Undirected->new(unionfind => 1, multiedged => 1), \%undirected_map);
+test_graph(Graph::Directed->new, \%directed_map);
 
-ok(!$g0->is_connected);
-is( $g0->connected_components(), 0);
-is( $g0->connected_component_by_vertex('a'), undef);
-is( $g0->connected_component_by_index(0), undef );
-ok(!$g0->same_connected_components('a', 'b'));
-is($g0->connected_graph, '');
+sub test_graph {
+    my ($g0, $methmap) = @_;
+    ok(!$g0->${ \$methmap->{is_connected} });
+    is( $g0->${ \$methmap->{connected_components} }, 0);
+    is( $g0->${ \$methmap->{connected_component_by_vertex} }('a'), undef);
+    is( $g0->${ \$methmap->{connected_component_by_index} }(0), undef );
+    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'b'));
+    is($g0->${ \$methmap->{connected_graph} }, '');
 
-$g0->add_vertex('a');
+    $g0->add_vertex('a');
 
-ok( $g0->is_connected);
-is( $g0->connected_components(), 1);
-isnt($g0->connected_component_by_vertex('a'), undef);
-is( "@{[ $g0->connected_component_by_index(0) ]}", 'a' );
-ok(!$g0->same_connected_components('a', 'b'));
-is($g0->connected_graph, 'a');
+    ok( $g0->${ \$methmap->{is_connected} });
+    is( $g0->${ \$methmap->{connected_components} }(), 1);
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }('a'), undef);
+    is( "@{[ $g0->${ \$methmap->{connected_component_by_index} }(0) ]}", 'a' );
+    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'b'));
+    is($g0->${ \$methmap->{connected_graph} }, 'a');
 
-$g0->add_vertex('b');
+    $g0->add_vertex('b');
 
-ok(!$g0->is_connected);
-is( $g0->connected_components(), 2);
-isnt($g0->connected_component_by_vertex('a'), undef);
-isnt($g0->connected_component_by_vertex('b'), undef);
-isnt($g0->connected_component_by_vertex('a'),
-     $g0->connected_component_by_vertex('b'));
-my @c0a = $g0->connected_component_by_index(0);
-my @c0b = $g0->connected_component_by_index(0);
-my @c0c = $g0->connected_component_by_index(0);
-is( @c0a, 1 );
-is( @c0b, 1 );
-is( @c0c, 1 );
-is( "@c0a", "@c0b" );
-is( "@c0a", "@c0c" );
-my @c1a = $g0->connected_component_by_index(1);
-my @c1b = $g0->connected_component_by_index(1);
-my @c1c = $g0->connected_component_by_index(1);
-is( @c1a, 1 );
-is( @c1b, 1 );
-is( @c1c, 1 );
-is( "@c1a", "@c1b" );
-is( "@c1a", "@c1c" );
-isnt( "@c0a", "@c1a" );
-ok( ("@c0a" eq "a" && "@c1a" eq "b") ||
-    ("@c0a" eq "b" && "@c1a" eq "a") );
-ok(!$g0->same_connected_components('a', 'b'));
-is($g0->connected_graph, 'a,b');
+    ok(!$g0->${ \$methmap->{is_connected} });
+    is( $g0->${ \$methmap->{connected_components} }(), 2);
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }($_), undef) for qw(a b);
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }('a'),
+	 $g0->${ \$methmap->{connected_component_by_vertex} }('b'));
+    my @c0 = map [ $g0->${ \$methmap->{connected_component_by_index} }(0) ], (1..3);
+    is( @$_, 1 ) for @c0;
+    is( "@{$c0[0]}", "@{$c0[$_]}" ) for 1, 2;
+    my @c1 = map [ $g0->${ \$methmap->{connected_component_by_index} }(1) ], (1..3);
+    is( @$_, 1 ) for @c1;
+    is( "@{$c1[0]}", "@{$c1[$_]}" ) for 1, 2;
+    isnt( "@{$c0[0]}", "@{$c1[0]}" );
+    ok( ("@{$c0[0]}" eq "a" && "@{$c1[0]}" eq "b") ||
+	("@{$c0[0]}" eq "b" && "@{$c1[0]}" eq "a") );
+    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'b'));
+    is($g0->${ \$methmap->{connected_graph} }, 'a,b');
 
-$g0->add_edge(qw(a b));
+    $g0->add_edge(qw(a b));
 
-ok( $g0->is_connected);
-is( $g0->connected_components(), 1);
-isnt($g0->connected_component_by_vertex('a'), undef);
-isnt($g0->connected_component_by_vertex('b'), undef);
-is($g0->connected_component_by_vertex('a'), $g0->connected_component_by_vertex('b'));
-@c0a = $g0->connected_component_by_index(0);
-@c0b = $g0->connected_component_by_index(0);
-@c0c = $g0->connected_component_by_index(0);
-is( @c0a, 2 );
-is( @c0b, 2 );
-is( @c0c, 2 );
-is( "@c0a", "@c0b" );
-is( "@c0a", "@c0c" );
-@c1a = $g0->connected_component_by_index(1);
-@c1b = $g0->connected_component_by_index(1);
-@c1c = $g0->connected_component_by_index(1);
-is( @c1a, 0 );
-is( @c1b, 0 );
-is( @c1c, 0 );
-ok( "@{[ sort @c0a ]}" eq "a b" );
-ok( $g0->same_connected_components('a', 'b'));
-is($g0->connected_graph, 'a+b');
+    ok( $g0->${ \$methmap->{is_connected} });
+    is( $g0->${ \$methmap->{connected_components} }(), 1);
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }($_), undef) for qw(a b);
+    is($g0->${ \$methmap->{connected_component_by_vertex} }('a'), $g0->${ \$methmap->{connected_component_by_vertex} }('b'));
+    @c0 = map [ $g0->${ \$methmap->{connected_component_by_index} }(0) ], (1..3);
+    is( @$_, 2 ) for @c0;
+    is( "@{$c0[0]}", "@{$c0[$_]}" ) for 1, 2;
+    @c1 = map [ $g0->${ \$methmap->{connected_component_by_index} }(1) ], (1..3);
+    is( @$_, 0 ) for @c1;
+    is( "@{[ sort @{$c0[0]} ]}", "a b" );
+    ok( $g0->${ \$methmap->{same_connected_components} }('a', 'b'));
+    is($g0->${ \$methmap->{connected_graph} }, 'a+b');
 
-$g0->add_edge(qw(c d));
+    $g0->add_edge(qw(c d));
 
-ok(!$g0->is_connected);
-is( $g0->connected_components(), 2);
-isnt($g0->connected_component_by_vertex('a'), undef);
-isnt($g0->connected_component_by_vertex('b'), undef);
-isnt($g0->connected_component_by_vertex('c'), undef);
-isnt($g0->connected_component_by_vertex('d'), undef);
-is($g0->connected_component_by_vertex('a'), $g0->connected_component_by_vertex('b'));
-is($g0->connected_component_by_vertex('c'), $g0->connected_component_by_vertex('d'));
-isnt($g0->connected_component_by_vertex('a'), $g0->connected_component_by_vertex('d'));
-ok( $g0->same_connected_components('a', 'b'));
-ok( $g0->same_connected_components('c', 'd'));
-ok(!$g0->same_connected_components('a', 'c'));
-is($g0->connected_graph, 'a+b,c+d');
-
-my $g1 = Graph::Undirected->new(unionfind => 1);
-
-ok(!$g1->is_connected);
-is( $g1->connected_components(), 0);
-is( $g1->connected_component_by_vertex('a'), undef);
-ok(!$g1->same_connected_components('a', 'b'));
-is($g1->connected_graph, '');
-
-$g1->add_vertex('a');
-
-ok( $g1->is_connected);
-is( $g1->connected_components(), 1);
-isnt($g1->connected_component_by_vertex('a'), undef);
-ok(!$g1->same_connected_components('a', 'b'));
-is($g1->connected_graph, 'a');
-
-$g1->add_vertex('b');
-
-ok(!$g1->is_connected);
-is( $g1->connected_components(), 2);
-isnt($g1->connected_component_by_vertex('a'), undef);
-isnt($g1->connected_component_by_vertex('b'), undef);
-isnt($g1->connected_component_by_vertex('a'), $g1->connected_component_by_vertex('b'));
-ok(!$g1->same_connected_components('a', 'b'));
-is($g1->connected_graph, 'a,b');
-
-$g1->add_edge(qw(a b));
-
-ok( $g1->is_connected);
-is( $g1->connected_components(), 1);
-isnt($g1->connected_component_by_vertex('a'), undef);
-isnt($g1->connected_component_by_vertex('b'), undef);
-is($g1->connected_component_by_vertex('a'), $g1->connected_component_by_vertex('b'));
-ok( $g1->same_connected_components('a', 'b'));
-is($g1->connected_graph, 'a+b');
-
-$g1->add_edge(qw(c d));
-
-ok(!$g1->is_connected);
-is( $g1->connected_components(), 2);
-isnt($g1->connected_component_by_vertex('a'), undef);
-isnt($g1->connected_component_by_vertex('b'), undef);
-isnt($g1->connected_component_by_vertex('c'), undef);
-isnt($g1->connected_component_by_vertex('d'), undef);
-is($g1->connected_component_by_vertex('a'), $g1->connected_component_by_vertex('b'));
-is($g1->connected_component_by_vertex('c'), $g1->connected_component_by_vertex('d'));
-isnt($g1->connected_component_by_vertex('a'), $g1->connected_component_by_vertex('d'));
-ok( $g1->same_connected_components('a', 'b'));
-ok( $g1->same_connected_components('c', 'd'));
-ok(!$g1->same_connected_components('a', 'c'));
-is($g1->connected_graph, 'a+b,c+d');
-
-my $g2 = Graph::Directed->new;
-
-ok(!$g2->is_weakly_connected);
-is( $g2->weakly_connected_components(), 0);
-is( $g2->weakly_connected_component_by_vertex('a'), undef);
-is( $g2->weakly_connected_component_by_index(0), undef );
-ok(!$g2->same_weakly_connected_components('a', 'b'));
-is($g2->weakly_connected_graph, '');
-
-$g2->add_vertex('a');
-
-ok( $g2->is_weakly_connected);
-is( $g2->weakly_connected_components(), 1);
-isnt($g2->weakly_connected_component_by_vertex('a'), undef);
-is( "@{[ $g2->weakly_connected_component_by_index(0) ]}", 'a' );
-ok(!$g2->same_weakly_connected_components('a', 'b'));
-is($g2->weakly_connected_graph, 'a');
-
-$g2->add_vertex('b');
-
-ok(!$g2->is_weakly_connected);
-is( $g2->weakly_connected_components(), 2);
-isnt($g2->weakly_connected_component_by_vertex('a'), undef);
-isnt($g2->weakly_connected_component_by_vertex('b'), undef);
-isnt($g2->weakly_connected_component_by_vertex('a'), $g2->weakly_connected_component_by_vertex('b'));
-@c0a = $g2->weakly_connected_component_by_index(0);
-@c0b = $g2->weakly_connected_component_by_index(0);
-@c0c = $g2->weakly_connected_component_by_index(0);
-is( @c0a, 1 );
-is( @c0b, 1 );
-is( @c0c, 1 );
-is( "@c0a", "@c0b" );
-is( "@c0a", "@c0c" );
-@c1a = $g2->weakly_connected_component_by_index(1);
-@c1b = $g2->weakly_connected_component_by_index(1);
-@c1c = $g2->weakly_connected_component_by_index(1);
-is( @c1a, 1 );
-is( @c1b, 1 );
-is( @c1c, 1 );
-is( "@c1a", "@c1b" );
-is( "@c1a", "@c1c" );
-isnt( "@c0a", "@c1a" );
-ok( ("@c0a" eq "a" && "@c1a" eq "b") ||
-    ("@c0a" eq "b" && "@c1a" eq "a") );
-ok(!$g2->same_weakly_connected_components('a', 'b'));
-is($g2->weakly_connected_graph, 'a,b');
-
-$g2->add_edge(qw(a b));
-
-ok( $g2->is_weakly_connected);
-is( $g2->weakly_connected_components(), 1);
-isnt($g2->weakly_connected_component_by_vertex('a'), undef);
-isnt($g2->weakly_connected_component_by_vertex('b'), undef);
-is($g2->weakly_connected_component_by_vertex('a'), $g2->weakly_connected_component_by_vertex('b'));
-@c0a = $g2->weakly_connected_component_by_index(0);
-@c0b = $g2->weakly_connected_component_by_index(0);
-@c0c = $g2->weakly_connected_component_by_index(0);
-is( @c0a, 2 );
-is( @c0b, 2 );
-is( @c0c, 2 );
-is( "@c0a", "@c0b" );
-is( "@c0a", "@c0c" );
-@c1a = $g2->weakly_connected_component_by_index(1);
-@c1b = $g2->weakly_connected_component_by_index(1);
-@c1c = $g2->weakly_connected_component_by_index(1);
-is( @c1a, 0 );
-is( @c1b, 0 );
-is( @c1c, 0 );
-ok( "@{[ sort @c0a ]}" eq "a b" );
-ok( $g2->same_weakly_connected_components('a', 'b'));
-is($g2->weakly_connected_graph, 'a+b');
-
-$g2->add_edge(qw(c d));
-
-ok(!$g2->is_weakly_connected);
-is( $g2->weakly_connected_components(), 2);
-isnt($g2->weakly_connected_component_by_vertex('a'), undef);
-isnt($g2->weakly_connected_component_by_vertex('b'), undef);
-isnt($g2->weakly_connected_component_by_vertex('c'), undef);
-isnt($g2->weakly_connected_component_by_vertex('d'), undef);
-is($g2->weakly_connected_component_by_vertex('a'), $g2->weakly_connected_component_by_vertex('b'));
-is($g2->weakly_connected_component_by_vertex('c'), $g2->weakly_connected_component_by_vertex('d'));
-isnt($g2->weakly_connected_component_by_vertex('a'), $g2->weakly_connected_component_by_vertex('d'));
-ok( $g2->same_weakly_connected_components('a', 'b'));
-ok( $g2->same_weakly_connected_components('c', 'd'));
-ok(!$g2->same_weakly_connected_components('a', 'c'));
-is($g2->weakly_connected_graph, 'a+b,c+d');
-
-my $g3 = Graph::Undirected->new(unionfind => 1, multiedged => 1);
-
-ok(!$g3->is_connected);
-is( $g3->connected_components(), 0);
-is( $g3->connected_component_by_vertex('a'), undef);
-ok(!$g3->same_connected_components('a', 'b'));
-is($g3->connected_graph, '');
-
-$g3->add_vertex('a');
-
-ok( $g3->is_connected);
-is( $g3->connected_components(), 1);
-isnt($g3->connected_component_by_vertex('a'), undef);
-ok(!$g3->same_connected_components('a', 'b'));
-is($g3->connected_graph, 'a');
-
-$g3->add_vertex('b');
-
-ok(!$g3->is_connected);
-is( $g3->connected_components(), 2);
-isnt($g3->connected_component_by_vertex('a'), undef);
-isnt($g3->connected_component_by_vertex('b'), undef);
-isnt($g3->connected_component_by_vertex('a'), $g3->connected_component_by_vertex('b'));
-ok(!$g3->same_connected_components('a', 'b'));
-is($g3->connected_graph, 'a,b');
-
-$g3->add_edge(qw(a b));
-
-ok( $g3->is_connected);
-is( $g3->connected_components(), 1);
-isnt($g3->connected_component_by_vertex('a'), undef);
-isnt($g3->connected_component_by_vertex('b'), undef);
-is($g3->connected_component_by_vertex('a'), $g3->connected_component_by_vertex('b'));
-ok( $g3->same_connected_components('a', 'b'));
-is($g3->connected_graph, 'a+b');
-
-$g3->add_edge(qw(c d));
-
-ok(!$g3->is_connected);
-is( $g3->connected_components(), 2);
-isnt($g3->connected_component_by_vertex('a'), undef);
-isnt($g3->connected_component_by_vertex('b'), undef);
-isnt($g3->connected_component_by_vertex('c'), undef);
-isnt($g3->connected_component_by_vertex('d'), undef);
-is($g3->connected_component_by_vertex('a'), $g3->connected_component_by_vertex('b'));
-is($g3->connected_component_by_vertex('c'), $g3->connected_component_by_vertex('d'));
-isnt($g3->connected_component_by_vertex('a'), $g3->connected_component_by_vertex('d'));
-ok( $g3->same_connected_components('a', 'b'));
-ok( $g3->same_connected_components('c', 'd'));
-ok(!$g3->same_connected_components('a', 'c'));
-
-my $g3c = $g3->connected_graph;
-is($g3c, 'a+b,c+d');
-
-is("@{[sort @{ $g3c->get_vertex_attribute('a+b', 'subvertices') }]}", "a b");
-is("@{[sort @{ $g3c->get_vertex_attribute('c+d', 'subvertices') }]}", "c d");
-is($g3c->get_vertex_attribute('b+a', 'subvertices'), undef);
+    ok(!$g0->${ \$methmap->{is_connected} });
+    is( $g0->${ \$methmap->{connected_components} }(), 2);
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }($_), undef) for qw(a b c d);
+    is($g0->${ \$methmap->{connected_component_by_vertex} }($_->[0]), $g0->${ \$methmap->{connected_component_by_vertex} }($_->[1])) for [qw(a b)], [qw(c d)];
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }('a'), $g0->${ \$methmap->{connected_component_by_vertex} }('d'));
+    ok( $g0->${ \$methmap->{same_connected_components} }(@$_)) for [qw(a b)], [qw(c d)];
+    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'c'));
+    my $g0c = $g0->${ \$methmap->{connected_graph} };
+    is($g0c, 'a+b,c+d');
+    is("@{[sort @{ $g0c->get_vertex_attribute('a+b', 'subvertices') }]}", "a b");
+    is("@{[sort @{ $g0c->get_vertex_attribute('c+d', 'subvertices') }]}", "c d");
+    is($g0c->get_vertex_attribute('b+a', 'subvertices'), undef);
+}
 
 my $g4 = Graph::Directed->new;
 

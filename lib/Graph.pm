@@ -2791,7 +2791,8 @@ sub connected_component_by_index {
     my ($g, $i) = @_;
     $g->expect_undirected;
     my ($CCE, $CCI) = $g->_connected_components();
-    return defined $CCI->{ $i } ? @{ $CCI->{ $i } } : ( );
+    return unless my $value = (values %$CCI)[$i];
+    return @$value;
 }
 
 sub connected_components {
