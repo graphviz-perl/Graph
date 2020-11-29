@@ -165,7 +165,7 @@ sub _opt_unknown {
     my ($opt) = @_;
     return unless my @opt = keys %$opt;
     __carp_confess sprintf
-        "@{[(caller(1))[3]]}: Unknown option%s: @{[map { qq['$_'] } sort @opt]}",
+        "@{[(caller(1))[3]]}: Unknown option%s: @{[map qq['$_'], sort @opt]}",
         @opt > 1 ? 's' : '';
 }
 
@@ -291,17 +291,13 @@ sub new {
 
     $g->add_vertices(@V) if @V;
 
-    if (@E) {
-	for my $e (@E) {
-	    __carp_confess "Graph: edges should be array refs"
-		if ref $e ne 'ARRAY';
-	    $g->add_edge(@$e);
-	}
+    for my $e (@E) {
+	__carp_confess "Graph: edges should be array refs"
+	    if ref $e ne 'ARRAY';
+	$g->add_edge(@$e);
     }
 
-    if (($gflags & _UNIONFIND)) {
-	$g->[ _U ] = Graph::UnionFind->new;
-    }
+    $g->[ _U ] = Graph::UnionFind->new if $gflags & _UNIONFIND;
 
     return $g;
 }
@@ -376,7 +372,7 @@ sub vertices05 {
     my @v = $g->[ _V ]->paths( @_ );
     if (wantarray) {
 	return $g->[ _V ]->_is_HYPER ?
-	    @v : map { ref $_ eq 'ARRAY' ? @$_ : $_ } @v;
+	    @v : map ref $_ eq 'ARRAY' ? @$_ : $_, @v;
     } else {
 	return scalar @v;
     }
@@ -385,27 +381,12 @@ sub vertices05 {
 sub vertices {
     my $g = shift;
     my @v = $g->vertices05;
-    if ($g->is_compat02) {
-        wantarray ? sort @v : scalar @v;
-    } else {
-	if ($g->is_multivertexed || $g->is_countvertexed) {
-	    if (wantarray) {
-		my @V;
-		for my $v ( @v ) {
-		    push @V, ($v) x $g->get_vertex_count($v);
-		}
-		return @V;
-	    } else {
-		my $V = 0;
-		for my $v ( @v ) {
-		    $V += $g->get_vertex_count($v);
-		}
-		return $V;
-	    }
-	} else {
-	    return @v;
-	}
-    }
+    return wantarray ? sort @v : scalar @v if $g->is_compat02;
+    return @v if !($g->is_multivertexed || $g->is_countvertexed);
+    return map +(($_) x $g->get_vertex_count($_)), @v if wantarray;
+    my $V = 0;
+    $V += $g->get_vertex_count($_) for @v;
+    return $V;
 }
 
 *vertices_unsorted = \&vertices_unsorted; # Graph 0.20103 compat.
@@ -413,11 +394,8 @@ sub vertices {
 sub unique_vertices {
     my $g = shift;
     my @v = $g->vertices05;
-    if ($g->is_compat02) {
-        wantarray ? sort @v : scalar @v;
-    } else {
-	return @v;
-    }
+    return @v if !$g->is_compat02;
+    wantarray ? sort @v : scalar @v;
 }
 
 sub has_vertices {
@@ -428,19 +406,16 @@ sub has_vertices {
 sub _add_edge {
     my $g = shift;
     my $V = $g->[ _V ];
-    my @e;
     if (($V->[ _f ]) & _LIGHT) {
-	for my $v ( @_ ) {
-	    $g->add_vertex( $v ) unless exists $V->[ _s ]->{ $v };
-	    push @e, $V->[ _s ]->{ $v };
-	}
-    } else {
-	my $h = $V->_is_HYPER;
-	for my $v ( @_ ) {
-	    my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
-	    $g->add_vertex( @v ) unless $V->has_path( @v );
-	    push @e, $V->_get_path_id( @v );
-	}
+	$g->add_vertex( $_ ) for grep !exists $V->[ _s ]->{ $_ }, @_;
+	return map $V->[ _s ]->{ $_ }, @_;
+    }
+    my @e;
+    my $h = $V->_is_HYPER;
+    for my $v ( @_ ) {
+	my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
+	$g->add_vertex( @v ) unless $V->has_path( @v );
+	push @e, $V->_get_path_id( @v );
     }
     return @e;
 }
@@ -468,19 +443,16 @@ sub add_edge {
 sub _vertex_ids {
     my $g = shift;
     my $V = $g->[ _V ];
-    my @e;
     if (($V->[ _f ] & _LIGHT)) {
-	for my $v ( @_ ) {
-	    return () unless exists $V->[ _s ]->{ $v };
-	    push @e, $V->[ _s ]->{ $v };
-	}
-    } else {
-	my $h = $V->_is_HYPER;
-	for my $v ( @_ ) {
-	    my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
-	    return () unless $V->has_path( @v );
-	    push @e, $V->_get_path_id( @v );
-	}
+	return if grep !exists $V->[ _s ]->{ $_ }, @_;
+	return map $V->[ _s ]->{ $_ }, @_;
+    }
+    my @e;
+    my $h = $V->_is_HYPER;
+    for my $v ( @_ ) {
+	my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
+	return () unless $V->has_path( @v );
+	push @e, $V->_get_path_id( @v );
     }
     return @e;
 }
@@ -513,11 +485,9 @@ sub edges05 {
     my $g = shift;
     my $V = $g->[ _V ];
     my @e = $g->[ _E ]->paths( @_ );
-    wantarray ?
-	map { [ map { my @v = $V->_get_id_path($_);
-		      @v == 1 ? $v[0] : [ @v ] }
-		@$_ ] }
-            @e : @e;
+    return @e if !wantarray;
+    map [ map { my @v = $V->_get_id_path($_);
+		@v == 1 ? $v[0] : \@v } @$_ ], @e;
 }
 
 sub edges02 {
@@ -526,16 +496,16 @@ sub edges02 {
 	unless (defined $_[1]) {
 	    my @e = $g->edges_at($_[0]);
 	    wantarray ?
-		map { @$_ }
+		map @$_,
                     sort { $a->[0] cmp $b->[0] || $a->[1] cmp $b->[1] } @e
                 : @e;
 	} else {
 	    die "edges02: unimplemented option";
 	}
     } else {
-	my @e = map { ($_) x $g->get_edge_count(@$_) } $g->edges05( @_ );
+	my @e = map +(($_) x $g->get_edge_count(@$_)), $g->edges05( @_ );
 	wantarray ?
-          map { @$_ }
+          map @$_,
               sort { $a->[0] cmp $b->[0] || $a->[1] cmp $b->[1] } @e
           : @e;
     }
@@ -548,27 +518,13 @@ sub unique_edges {
 
 sub edges {
     my $g = shift;
-    if ($g->is_compat02) {
-	return $g->edges02( @_ );
-    } else {
-	if ($g->is_multiedged || $g->is_countedged) {
-	    if (wantarray) {
-		my @E;
-		for my $e ( $g->edges05 ) {
-		    push @E, ($e) x $g->get_edge_count(@$e);
-		}
-		return @E;
-	    } else {
-		my $E = 0;
-		for my $e ( $g->edges05 ) {
-		    $E += $g->get_edge_count(@$e);
-		}
-		return $E;
-	    }
-	} else {
-	    return $g->edges05;
-	}
-    }
+    return $g->edges02( @_ ) if $g->is_compat02;
+    my @e = $g->edges05;
+    return @e if !($g->is_multiedged || $g->is_countedged);
+    return map +(($_) x $g->get_edge_count(@$_)), @e if wantarray;
+    my $E = 0;
+    $E += $g->get_edge_count(@$_) for @e;
+    return $E;
 }
 
 sub has_edges {
@@ -723,14 +679,9 @@ sub _edges_at {
 	my $Ei = $E->_ids;
 	while (my ($ei, $ev) = each %{ $Ei }) {
 	    if (wantarray) {
-		for my $j (@$ev) {
-		    push @e, [ $ei, $ev ]
-			if $j == $vi && !$ev{$ei}++;
-		}
+		push @e, [ $ei, $ev ] for grep $_ == $vi && !$ev{$ei}++, @$ev;
 	    } else {
-		for my $j (@$ev) {
-		    $en++ if $j == $vi;
-		}
+		$en++ for grep $_ == $vi, @$ev;
 	    }		    
 	}
     }
@@ -772,12 +723,9 @@ sub _edges {
 	push @e, @{ $N->[ 1 ]->{ $vi } };
     }
     if (wantarray && $g->is_undirected) {
-	my @i = map { $V->_get_path_id( $_ ) } @_;
-	for my $e ( @e ) {
-	    unless ( $e->[ 1 ]->[ $i ] == $i[ $i ] ) {
-		$e = [ $e->[ 0 ], [ reverse @{ $e->[ 1 ] } ] ];
-	    }
-	}
+	my @i = map $V->_get_path_id( $_ ), @_;
+	$_ = [ $_->[ 0 ], [ reverse @{ $_->[ 1 ] } ] ]
+	    for grep $_->[ 1 ]->[ $i ] != $i[ $i ], @e;
     }
     return @e;
 }
@@ -802,17 +750,17 @@ sub _edges_id_path {
 
 sub edges_at {
     my $g = shift;
-    map { $g->_edges_id_path($_ ) } $g->_edges_at( @_ );
+    map $g->_edges_id_path($_), $g->_edges_at( @_ );
 }
 
 sub edges_from {
     my $g = shift;
-    map { $g->_edges_id_path($_ ) } $g->_edges_from( @_ );
+    map $g->_edges_id_path($_), $g->_edges_from( @_ );
 }
 
 sub edges_to {
     my $g = shift;
-    map { $g->_edges_id_path($_ ) } $g->_edges_to( @_ );
+    map $g->_edges_id_path($_), $g->_edges_to( @_ );
 }
 
 sub successors {
@@ -871,7 +819,7 @@ sub neighbours {
     my %n;
     @n{ @s } = @s;
     @n{ @p } = @p;
-    map { $V->_get_id_path($_) } keys %n;
+    map $V->_get_id_path($_), keys %n;
 }
 
 *neighbors = \&neighbours;
@@ -925,9 +873,7 @@ sub delete_vertex {
     } else {
       # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
       my $E = $g->[ _E ];
-      for my $e ( $g->_edges_at( @_ ) ) {
-        $E->_del_id( $e->[ 0 ] );
-      }
+      $E->_del_id( $_->[ 0 ] ) for $g->_edges_at( @_ );
     }
     $V->del_path( @_ );
     $g->[ _G ]++;
@@ -1006,15 +952,11 @@ sub _total_degree {
 
 sub degree {
     my $g = shift;
-    if (@_) {
-	$g->_total_degree( @_ );
-    } elsif ($g->is_undirected) {
-	my $total = 0;
-	$total += $g->_total_degree( $_ ) for $g->vertices05;
-	return $total;
-    } else {
-	return 0;
-    }
+    return $g->_total_degree( @_ ) if @_;
+    return 0 if !$g->is_undirected;
+    my $total = 0;
+    $total += $g->_total_degree( $_ ) for $g->vertices05;
+    return $total;
 }
 
 *vertex_degree = \&degree;
@@ -1082,60 +1024,58 @@ sub is_exterior_vertex {
 sub is_self_loop_vertex {
     my $g = shift;
     return 0 unless @_;
-    for my $s ( $g->successors( @_ ) ) {
-	return 1 if $s eq $_[0]; # @todo: multiedges, hypervertices
-    }
+    return 1 if grep $_ eq $_[0], $g->successors( @_ ); # @todo: multiedges, hypervertices
     return 0;
 }
 
 sub sink_vertices {
     my $g = shift;
-    grep { $g->is_sink_vertex($_) } $g->vertices05;
+    grep $g->is_sink_vertex($_), $g->vertices05;
 }
 
 sub source_vertices {
     my $g = shift;
-    grep { $g->is_source_vertex($_) } $g->vertices05;
+    grep $g->is_source_vertex($_), $g->vertices05;
 }
 
 sub successorless_vertices {
     my $g = shift;
-    grep { $g->is_successorless_vertex($_) } $g->vertices05;
+    grep $g->is_successorless_vertex($_), $g->vertices05;
 }
 
 sub predecessorless_vertices {
     my $g = shift;
-    grep { $g->is_predecessorless_vertex($_) } $g->vertices05;
+    grep $g->is_predecessorless_vertex($_), $g->vertices05;
 }
 
 sub successorful_vertices {
     my $g = shift;
-    grep { $g->is_successorful_vertex($_) } $g->vertices05;
+    grep $g->is_successorful_vertex($_), $g->vertices05;
 }
 
 sub predecessorful_vertices {
     my $g = shift;
-    grep { $g->is_predecessorful_vertex($_) } $g->vertices05;
+    grep $g->is_predecessorful_vertex($_), $g->vertices05;
 }
 
 sub isolated_vertices {
     my $g = shift;
-    grep { $g->is_isolated_vertex($_) } $g->vertices05;
+    grep $g->is_isolated_vertex($_), $g->vertices05;
 }
 
 sub interior_vertices {
     my $g = shift;
-    grep { $g->is_interior_vertex($_) } $g->vertices05;
+    grep $g->is_interior_vertex($_), $g->vertices05;
 }
 
 sub exterior_vertices {
     my $g = shift;
-    grep { $g->is_exterior_vertex($_) } $g->vertices05;
+    grep $g->is_exterior_vertex($_), $g->vertices05;
 }
 
 sub self_loop_vertices {
     my $g = shift;
-    grep { $g->is_self_loop_vertex($_) } $g->vertices05;
+    grep $g->is_self_loop_vertex($_), $g->vertices05;
 }
 
 ###
@@ -1591,14 +1531,14 @@ sub out_edges {
     my $g = shift;
     return unless @_ && $g->has_vertex( @_ );
     my @e = $g->edges_from( @_ );
-    wantarray ? map { @$_ } @e : @e;
+    wantarray ? map @$_, @e : @e;
 }
 
 sub in_edges {
     my $g = shift;
     return unless @_ && $g->has_vertex( @_ );
     my @e = $g->edges_to( @_ );
-    wantarray ? map { @$_ } @e : @e;
+    wantarray ? map @$_, @e : @e;
 }
 
 sub add_vertices {
@@ -1631,17 +1571,8 @@ sub rename_vertex {
 sub rename_vertices {
     my ($g, $code) = @_;
     my %seen;
-    for ($g->vertices) {
-        my $from;
-        if (ref) {
-            next if @$_ > 1;
-            ($from) = @$_;
-        } else {
-            $from = $_;
-        }
-        next if $seen{$from}++;
-        $g->rename_vertex($from, $code->($from));
-    }
+    $g->rename_vertex($_, $code->($_))
+	for grep !$seen{$_}++, map ref() ? $_->[0] : $_, $g->vertices;
     return $g;
 }
 
@@ -1701,9 +1632,8 @@ sub ingest {
 sub copy {
     my $g = shift;
     my %opt = _get_options( \@_ );
-
     my $c =
-	(ref $g)->new(map { $_ => $g->$_ ? 1 : 0 }
+	(ref $g)->new(map +($_ => $g->$_ ? 1 : 0),
 		      qw(directed
 			 compat02
 			 refvertexed
@@ -1715,9 +1645,8 @@ sub copy {
 			 multiedged
 			 omniedged
 		         __stringified));
-    for my $v ($g->isolated_vertices) { $c->add_vertex($v) }
-    for my $e ($g->edges05)           { $c->add_edge(@$e)  }
-
+    $c->add_vertex($_) for $g->isolated_vertices;
+    $c->add_edge(@$_) for $g->edges05;
     return $c;
 }
 
@@ -1770,11 +1699,8 @@ sub transpose_edge {
 sub transpose_graph {
     my $g = shift;
     my $t = $g->copy;
-    if ($t->directed) {
-	for my $e ($t->edges05) {
-	    $t->transpose_edge(@$e);
-	}
-    }
+    return $t if !$t->directed;
+    $t->transpose_edge(@$_) for $t->edges05;
     return $t;
 }
 
@@ -1786,12 +1712,8 @@ sub complete_graph {
     my @v = $g->vertices05;
     for (my $i = 0; $i <= $#v; $i++ ) {
 	for (my $j = $i + 1; $j <= $#v; $j++ ) {
-	    if ($g->is_undirected) {
-		$c->add_edge($v[$i], $v[$j]);
-	    } else {
-		$c->add_edge($v[$i], $v[$j]);
-		$c->add_edge($v[$j], $v[$i]);
-	    }
+	    $c->add_edge($v[$i], $v[$j]);
+	    $c->add_edge($v[$j], $v[$i]) if !$g->is_undirected;
 	}
     }
     return $c;
@@ -1805,15 +1727,9 @@ sub complement_graph {
     $c->add_vertices(my @v = $g->vertices05);
     for (my $i = 0; $i <= $#v; $i++ ) {
 	for (my $j = $i + 1; $j <= $#v; $j++ ) {
-	    if ($g->is_undirected) {
-		$c->add_edge($v[$i], $v[$j])
-		    unless $g->has_edge($v[$i], $v[$j]);
-	    } else {
-		$c->add_edge($v[$i], $v[$j])
-		    unless $g->has_edge($v[$i], $v[$j]);
-		$c->add_edge($v[$j], $v[$i])
-		    unless $g->has_edge($v[$j], $v[$i]);
-	    }
+	    $c->add_edge($v[$i], $v[$j]) if !$g->has_edge($v[$i], $v[$j]);
+	    $c->add_edge($v[$j], $v[$i])
+		if !$g->is_undirected and !$g->has_edge($v[$j], $v[$i]);
 	}
     }
     return $c;
@@ -1823,21 +1739,14 @@ sub complement_graph {
 
 sub subgraph {
   my ($g, $src, $dst) = @_;
-  $dst = $src unless defined $dst;
   __carp_confess "Graph::subgraph: need src and dst array references"
-    unless ref $src eq 'ARRAY' && ref $dst eq 'ARRAY';
+    unless ref $src eq 'ARRAY' && (!defined($dst) or ref $dst eq 'ARRAY');
   my $s = $g->new;
-  my @u = grep { $g->has_vertex($_) } @$src;
-  my @v = grep { $g->has_vertex($_) } @$dst;
-  $s->add_vertices(@u, @v);
+  my @u = grep $g->has_vertex($_), @$src;
+  my @v = defined($dst) ? grep $g->has_vertex($_), @$dst : @u;
+  $s->add_vertices(@u, defined($dst) ? @v : ());
   for my $u (@u) {
-    my @e;
-    for my $v (@v) {
-      if ($g->has_edge($u, $v)) {
-        push @e, [$u, $v];
-      }
-    }
-    $s->add_edges(@e);
+    $s->add_edges( map [$u, $_], grep $g->has_edge($u, $_), @v );
   }
   return $s;
 }
@@ -2302,9 +2211,9 @@ sub _MST_attr {
 sub _MST_edges {
     my ($g, $attr) = @_;
     my ($attribute, $comparator) = _MST_attr($attr);
-    map { $_->[1] }
+    map $_->[1],
         sort { $comparator->($a->[0], $b->[0], $a->[1], $b->[1]) }
-             map { [ $g->get_edge_attribute(@$_, $attribute), $_ ] }
+             map [ $g->get_edge_attribute(@$_, $attribute), $_ ],
                  $g->edges05;
 }
 
@@ -2316,16 +2225,13 @@ sub MST_Kruskal {
     my $MST = Graph::Undirected->new;
 
     my $UF  = Graph::UnionFind->new;
-    for my $v ($g->vertices05) { $UF->add($v) }
+    $UF->add($_) for $g->vertices05;
 
     for my $e ($g->_MST_edges(\%attr)) {
 	my ($u, $v) = @$e; # TODO: hyperedges
-	my $t0 = $UF->find( $u );
-	my $t1 = $UF->find( $v );
-	unless ($t0 eq $t1) {
-	    $UF->union($u, $v);
-	    $MST->add_edge($u, $v);
-	}
+	next if $UF->find( $u ) eq $UF->find( $v );
+	$UF->union($u, $v);
+	$MST->add_edge($u, $v);
     }
 
     return $MST;
@@ -2333,9 +2239,8 @@ sub MST_Kruskal {
 
 sub _MST_add {
     my ($g, $h, $HF, $r, $attr, $unseen) = @_;
-    for my $s ( grep { exists $unseen->{ $_ } } $g->successors( $r ) ) {
-	$HF->add( Graph::MSTHeapElem->new( $r, $s, $g->get_edge_attribute( $r, $s, $attr ) ) );
-    }
+    $HF->add( Graph::MSTHeapElem->new( $r, $_, $g->get_edge_attribute( $r, $_, $attr ) ) )
+	for grep exists $unseen->{ $_ }, $g->successors( $r );
 }
 
 sub _next_alphabetic { shift; (sort               keys %{ $_[0] })[0] }
@@ -2619,12 +2524,8 @@ sub topological_sort {
 sub _undirected_copy_compute {
   my $g = shift;
   my $c = Graph::Undirected->new;
-  for my $v ($g->isolated_vertices) { # TODO: if iv ...
-    $c->add_vertex($v);
-  }
-  for my $e ($g->edges05) {
-    $c->add_edge(@$e);
-  }
+  $c->add_vertex($_) for $g->isolated_vertices; # TODO: if iv ...
+  $c->add_edge(@$_) for $g->edges05;
   return $c;
 }
 
@@ -2640,9 +2541,7 @@ sub directed_copy {
     my $g = shift;
     $g->expect_undirected;
     my $c = Graph::Directed->new;
-    for my $v ($g->isolated_vertices) { # TODO: if iv ...
-	$c->add_vertex($v);
-    }
+    $c->add_vertex($_) for $g->isolated_vertices; # TODO: if iv ...
     for my $e ($g->edges05) {
 	my @e = @$e;
 	$c->add_edge(@e);
@@ -2805,29 +2704,20 @@ sub connected_components {
 sub same_connected_components {
     my $g = shift;
     $g->expect_undirected;
+    my $u = shift;
+    my ($c, @d);
     if ($g->has_union_find) {
 	my $UF = $g->_get_union_find();
 	my $V  = $g->[ _V ];
-	my $u = shift;
-	my $c = $UF->find( $V->_get_path_id ( $u ) );
-	my $d;
-	for my $v ( @_) {
-	    return 0
-		unless defined($d = $UF->find( $V->_get_path_id( $v ) )) &&
-		       $d eq $c;
-	}
-	return 1;
+	$c = $UF->find( $V->_get_path_id ( $u ) );
+	@d = map scalar $UF->find( $V->_get_path_id( $_ ) ), @_;
     } else {
 	my ($CCE, $CCI) = $g->_connected_components();
-	my $u = shift;
-	my $c = $CCE->{ $u };
-	for my $v ( @_ ) {
-	    return 0
-		unless defined $CCE->{ $v } &&
-		       $CCE->{ $v } eq $c;
-	}
-	return 1;
+	$c = $CCE->{ $u };
+	@d = map $CCE->{ $_ }, @_;
     }
+    return 0 if grep !(defined($_) && $_ eq $c), @d;
+    return 1;
 }
 
 my $super_component = sub { join("+", sort @_) };
@@ -2971,10 +2861,9 @@ sub same_strongly_connected_components {
 	my $v = shift;
 	for (my $i = 0; $i <= $#scc; $i++) {
 	    for (my $j = 0; $j <= $#{ $scc[$i] }; $j++) {
-		if ($scc[$i]->[$j] eq $v) {
-		    push @i, $i;
-		    return 0 if @i > 1 && $i[-1] ne $i[0];
-		}
+		next if $scc[$i]->[$j] ne $v;
+		push @i, $i;
+		return 0 if @i > 1 && $i[-1] ne $i[0];
 	    }
 	}
     }
@@ -3074,30 +2963,26 @@ sub strongly_connected_graph {
 	my $c = $c[$i];
 	$s->add_vertex( $s[$i] = $sc_cb->(@$c) );
 	$s->set_vertex_attribute($s[$i], 'subvertices', [ @$c ]);
-	for my $v (@$c) {
-	    $c{$v} = $i;
-	}
+	@c{@$c} = ($i) x @$c;
     }
 
     my $n = @c;
-    for my $v ($g->vertices) {
-	unless (exists $c{$v}) {
-	    $c{$v} = $n;
-	    $s[$n] = $v;
-	    $n++;
-	}
+    for my $v (grep !exists $c{$_}, $g->vertices) {
+	$c{$v} = $n;
+	$s[$n] = $v;
+	$n++;
     }
 
     for my $e ($g->edges05) {
 	my ($u, $v) = @$e; # @TODO: hyperedges
 	unless ($c{$u} == $c{$v}) {
-	    my ($p, $q) = ( $s[ $c{ $u } ], $s[ $c{ $v } ] );
+	    my ($p, $q) = @s[ @c{ $u, $v } ];
 	    $s->add_edge($p, $q) unless $s->has_edge($p, $q);
 	}
     }
 
     if (my @i = $g->isolated_vertices) {
-	$s->add_vertices(map { $s[ $c{ $_ } ] } @i);
+	$s->add_vertices(map $s[ $c{ $_ } ], @i);
     }
 
     return $s;
@@ -3154,44 +3039,30 @@ sub _biconnectivity_compute {
     my %state = (BC=>[], BR=>[], V2BC=>{}, BC2V=>{}, AP=>[], dfs=>0);
     my @u = _shuffle $g->vertices;
     for my $u (@u) {
-      unless (exists $state{num}->{$u}) {
+	next if exists $state{num}->{$u};
 	_biconnectivity_dfs($g, $u, \%state);
 	_biconnectivity_out(\%state);
 	delete $state{stack};
-      }
     }
 
     # Mark the components each vertex belongs to.
     my $bci = 0;
     for my $bc (@{$state{BC}}) {
-      for my $e (@$bc) {
-	for my $v (@$e) {
-	  $state{V2BC}->{$v}->{$bci}++;
-	}
-      }
+      $state{V2BC}{$_}{$bci}++ for map @$_, @$bc;
       $bci++;
     }
 
     # Any isolated vertices get each their own component.
-    for my $v ($g->vertices) {
-      unless (exists $state{V2BC}->{$v}) {
-	$state{V2BC}->{$v}->{$bci++}++;
-      }
-    }
+    $state{V2BC}{$_}{$bci++}++
+	for grep !exists $state{V2BC}{$_}, $g->vertices;
 
     for my $v ($g->vertices) {
-      for my $bc (keys %{$state{V2BC}->{$v}}) {
-	$state{BC2V}->{$bc}->{$v}->{$bc}++;
-      }
+      $state{BC2V}{$_}{$v}{$_}++ for keys %{$state{V2BC}{$v}};
     }
 
     # Articulation points / cut vertices are the vertices
     # which belong to more than one component.
-    for my $v (keys %{$state{V2BC}}) {
-      if (keys %{$state{V2BC}->{$v}} > 1) {
-	push @{$state{AP}}, $v;
-      }
-    }
+    push @{$state{AP}}, grep keys %{$state{V2BC}{$_}} > 1, keys %{$state{V2BC}};
 
     # Bridges / cut edges are the components of two vertices.
     for my $v (keys %{$state{BC2V}}) {
@@ -3280,18 +3151,10 @@ sub same_biconnected_components {
     my %ubc; @ubc{ @u } = ();
     while (@_) {
 	my $v = shift;
-	my @v = $g->biconnected_component_by_vertex($v);
-	if (@v) {
-	    my %vbc; @vbc{ @v } = ();
-	    my $vi;
-	    for my $ui (keys %ubc) {
-		if (exists $vbc{ $ui }) {
-		    $vi = $ui;
-		    last;
-		}
-	    }
-	    return 0 unless defined $vi;
-	}
+	next unless my @v = $g->biconnected_component_by_vertex($v);
+	my %vbc; @vbc{ @v } = ();
+	my ($vi) = grep exists $vbc{ $_ }, keys %ubc;
+	return 0 unless defined $vi;
     }
     return 1;
 }
@@ -3311,17 +3174,10 @@ sub biconnected_graph {
     for my $i (0..$#$bc) {
 	my @u = @{ $bc->[ $i ] };
 	for my $j (0..$i-1) {
-	    my @v = @{ $bc->[ $j ] };
-	    my %j; @j{ @v } = ();
-	    for my $u (@u) {
-		if (exists $j{ $u }) {
-		    unless ($k{ $i }{ $j }++) {
-			$bcg->add_edge($sc_cb->(@{$bc->[$i]}),
-				       $sc_cb->(@{$bc->[$j]}));
-		    }
-		    last;
-		}
-	    }
+	    my %j; @j{ @{ $bc->[ $j ] } } = ();
+	    next if !grep exists $j{ $_ }, @u;
+	    next if $k{ $i }{ $j }++;
+	    $bcg->add_edge($sc_cb->(@{$bc->[$i]}), $sc_cb->(@{$bc->[$j]}));
 	}
     }
     return $bcg;
@@ -3340,7 +3196,7 @@ sub bridges {
 sub _SPT_add {
     my ($g, $h, $HF, $r, $attr, $unseen, $etc) = @_;
     my $etc_r = $etc->{ $r } || 0;
-    for my $s ( grep { exists $unseen->{ $_ } } $g->successors( $r ) ) {
+    for my $s ( grep exists $unseen->{ $_ }, $g->successors( $r ) ) {
 	my $t = $g->get_edge_attribute( $r, $s, $attr );
 	$t = 1 unless defined $t;
 	__carp_confess "Graph::SPT_Dijkstra: edge $r-$s is negative ($t)"
@@ -3442,9 +3298,8 @@ sub _SPT_Bellman_Ford {
 	for my $e ($g->edges) {
 	    my ($u, $v) = @$e;
 	    __SPT_Bellman_Ford($g, $u, $v, $attr, \%d, \%p, \%c0, \%c1);
-	    if ($g->undirected) {
-		__SPT_Bellman_Ford($g, $v, $u, $attr, \%d, \%p, \%c0, \%c1);
-	    }
+	    __SPT_Bellman_Ford($g, $v, $u, $attr, \%d, \%p, \%c0, \%c1)
+		if $g->undirected;
 	}
 	%c0 = %c1 unless $i == $V - 1;
     }
@@ -3602,11 +3457,7 @@ sub for_shortest_paths {
     my @v = $g->vertices;
     my $n = 0;
     for my $u (@v) {
-	for my $v (@v) {
-	    next unless $t->is_reachable($u, $v);
-	    $n++;
-	    $c->($t, $u, $v, $n);
-	}
+	$c->($t, $u, $_, ++$n) for grep $t->is_reachable($u, $_), @v;
     }
     return $n;
 }
@@ -3646,58 +3497,44 @@ sub longest_path {
     my ($g, $u, $v) = @_;
     my $t = $g->transitive_closure_matrix;
     if (defined $u) {
-	if (defined $v) {
-	    return wantarray ?
-		$t->path_vertices($u, $v) : $t->path_length($u, $v);
-	} else {
-	    my $max;
-	    my @max;
-	    for my $v ($g->vertices) {
-		next if $u eq $v;
-		my $l = $t->path_length($u, $v);
-		if (defined $l && (!defined $max || $l > $max)) {
-		    $max = $l;
-		    @max = $t->path_vertices($u, $v);
-		}
-	    }
-	    return wantarray ? @max : $max;
+	return wantarray ? $t->path_vertices($u, $v) : $t->path_length($u, $v)
+	    if defined $v;
+	my $max;
+	my @max;
+	for my $v (grep $u ne $_, $g->vertices) {
+	    my $l = $t->path_length($u, $v);
+	    next if !(defined $l && (!defined $max || $l > $max));
+	    $max = $l;
+	    @max = $t->path_vertices($u, $v);
 	}
-    } else {
-	if (defined $v) {
-	    my $max;
-	    my @max;
-	    for my $u ($g->vertices) {
-		next if $u eq $v;
-		my $l = $t->path_length($u, $v);
-		if (defined $l && (!defined $max || $l > $max)) {
-		    $max = $l;
-		    @max = $t->path_vertices($u, $v);
-		}
-	    }
-	    return wantarray ? @max : @max - 1;
-	} else {
-	    my ($min, $max, $minp, $maxp) = $g->_minmax_path(@_);
-	    return defined $maxp ? (wantarray ? @$maxp : $max) : undef;
-	}
+	return wantarray ? @max : $max;
     }
+    if (defined $v) {
+	my $max;
+	my @max;
+	for my $u (grep $_ ne $v, $g->vertices) {
+	    my $l = $t->path_length($u, $v);
+	    next if !(defined $l && (!defined $max || $l > $max));
+	    $max = $l;
+	    @max = $t->path_vertices($u, $v);
+	}
+	return wantarray ? @max : @max - 1;
+    }
+    my ($min, $max, $minp, $maxp) = $g->_minmax_path(@_);
+    return defined $maxp ? (wantarray ? @$maxp : $max) : undef;
 }
 
 sub vertex_eccentricity {
     my ($g, $u) = @_;
     $g->expect_undirected;
-    if ($g->is_connected) {
-	my $max;
-	for my $v ($g->vertices) {
-	    next if $u eq $v;
-	    my $l = $g->path_length($u, $v);
-	    if (defined $l && (!defined $max || $l > $max)) {
-		$max = $l;
-	    }
-	}
-	return defined $max ? $max : Infinity();
-    } else {
-	return Infinity();
+    return Infinity() if !$g->is_connected;
+    my $max;
+    for my $v (grep $u ne $_, $g->vertices) {
+	my $l = $g->path_length($u, $v);
+	next if !(defined $l && (!defined $max || $l > $max));
+	$max = $l;
     }
+    return defined $max ? $max : Infinity();
 }
 
 sub shortest_path {
@@ -3705,44 +3542,34 @@ sub shortest_path {
     $g->expect_undirected;
     my $t = $g->transitive_closure_matrix;
     if (defined $u) {
-	if (defined $v) {
-	    return wantarray ?
-		$t->path_vertices($u, $v) : $t->path_length($u, $v);
-	} else {
-	    my $min;
-	    my @min;
-	    for my $v ($g->vertices) {
-		next if $u eq $v;
-		my $l = $t->path_length($u, $v);
-		if (defined $l && (!defined $min || $l < $min)) {
-		    $min = $l;
-		    @min = $t->path_vertices($u, $v);
-		}
-	    }
-            print "min/1 = @min\n";
-	    return wantarray ? @min : $min;
+	return wantarray ? $t->path_vertices($u, $v) : $t->path_length($u, $v)
+	    if defined $v;
+	my $min;
+	my @min;
+	for my $v (grep $u ne $_, $g->vertices) {
+	    my $l = $t->path_length($u, $v);
+	    next if !(defined $l && (!defined $min || $l < $min));
+	    $min = $l;
+	    @min = $t->path_vertices($u, $v);
 	}
-    } else {
-	if (defined $v) {
-	    my $min;
-	    my @min;
-	    for my $u ($g->vertices) {
-		next if $u eq $v;
-		my $l = $t->path_length($u, $v);
-		if (defined $l && (!defined $min || $l < $min)) {
-		    $min = $l;
-		    @min = $t->path_vertices($u, $v);
-		}
-	    }
-            print "min/2 = @min\n";
-	    return wantarray ? @min : $min;
-	} else {
-	    my ($min, $max, $minp, $maxp) = $g->_minmax_path(@_);
-	    return defined $minp
-              ? (wantarray ? @$minp : $min)
-              : wantarray ? () : undef;
-	}
+	# print "min/1 = @min\n";
+	return wantarray ? @min : $min;
     }
+    if (defined $v) {
+	my $min;
+	my @min;
+	for my $u (grep $_ ne $v, $g->vertices) {
+	    my $l = $t->path_length($u, $v);
+	    next if !(defined $l && (!defined $min || $l < $min));
+	    $min = $l;
+	    @min = $t->path_vertices($u, $v);
+	}
+	# print "min/2 = @min\n";
+	return wantarray ? @min : $min;
+    }
+    my ($min, $max, $minp, $maxp) = $g->_minmax_path(@_);
+    return if !defined $minp;
+    wantarray ? @$minp : $min;
 }
 
 sub radius {
@@ -3802,9 +3629,7 @@ sub is_multi_graph {
     my $multiedges = 0;
     for my $e ($g->edges05) {
 	my ($u, @v) = @$e;
-	for my $v (@v) {
-	    return 0 if $u eq $v;
-	}
+	return 0 if grep $u eq $_, @v;
 	$multiedges++ if $g->get_edge_count(@$e) > 1;
     }
     return $multiedges;
@@ -3813,9 +3638,7 @@ sub is_multi_graph {
 sub is_simple_graph {
     my $g = shift;
     return 1 unless $g->is_countedged || $g->is_multiedged;
-    for my $e ($g->edges05) {
-	return 0 if $g->get_edge_count(@$e) > 1;
-    }
+    return 0 if grep $g->get_edge_count(@$_) > 1, $g->edges05;
     return 1;
 }
 
@@ -3824,9 +3647,7 @@ sub is_pseudo_graph {
     my $m = $g->is_countedged || $g->is_multiedged;
     for my $e ($g->edges05) {
 	my ($u, @v) = @$e;
-	for my $v (@v) {
-	    return 1 if $u eq $v;
-	}
+	return 1 if grep $u eq $_, @v;
 	return 1 if $m && $g->get_edge_count($u, @v) > 1;
     }
     return 0;
@@ -3859,36 +3680,26 @@ sub could_be_isomorphic {
     return 0 unless $g0->vertices == $g1->vertices;
     return 0 unless $g0->edges05  == $g1->edges05;
     my %d0;
-    for my $v0 ($g0->vertices) {
-	$d0{ $g0->in_degree($v0) }{ $g0->out_degree($v0) }++
-    }
+    $d0{ $g0->in_degree($_) }{ $g0->out_degree($_) }++ for $g0->vertices;
     my %d1;
-    for my $v1 ($g1->vertices) {
-	$d1{ $g1->in_degree($v1) }{ $g1->out_degree($v1) }++
-    }
+    $d1{ $g1->in_degree($_) }{ $g1->out_degree($_) }++ for $g1->vertices;
     return 0 unless keys %d0 == keys %d1;
     for my $da (keys %d0) {
 	return 0
 	    unless exists $d1{$da} &&
 		   keys %{ $d0{$da} } == keys %{ $d1{$da} };
-	for my $db (keys %{ $d0{$da} }) {
-	    return 0
-		unless exists $d1{$da}{$db} && 
-		       $d0{$da}{$db} == $d1{$da}{$db};
-	}
+	return 0
+	    if grep !(exists $d1{$da}{$_} && $d0{$da}{$_} == $d1{$da}{$_}),
+	    keys %{ $d0{$da} };
     }
     for my $da (keys %d0) {
-	for my $db (keys %{ $d0{$da} }) {
-	    return 0 unless $d1{$da}{$db} == $d0{$da}{$db};
-	}
+	return 0 if grep $d1{$da}{$_} != $d0{$da}{$_}, keys %{ $d0{$da} };
 	delete $d1{$da};
     }
     return 0 unless keys %d1 == 0;
     my $f = 1;
     for my $da (keys %d0) {
-	for my $db (keys %{ $d0{$da} }) {
-	    $f *= _factorial(abs($d0{$da}{$db}));
-	}
+	$f *= _factorial(abs($d0{$da}{$_})) for keys %{ $d0{$da} };
     }
     return $f;
 }
@@ -3904,9 +3715,7 @@ sub subgraph_by_radius
 
     my $r = (ref $g)->new;
 
-    if ($rad == 0) {
-	return $r->add_vertex($n);
-    }
+    return $r->add_vertex($n) if $rad == 0;
 
     my %h;
     $h{1} = [ [ $n, $g->successors($n) ] ];
@@ -3936,12 +3745,10 @@ sub clustering_coefficient {
 	my @neigh = $g->successors($n);
 	my %c;
 	for my $u (@neigh) {
-	    for my $v (@neigh) {
-		if (!$c{"$u-$v"} && $g->has_edge($u, $v)) {
-		    $gamma_v++;
-		    $c{"$u-$v"} = 1;
-		    $c{"$v-$u"} = 1;
-		}
+	    for my $v (grep +(!$c{"$u-$_"} && $g->has_edge($u, $_)), @neigh) {
+		$gamma_v++;
+		$c{"$u-$v"} = 1;
+		$c{"$v-$u"} = 1;
 	    }
 	}
 	if (@neigh > 1) {
@@ -3964,7 +3771,7 @@ sub betweenness {
 
     my %Cb; # C_b{w} = 0
 
-    $Cb{$_} = 0 for @V;
+    @Cb{@V} = ();
 
     for my $s (@V) {
 	my @S; # stack (unshift, shift)
@@ -4005,12 +3812,9 @@ sub betweenness {
 
 	while (@S) {
 	    my $w = shift @S;
-	    for my $v (@{ $P{$w} }) {
-		$delta{$v} += $sigma{$v}/$sigma{$w} * (1 + $delta{$w});
-	    }
-	    if ($w ne $s) {
-		$Cb{$w} += $delta{$w};
-	    }
+	    $delta{$_} += $sigma{$_}/$sigma{$w} * (1 + $delta{$w})
+		for @{ $P{$w} };
+	    $Cb{$w} += $delta{$w} if $w ne $s;
 	}
     }
 
