@@ -1410,7 +1410,7 @@ sub set_edge_attribute_by_id {
     $g->expect_multiedged;
     my $value = pop;
     my $attr  = pop;
-    # $g->add_edge_by_id( @_ ) unless $g->has_edge_by_id( @_ );
+    $g->add_edge_by_id( @_ ) unless $g->has_edge_by_id( @_ );
     my $id = pop;
     $g->[ _E ]->_set_path_attr( $g->_vertex_ids( @_ ), $id, $attr, $value );
 }
