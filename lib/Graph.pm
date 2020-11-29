@@ -1785,8 +1785,7 @@ sub complete_graph {
     my $c = $g->new( directed => $g->directed );
     my @v = $g->vertices05;
     for (my $i = 0; $i <= $#v; $i++ ) {
-	for (my $j = 0; $j <= $#v; $j++ ) {
-	    next if $i >= $j;
+	for (my $j = $i + 1; $j <= $#v; $j++ ) {
 	    if ($g->is_undirected) {
 		$c->add_edge($v[$i], $v[$j]);
 	    } else {
@@ -1805,8 +1804,7 @@ sub complement_graph {
     my $c = $g->new( directed => $g->directed );
     $c->add_vertices(my @v = $g->vertices05);
     for (my $i = 0; $i <= $#v; $i++ ) {
-	for (my $j = 0; $j <= $#v; $j++ ) {
-	    next if $i >= $j;
+	for (my $j = $i + 1; $j <= $#v; $j++ ) {
 	    if ($g->is_undirected) {
 		$c->add_edge($v[$i], $v[$j])
 		    unless $g->has_edge($v[$i], $v[$j]);
