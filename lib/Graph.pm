@@ -284,10 +284,10 @@ sub new {
 	Graph::AdjacencyMap::Heavy->_new($uflags, 1) :
 	    (($vflags & ~_UNORD) ?
 	     Graph::AdjacencyMap::Vertex->_new($uflags, 1) :
-	     Graph::AdjacencyMap::Light->_new($g, $uflags, 1));
+	     Graph::AdjacencyMap::Light->_new($uflags, 1, $g));
     $g->[ _E ] = (($vflags & _HYPER) || ($eflags & ~_UNORD)) ?
 	Graph::AdjacencyMap::Heavy->_new($eflags, 2) :
-	    Graph::AdjacencyMap::Light->_new($g, $eflags, 2);
+	    Graph::AdjacencyMap::Light->_new($eflags, 2, $g);
 
     $g->add_vertices(@V) if @V;
 

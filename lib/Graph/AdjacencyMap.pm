@@ -3,31 +3,37 @@ package Graph::AdjacencyMap;
 use strict;
 use warnings;
 
+my (@FLAGS, %FLAG_COMBOS, %FLAG2I);
+BEGIN {
+    @FLAGS = qw(_COUNT _MULTI _HYPER _UNORD _UNIQ _REF _UNIONFIND _LIGHT _STR);
+    %FLAG_COMBOS = (
+	_COUNTMULTI => [qw(_COUNT _MULTI)],
+	_UNORDUNIQ => [qw(_UNORD _UNIQ)],
+	_REFSTR => [qw(_REF _STR)],
+    );
+    for my $i (0..$#FLAGS) {
+	my $n = $FLAGS[$i];
+	my $f = 1 << $i;
+	$FLAG2I{$n} = $f;
+	no strict 'refs';
+	*$n = sub () { $f };
+	*{"_is$n"} = sub { $_[0]->[ 1 ] & $f }; # 1 = _f
+    }
+    for my $k (keys %FLAG_COMBOS) {
+	my $f = 0;
+	$f |= $_ for map $FLAG2I{$_}, @{ $FLAG_COMBOS{$k} };
+	no strict 'refs';
+	*$k = sub () { return $f }; # return to dodge pointless 5.22 stricture
+    }
+}
+
 require Exporter;
 use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
-@EXPORT_OK   = qw(_COUNT _MULTI _COUNTMULTI _GEN_ID
-		  _HYPER _UNORD _UNIQ _REF _UNORDUNIQ _UNIONFIND _LIGHT
-		  _STR _REFSTR
-		  _n _f _a _i _s _p _g _u _ni _nc _na _nm);
 %EXPORT_TAGS =
-    (flags =>  [qw(_COUNT _MULTI _COUNTMULTI _GEN_ID
-		   _HYPER _UNORD _UNIQ _REF _UNORDUNIQ _UNIONFIND _LIGHT
-		   _STR _REFSTR)],
+    (flags =>  [@FLAGS, keys %FLAG_COMBOS, qw(_GEN_ID)],
      fields => [qw(_n _f _a _i _s _p _g _u _ni _nc _na _nm)]);
-
-sub _COUNT       () {  0x00000001   }
-sub _MULTI       () {  0x00000002   }
-sub _COUNTMULTI  () { _COUNT|_MULTI }
-sub _HYPER       () {  0x00000004   }
-sub _UNORD       () {  0x00000008   }
-sub _UNIQ        () {  0x00000010   }
-sub _REF         () {  0x00000020   }
-sub _UNORDUNIQ   () { _UNORD|_UNIQ  }
-sub _UNIONFIND   () {  0x00000040   }
-sub _LIGHT       () {  0x00000080   }
-sub _STR         () {  0x00000100   }
-sub _REFSTR      () { _REF|_STR     }
+@EXPORT_OK = map @$_, values %EXPORT_TAGS;
 
 my $_GEN_ID = 0;
 
@@ -47,6 +53,25 @@ sub _p () { 5 } # Predecessors.
 sub _g () { 6 } # Graph (AdjacencyMap::Light)
 
 sub _V () { 2 }  # Graph::_V()
+
+sub stringify {
+    my $m = shift;
+    my $f = $m->[ _f ];
+    my $fs  = join '|', grep $f & $FLAG2I{$_}, @FLAGS;
+    <<EOF;
+@{[ref $m]} flags: $fs
+EOF
+}
+
+sub _dumper {
+    my ($m, $got) = @_;
+    return $got if defined $got and !ref $got;
+    require Data::Dumper;
+    my $dumper = Data::Dumper->new([$got]);
+    $dumper->Indent(0)->Terse(1);
+    $dumper->Sortkeys(1) if $dumper->can("Sortkeys");
+    $dumper->Dump;
+}
 
 sub _new {
     my $class = shift;
@@ -344,14 +369,6 @@ sub _del_path_attr {
     }
 }
 
-sub _is_COUNT { $_[0]->[ _f ] & _COUNT }
-sub _is_MULTI { $_[0]->[ _f ] & _MULTI }
-sub _is_HYPER { $_[0]->[ _f ] & _HYPER }
-sub _is_UNORD { $_[0]->[ _f ] & _UNORD }
-sub _is_UNIQ  { $_[0]->[ _f ] & _UNIQ  }
-sub _is_REF   { $_[0]->[ _f ] & _REF   }
-sub _is_STR   { $_[0]->[ _f ] & _STR   }
-
 sub __arg {
     my $m = shift;
     my $f = $m->[ _f ];
@@ -387,7 +404,7 @@ __END__
 
 =head1 NAME
 
-Graph::AdjacencyMap - create and a map of graph vertices or edges
+Graph::AdjacencyMap - map of graph vertices or edges
 
 =head1 SYNOPSIS
 
@@ -397,51 +414,51 @@ Graph::AdjacencyMap - create and a map of graph vertices or edges
 
 B<This module is meant for internal use by the Graph module.>
 
-=head2 Object Methods
+=head1 OBJECT METHODS
 
-=over 4
-
-=item del_path(@id)
+=head2 del_path(@id)
 
 Delete a Map path by ids.
 
-=item del_path_by_multi_id($id)
+=head2 del_path_by_multi_id($id)
 
 Delete a Map path by a multi(vertex) id.
 
-=item get_multi_ids
+=head2 get_multi_ids
 
 Return the multi ids.
 
-=item has_path(@id)
+=head2 has_path(@id)
 
 Return true if the Map has the path by ids, false if not.
 
-=item has_paths
+=head2 has_paths
 
 Return true if the Map has any paths, false if not.
 
-=item has_path_by_multi_id($id)
+=head2 has_path_by_multi_id($id)
 
 Return true if the Map has the path by a multi(vertex) id, false if not.
 
-=item paths
+=head2 paths
 
 Return all the paths of the Map.
 
-=item set_path(@id)
+=head2 set_path(@id)
 
 Set the path by @ids.
 
-=item set_path_by_multi_id
+=head2 set_path_by_multi_id
 
 Set the path in the Map by the multi id.
 
-=item rename_path($from, $to)
+=head2 rename_path($from, $to)
 
 Rename the path.
 
-=back
+=head2 stringify
+
+Return a string describing the object in a human-friendly(ish) way.
 
 =head1 AUTHOR AND COPYRIGHT
 

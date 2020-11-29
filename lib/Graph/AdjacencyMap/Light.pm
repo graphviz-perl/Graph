@@ -20,17 +20,29 @@ sub _E () { 3 } # Graph::_E
 sub _F () { 0 } # Graph::_F
 
 sub _new {
-    my ($class, $graph, $flags, $arity) = @_;
-    my $m = bless [ ], $class;
-    $m->[ _n ] = 0;
-    $m->[ _f ] = $flags | _LIGHT;
-    $m->[ _a ] = $arity;
-    $m->[ _i ] = { };
-    $m->[ _s ] = { };
-    $m->[ _p ] = { };
-    $m->[ _g ] = $graph;
+    my ($class, $flags, $arity, $graph) = @_;
+    my $m = $class->SUPER::_new($flags | _LIGHT, $arity, {}, {}, {}, $graph);
     weaken $m->[ _g ]; # So that DESTROY finds us earlier.
     return $m;
+}
+
+sub stringify {
+    my $m = shift;
+    my @rows;
+    my $a = $m->[ _a ];
+    if ($a == 2) {
+	my @p = sort keys %{ $m->[ _s ] };
+	my @s = sort keys %{ $m->[ _p ] };
+	@rows = [ 'to:', @s ];
+	push @rows, map { my $p=$_; [ $p, map $m->has_path($p, $_), @s ] } @p;
+    } elsif ($a == 1) {
+	my $s = $m->[ _s ];
+	push @rows, map [ $_, $s->{ $_ } ], sort map @$_, $m->paths;
+    }
+    'Graph: ' . $m->[ _g ] . "\n" . $m->SUPER::stringify . join '',
+	map "$_\n",
+	map join(' ', map sprintf('%4s', $_), @$_),
+	@rows;
 }
 
 sub set_path {
@@ -102,25 +114,14 @@ sub _get_path_count {
     return exists $s->{ $e } ? 1 : 0;
 }
 
-sub has_paths {
-    my $m = shift;
-    my ($n, $f, $a, $i, $s) = @$m;
-    keys %$s;
-}
+sub has_paths { keys %{ $_[0]->[ _s ] } }
 
 sub paths {
     my $m = shift;
-    my ($n, $f, $a, $i) = @$m;
-    if (defined $i) {
-	my ($k, $v) = each %$i;
-	if (ref $v) {
-	    return values %{ $i };
-	} else {
-	    return map { [ $_ ] } values %{ $i };
-	}
-    } else {
-	return ( );
-    }
+    return if !defined(my $i = $m->[ _i ]);
+    my ($k, $v) = each %$i;
+    return values %$i if ref $v;
+    return map [ $_ ], values %$i;
 }
 
 sub _get_id_path {

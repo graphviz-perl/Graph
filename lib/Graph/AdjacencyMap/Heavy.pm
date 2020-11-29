@@ -15,6 +15,43 @@ use base 'Graph::AdjacencyMap';
 
 require overload; # for de-overloading
 
+sub stringify {
+    my $m = shift;
+    my @rows;
+    my $a = $m->[ _a ];
+    my $s = $m->[ _s ];
+    if ($a == 2) {
+	my (%p, %s);
+	for my $t ($m->paths) {
+	    my ($u, $v) = @$t;
+	    $p{$u} = $s{$v} = 1;
+	}
+	my @s = sort keys %s;
+	@rows = [ 'to:', @s ];
+	for my $u (sort keys %p) {
+	    my @r = $u;
+	    for my $v (@s) {
+		if (!$m->__has_path($u, $v)) {
+		    push @r, '';
+		    next;
+		}
+		my $v = $s->{$u}{$v};
+		push @r, $m->_dumper(ref $v ? $v->[-1] : defined $v ? 1 : '');
+	    }
+	    push @rows, \@r;
+	}
+    } elsif ($a == 1) {
+        my $s = $m->[ _s ];
+	my $d;
+	push @rows, map [ $_, ref($d=$s->{$_}) ? $m->_dumper($d->[-1]) : $d ],
+	    sort map @$_, $m->paths;
+    }
+    $m->SUPER::stringify . join '',
+        map "$_\n",
+        map join(' ', map sprintf('%4s', $_), @$_),
+        @rows;
+}
+
 sub __set_path {
     my $m = shift;
     my $f = $m->[ _f ];

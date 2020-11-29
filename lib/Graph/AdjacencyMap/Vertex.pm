@@ -15,9 +15,17 @@ use base 'Graph::AdjacencyMap';
 
 use Scalar::Util qw(weaken);
 
-sub _new {
-    my ($class, $flags, $arity) = @_;
-    bless [ 0, $flags, $arity ], $class;
+sub stringify {
+    my $m = shift;
+    my @rows;
+    my $s = $m->[ _s ];
+    my $d;
+    push @rows, map [ $_, ref($d=$s->{$_}) ? $m->_dumper($d->[-1]) : $d ],
+	sort map @$_, $m->paths;
+    $m->SUPER::stringify . join '',
+        map "$_\n",
+        map join(' ', map sprintf('%4s', $_), @$_),
+        @rows;
 }
 
 require overload; # for de-overloading
