@@ -1959,11 +1959,9 @@ sub add_weighted_edge {
     $g->expect_non_multiedged;
     if ($g->is_compat02) {
 	my $w = splice @_, 1, 1;
-	$g->add_edge(@_);
 	$g->set_edge_attribute(@_, $defattr, $w);
     } else {
 	my $w = pop;
-	$g->add_edge(@_);
 	$g->set_edge_attribute(@_, $defattr, $w);
     }
 }
@@ -1974,13 +1972,11 @@ sub add_weighted_edges {
     if ($g->is_compat02) {
 	while (@_) {
 	    my ($u, $w, $v) = splice @_, 0, 3;
-	    $g->add_edge($u, $v);
 	    $g->set_edge_attribute($u, $v, $defattr, $w);
 	}
     } else {
 	while (@_) {
 	    my ($u, $v, $w) = splice @_, 0, 3;
-	    $g->add_edge($u, $v);
 	    $g->set_edge_attribute($u, $v, $defattr, $w);
 	}
     }
@@ -1992,7 +1988,6 @@ sub add_weighted_edges_by_id {
     my $id = pop;
     while (@_) {
 	my ($u, $v, $w) = splice @_, 0, 3;
-	$g->add_edge_by_id($u, $v, $id);
 	$g->set_edge_attribute_by_id($u, $v, $id, $defattr, $w);
     }
 }
@@ -2003,7 +1998,6 @@ sub add_weighted_path {
     my $u = shift;
     while (@_) {
 	my ($w, $v) = splice @_, 0, 2;
-	$g->add_edge($u, $v);
 	$g->set_edge_attribute($u, $v, $defattr, $w);
 	$u = $v;
     }
@@ -2039,11 +2033,9 @@ sub add_weighted_edge_by_id {
     $g->expect_multiedged;
     if ($g->is_compat02) {
 	my $w = splice @_, 1, 1;
-	$g->add_edge_by_id(@_);
 	$g->set_edge_attribute_by_id(@_, $defattr, $w);
     } else {
 	my $w = pop;
-	$g->add_edge_by_id(@_);
 	$g->set_edge_attribute_by_id(@_, $defattr, $w);
     }
 }
@@ -2055,7 +2047,6 @@ sub add_weighted_path_by_id {
     my $u = shift;
     while (@_) {
 	my ($w, $v) = splice @_, 0, 2;
-	$g->add_edge_by_id($u, $v, $id);
 	$g->set_edge_attribute_by_id($u, $v, $id, $defattr, $w);
 	$u = $v;
     }
@@ -3496,7 +3487,6 @@ sub SPT_Bellman_Ford {
 	my $h = $g->new;
 	for my $v (keys %$p) {
 	    my $u = $p->{ $v };
-	    $h->add_edge( $u, $v );
 	    $h->set_edge_attribute( $u, $v, $attr,
 				    $g->get_edge_attribute($u, $v, $attr));
 	    $h->set_vertex_attribute( $v, $attr, $d->{ $v } );
