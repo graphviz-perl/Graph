@@ -3310,19 +3310,16 @@ sub biconnected_graph {
     my %k;
     for my $i (0..$#$bc) {
 	my @u = @{ $bc->[ $i ] };
-	my %i; @i{ @u } = ();
-	for my $j (0..$#$bc) {
-	    if ($i > $j) {
-		my @v = @{ $bc->[ $j ] };
-		my %j; @j{ @v } = ();
-		for my $u (@u) {
-		    if (exists $j{ $u }) {
-			unless ($k{ $i }{ $j }++) {
-			    $bcg->add_edge($sc_cb->(@{$bc->[$i]}),
-					   $sc_cb->(@{$bc->[$j]}));
-			}
-			last;
+	for my $j (0..$i-1) {
+	    my @v = @{ $bc->[ $j ] };
+	    my %j; @j{ @v } = ();
+	    for my $u (@u) {
+		if (exists $j{ $u }) {
+		    unless ($k{ $i }{ $j }++) {
+			$bcg->add_edge($sc_cb->(@{$bc->[$i]}),
+				       $sc_cb->(@{$bc->[$j]}));
 		    }
+		    last;
 		}
 	    }
 	}
