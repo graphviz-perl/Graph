@@ -10,6 +10,8 @@ use base 'Graph::BitMatrix';
 
 use Graph::AdjacencyMap qw(:flags :fields);
 
+sub _AM () { 0 }
+sub _DM () { 1 }
 sub _V () { 2 } # Graph::_V
 sub _E () { 3 } # Graph::_E
 
@@ -60,29 +62,20 @@ sub new {
     $self;
 }
 
-sub adjacency_matrix {
-    my $am = shift;
-    $am->[0];
-}
+sub adjacency_matrix { $_[0]->[ _AM ] }
 
-sub distance_matrix {
-    my $am = shift;
-    $am->[1];
-}
+sub distance_matrix { $_[0]->[ _DM ] }
 
-sub vertices {
-    my $am = shift;
-    @{ $am->[2] };
-}
+sub vertices { @{ $_[0]->[ _V ] } }
 
 sub is_adjacent {
     my ($m, $u, $v) = @_;
-    $m->[0]->get($u, $v) ? 1 : 0;
+    $m->[ _AM ]->get($u, $v) ? 1 : 0;
 }
 
 sub distance {
     my ($m, $u, $v) = @_;
-    defined $m->[1] ? $m->[1]->get($u, $v) : undef;
+    defined $m->[ _DM ] ? $m->[ _DM ]->get($u, $v) : undef;
 }
 
 1;
