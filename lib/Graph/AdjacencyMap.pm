@@ -208,7 +208,7 @@ sub _set_path_attr {
     $m->__attr( \@_ ); # _LIGHT maps need this to get upgraded when needed.
     push @_, $id if ($f & _MULTI);
     @_ = sort @_ if ($f & _UNORD);
-    if ($m->[ _a ] == 2 && @_ == 2 && !($f & (_REF|_UNIQ|_HYPER|_UNIQ))) {
+    if ($m->[ _a ] == 2 && @_ == 2 && !($f & (_REF|_UNIQ|_HYPER))) {
 	$m->[ _s ]->{ $_[0] } ||= { };
 	$p = [ $m->[ _s ], $m->[ _s ]->{ $_[0] } ];
 	$k = [ $_[0], $_[1] ];
