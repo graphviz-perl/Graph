@@ -177,14 +177,16 @@ sub new {
     my %opt = _get_options( \@_ );
 
     if (ref $class && $class->isa('Graph')) {
+	my %existing;
 	no strict 'refs';
         for my $c (qw(undirected refvertexed compat02
                       hypervertexed countvertexed multivertexed
                       hyperedged countedged multiedged omniedged
 		      __stringified)) {
-	    $opt{$c}++ if $class->$c;
+	    $existing{$c}++ if $class->$c;
         }
-	$opt{unionfind}++ if $class->has_union_find;
+	$existing{unionfind}++ if $class->has_union_find;
+	%opt = (%existing, %opt) if %existing; # allow overrides
     }
 
     _opt_get(\%opt, undirected   => \$opt{omniedged});

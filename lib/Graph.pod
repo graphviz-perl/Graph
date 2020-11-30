@@ -154,6 +154,11 @@ B<NOTE>: You can get an even shallower copy of a graph by
 This will copy only the graph properties (directed, and so forth),
 but none of the vertices or edges.
 
+As of 0.9712, you can also copy the graph properties of an existing
+object, I<but> with overrides:
+
+    my $c = $g->new(multiedged => 0);
+
 =item deep_copy
 
 =item deep_copy_graph

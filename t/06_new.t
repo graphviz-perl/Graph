@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 49;
+use Test::More tests => 50;
 
 use Graph;
 
@@ -111,6 +111,8 @@ ok( !$g7b->countedged() );
     ok($h->is_compat02);
     ok($h->is_hypervertexed);
     ok($h->is_multiedged);
+    $h = $g->new(multiedged => 0); # The flags should be overridable
+    ok !$h->is_multiedged;
 }
 
 use Graph::Directed;
