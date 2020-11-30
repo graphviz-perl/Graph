@@ -318,7 +318,7 @@ of the vertices existed in the graph.
 
 If the graph has been created I<multivertexed> or I<countvertexed>
 and a vertex has been added multiple times, the vertex will require
-at least an equal number of deletions to become completely deleteted.
+at least an equal number of deletions to become completely deleted.
 
 =item delete_edge
 
@@ -327,7 +327,7 @@ at least an equal number of deletions to become completely deleteted.
 Delete the edge from the graph.  Returns the graph, even
 if the edge did not exist in the graph.
 
-If the graph has been created I<multivertexed> or I<countedged>
+If the graph has been created I<multiedged> or I<countedged>
 and an edge has been added multiple times, the edge will require
 at least an equal number of deletions to become completely deleted.
 
@@ -338,7 +338,7 @@ at least an equal number of deletions to become completely deleted.
 Delete the edges from the graph.  Returns the graph, even if none
 of the edges existed in the graph.
 
-If the graph has been created I<multivertexed> or I<countedged>
+If the graph has been created I<multiedged> or I<countedged>
 and an edge has been added multiple times, the edge will require
 at least an equal number of deletions to become completely deleted.
 
