@@ -17,7 +17,6 @@ sub _E () { 3 } # Graph::_E
 
 sub new {
     my ($class, $g, %opt) = @_;
-    my $n;
     my @V = $g->vertices;
     my $want_distance = delete $opt{distance_matrix};
     my $d = Graph::_defattr();
@@ -27,12 +26,8 @@ sub new {
     }
     my $want_transitive = delete $opt{is_transitive};
     Graph::_opt_unknown(\%opt);
-    if ($want_distance) {
-	$n = Graph::Matrix->new($g);
-	$n->set($_, $_, 0) for @V;
-    }
     my $m = Graph::BitMatrix->new($g, connect_edges => $want_distance);
-    my $self = bless [ $m, $n, \@V ], $class;
+    my $self = bless [ $m, undef, \@V ], $class;
     return $self if !$want_distance;
     # for my $u (@V) {
     #     for my $v (@V) {
@@ -42,6 +37,8 @@ sub new {
     #        }
     #     }
     # }
+    my $n = $self->[ _DM ] = Graph::Matrix->new($g);
+    $n->set($_, $_, 0) for @V;
     my $Vi = $g->[_V]->[_i];
     my $Ei = $g->[_E]->[_i];
     my %V; @V{ @V } = 0 .. $#V;
