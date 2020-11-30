@@ -115,9 +115,15 @@ sub _get_path_count {
 
 sub __attr {
     my $m = shift;
-    return unless @_ && ref $_[0] && @{ $_[0] } != $m->[ _a ];
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected %d",
-		  scalar @{ $_[0] }, $m->[ _a ]);
+    return unless @_ && ref $_[0] && @{ $_[0] };
+    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d",
+		  scalar @{ $_[0] }, $m->[ _a ])
+        if @{ $_[0] } != $m->[ _a ];
+    my $f = $m->[ _f ];
+    return if !(@{ $_[0] } > 1 && ($f & _UNORDUNIQ));
+    if (($f & _UNORDUNIQ) == _UNORD && @{ $_[0] } > 1) {
+	@{ $_[0] } = sort @{ $_[0] }
+    } else { $m->__arg(\@_) }
 }
 
 sub _get_id_path {

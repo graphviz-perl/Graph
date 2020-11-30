@@ -230,6 +230,7 @@ sub _predecessors {
 sub __attr {
     # Major magic takes place here: we rebless the appropriate 'light'
     # map into a more complex map and then redispatch the method.
+    # The other map types will sort @_ for _UNORD purposes.
     my $m = $_[0];
     my ($n, $f, $a, $i, $s, $p, $g) = @$m;
     my ($k, $v) = each %$i;
@@ -239,7 +240,7 @@ sub __attr {
     if (ref $v eq 'ARRAY') { # Edges, then.
 	# print "Reedging.\n";
 	@E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
-	$g->[ _E ] = $m = Graph::AdjacencyMap::Heavy->_new($f, 2);
+	$g->[ _E ] = $m = Graph::AdjacencyMap::Heavy->_new(($f & ~_LIGHT), 2);
 	$g->add_edges( @E );
     } else {
 	# print "Revertexing.\n";
