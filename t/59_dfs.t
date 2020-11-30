@@ -49,9 +49,8 @@ sub simple {
     my $g = shift;
     my @v = $g->vertices;
     is(@_, @v, "vertices");
-    my %v; $v{$_} ++ for @_;
-    # is(...,0) is 5.00504-incompatible
-    ok(!scalar(grep { ($v{$_} || 0) != 1 } @v), "... once");
+    my %v; $v{$_}++ for @_;
+    is_deeply [ grep { ($v{$_} || 0) != 1 } @v ], [], "... once";
 }
 
 {

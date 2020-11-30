@@ -42,7 +42,7 @@ ok( $g2->delete_vertex('a') );
 is( $g2->vertices, 1 );
 is( $g2->unique_vertices, 1 );
 
-is( $g2->delete_vertex('a'), "" ); # ok($g2->...) fails in 5.00504
+is( $g2->delete_vertex('a'), "" );
 is( $g2->vertices, 0 );
 is( $g2->unique_vertices, 0 );
 

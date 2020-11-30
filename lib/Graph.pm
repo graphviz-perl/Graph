@@ -182,11 +182,9 @@ sub new {
                       hypervertexed countvertexed multivertexed
                       hyperedged countedged multiedged omniedged
 		      __stringified)) {
-#            $opt{$c}++ if $class->$c; # 5.00504-incompatible
-	    if (&{"Graph::$c"}($class)) { $opt{$c}++ }
+	    $opt{$c}++ if $class->$c;
         }
-#        $opt{unionfind}++ if $class->has_union_find; # 5.00504-incompatible
-	if (&{"Graph::has_union_find"}($class)) { $opt{unionfind}++ }
+	$opt{unionfind}++ if $class->has_union_find;
     }
 
     _opt_get(\%opt, undirected   => \$opt{omniedged});
