@@ -134,25 +134,22 @@ sub _get_id_path {
 sub del_path {
     my $m = shift;
     my ($n, $f, $a, $i, $s, $p) = @$m;
-    if (@_ == 2) {
-	@_ = sort @_ if ($f & _UNORD);
-	my $e0 = shift;
-	return 0 unless exists $s->{ $e0 };
+    @_ = sort @_ if @_ > 1 and $f & _UNORD;
+    my $e0 = shift;
+    return 0 if !defined($n = $s->{ $e0 });
+    if (@_ == 1) {
 	my $e1 = shift;
-	return 0 if !defined($n = $s->{ $e0 }->{ $e1 });
+	return 0 if !defined($n = $n->{ $e1 }); # "actual" n ie id
 	delete $i->{ $n };
 	delete $s->{ $e0 }->{ $e1 };
 	delete $p->{ $e1 }->{ $e0 };
 	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
 	delete $p->{ $e1 } unless keys %{ $p->{ $e1 } };
-	return 1;
     } else {
-	my $e = shift;
-	return 0 if !defined($n = $s->{ $e });
 	delete $i->{ $n };
-	delete $s->{ $e };
-	return 1;
+	delete $s->{ $e0 };
     }
+    return 1;
 }
 
 sub rename_path {
