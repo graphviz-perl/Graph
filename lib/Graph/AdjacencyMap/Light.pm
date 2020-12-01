@@ -139,23 +139,20 @@ sub del_path {
 	my $e0 = shift;
 	return 0 unless exists $s->{ $e0 };
 	my $e1 = shift;
-	if (defined($n = $s->{ $e0 }->{ $e1 })) {
-	    delete $i->{ $n };
-            delete $s->{ $e0 }->{ $e1 };
-            delete $p->{ $e1 }->{ $e0 };
-	    delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
-	    delete $p->{ $e1 } unless keys %{ $p->{ $e1 } };
-	    return 1;
-	}
+	return 0 if !defined($n = $s->{ $e0 }->{ $e1 });
+	delete $i->{ $n };
+	delete $s->{ $e0 }->{ $e1 };
+	delete $p->{ $e1 }->{ $e0 };
+	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
+	delete $p->{ $e1 } unless keys %{ $p->{ $e1 } };
+	return 1;
     } else {
 	my $e = shift;
-	if (defined($n = $s->{ $e })) {
-	    delete $i->{ $n };
-	    delete $s->{ $e };
-	    return 1;
-	}
+	return 0 if !defined($n = $s->{ $e });
+	delete $i->{ $n };
+	delete $s->{ $e };
+	return 1;
     }
-    return 0;
 }
 
 sub rename_path {
