@@ -11,18 +11,18 @@ sub new {
     my @V = $g->vertices;
     my $V = @V;
     my %V; @V{ @V } = 0 .. $#V;
-    bless [ [ map { [ ] } 0 .. $#V ], \%V ], $class;
+    bless [ [ map [], 0 .. $#V ], \%V ], $class;
 }
 
 sub set {
     my ($m, $u, $v, $val) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
+    my ($i, $j) = map $m->[1]->{ $_ }, ($u, $v);
     $m->[0]->[$i]->[$j] = $val;
 }
 
 sub get {
     my ($m, $u, $v) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
+    my ($i, $j) = map $m->[1]->{ $_ }, ($u, $v);
     $m->[0]->[$i]->[$j];
 }
 
