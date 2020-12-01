@@ -95,7 +95,7 @@ Graph::TransitiveClosure - create and query transitive closure of graph
     my $tcg = Graph::TransitiveClosure->new($g, path_length => 1);
     $tcg->path_length($u, $v)
 
-    # path_vertices is automatically always on so this is a no-op.
+    # path_vertices is on by default so this is a no-op.
     my $tcg = Graph::TransitiveClosure->new($g, path_vertices => 1);
     $tcg->path_vertices($u, $v)
 

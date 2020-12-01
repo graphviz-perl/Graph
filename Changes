@@ -4,6 +4,7 @@
 - reduce redundant sorting for _UNORD, fix AdjacencyMap::Vertex with ID 0
 - AdjacencyMap.stringify
 - allow constructor args to override "prototype" object
+- fix docs for TransitiveClosure to correctly say path_vertices default true
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

@@ -368,7 +368,7 @@ as a hash. The known options are
 
 =item C<attribute_name> => I<attribute_name>
 
-By default the edge attribute used for distance is C<w>.  You can
+By default the edge attribute used for distance is C<weight>.  You can
 change that by giving another attribute name with the C<attribute_name>
 attribute to the new() constructor.
 
@@ -381,16 +381,21 @@ the diagonal, use true for the C<reflexive> option.
 B<NOTE>: this behaviour has changed from Graph 0.2xxx: transitive
 closure graphs were by default reflexive.
 
+=item path => boolean
+
+If set true, sets C<path_length> and C<path_vertices>. If either of
+those are true (and C<path_vertices> is by default), then both are
+calculated.
+
 =item path_length => boolean
 
-By default the path lengths are not computed, only the boolean transitivity.
-By using true for C<path_length> also the path lengths will be computed,
+By default "false", but see above as overridden by default
+C<path_vertices> being true. If calculated,
 they can be retrieved using the path_length() method.
 
 =item path_vertices => boolean
 
-By default the paths are not computed, only the boolean transitivity.
-By using true for C<path_vertices> also the paths will be computed,
+By default the paths are computed, with the boolean transitivity,
 they can be retrieved using the path_vertices() method.
 
 =item path_count => boolean

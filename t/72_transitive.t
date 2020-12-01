@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 266;
+use Test::More tests => 268;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -96,6 +96,8 @@ ok $t1->has_edge(@$_) for (
     [qw(b c)], [qw(b d)], [qw(c a)], [qw(c b)], [qw(c c)], [qw(c d)],
     [qw(d a)], [qw(d b)], [qw(d c)], [qw(d d)],
 );
+is("@{[$t1->path_vertices(qw(a d))]}", "a c d");
+is($t1->path_length(qw(a b)), 1);
 
 ok( $t1->is_transitive);
 
