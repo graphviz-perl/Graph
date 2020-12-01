@@ -158,14 +158,10 @@ sub del_path {
 sub rename_path {
     my ($m, $from, $to) = @_;
     my ($n, $f, $a, $i, $s, $p) = @$m;
+    return 1 if $a > 1; # arity > 1, all integers, no names
     return 0 unless exists $s->{ $from };
     $s->{ $to } = delete $s->{ $from };
-    if ($a == 2) {
-	$_->{ $to } = delete $_->{ $from }
-	    for map $p->{ $_ }, keys %{ $s->{ $to } };
-    } else {
-	$i->{ $s->{ $to } } = $to;
-    }
+    $i->{ $s->{ $to } } = $to;
     return 1;
 }
 
