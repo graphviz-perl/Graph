@@ -3,6 +3,17 @@ package Graph::Attribute;
 use strict;
 use warnings;
 
+my @API = qw(get_attribute
+	     get_attributes
+	     set_attribute
+	     set_attributes
+	     has_attribute
+	     has_attributes
+	     delete_attribute
+	     delete_attributes
+	     get_attribute_names
+	     get_attribute_values);
+
 sub _F () { 0 }
 sub _COMPAT02 () { 0x00000001 }
 
@@ -31,21 +42,12 @@ sub import {
 	*{"${caller}::_has_attributes"} = sub { defined $_[0]->{ $k } };
 	*{"${caller}::_delete_attributes"} = sub { delete $_[0]->{ $k } };
     } else {
+	# uncoverable statement
 	die "Graph::Attribute::import($package @_) caller $caller\n";
     }
-    my @api = qw(get_attribute
-		 get_attributes
-		 set_attribute
-		 set_attributes
-		 has_attribute
-		 has_attributes
-		 delete_attribute
-		 delete_attributes
-		 get_attribute_names
-		 get_attribute_values);
     if (exists $attr{map}) {
 	my $map = $attr{map};
-	for my $api (@api) {
+	for my $api (@API) {
 	    my ($first, $rest) = ($api =~ /^(\w+?)_(.+)/);
 	    no strict 'refs';
 	    *{"${caller}::${first}_${map}_${rest}"} = \&$api;
