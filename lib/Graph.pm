@@ -3821,14 +3821,4 @@ sub betweenness {
     return %Cb;
 }
 
-###
-# Debugging.
-#
-
-sub _dump {
-    require Data::Dumper;
-    my $d = Data::Dumper->new([$_[0]],[ref $_[0]]);
-    defined wantarray ? $d->Dump : print $d->Dump;
-}
-
 1;

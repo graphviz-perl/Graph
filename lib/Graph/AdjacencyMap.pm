@@ -88,12 +88,6 @@ sub has_paths {
     return defined $m->[ _i ] && keys %{ $m->[ _i ] };
 }
 
-sub _dump {
-    require Data::Dumper;
-    my $d = Data::Dumper->new([$_[0]],[ref $_[0]]);
-    defined wantarray ? $d->Dump : print $d->Dump;
-}
-
 sub _del_id {
     my ($m, $i) = @_;
     my @p = $m->_get_id_path( $i );

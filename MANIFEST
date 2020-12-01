@@ -106,7 +106,6 @@ t/77_adjacency.t
 t/78_expect.t
 t/79_unionfind.t
 t/80_isomorphic.t
-t/81_dump.t
 t/82_cycle.t
 t/83_bitmatrix.t
 t/84_all_cessors.t

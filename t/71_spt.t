@@ -137,8 +137,6 @@ is($sg5, "0-1,1-2");
 
 #  Test the attributes of the $s2_di from earlier.
 
-# $s2_di->_dump;
-
 is($s2_di->get_edge_attribute('0', '1', 'weight'), 0.41, "edge 0-1");
 is($s2_di->get_edge_attribute('0', '5', 'weight'), 0.29, "edge 0-5");
 is($s2_di->get_edge_attribute('5', '4', 'weight'), 0.50, "edge 5-4");
