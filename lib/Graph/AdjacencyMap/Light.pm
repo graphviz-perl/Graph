@@ -12,9 +12,6 @@ use base 'Graph::AdjacencyMap';
 
 use Scalar::Util qw(weaken);
 
-use Graph::AdjacencyMap::Heavy;
-use Graph::AdjacencyMap::Vertex;
-
 sub _V () { 2 } # Graph::_V
 sub _E () { 3 } # Graph::_E
 sub _F () { 0 } # Graph::_F
@@ -231,10 +228,12 @@ sub __attr {
     if (ref $v eq 'ARRAY') { # Edges, then.
 	# print "Reedging.\n";
 	@E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
+	require Graph::AdjacencyMap::Heavy;
 	$g->[ _E ] = $m = Graph::AdjacencyMap::Heavy->_new(($f & ~_LIGHT), 2);
 	$g->add_edges( @E );
     } else {
 	# print "Revertexing.\n";
+	require Graph::AdjacencyMap::Vertex;
 	$m = Graph::AdjacencyMap::Vertex->_new(($f & ~_LIGHT), 1);
 	$m->[ _n ] = $V[ _n ];
 	$m->[ _i ] = $V[ _i ];
