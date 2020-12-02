@@ -13,8 +13,6 @@ use warnings;
 use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
 
-use Scalar::Util qw(weaken);
-
 sub stringify {
     my $m = shift;
     my @rows;
@@ -38,30 +36,18 @@ sub __strval {
 }
 
 sub __set_path {
-    my $m = shift;
-    my $f = $m->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_) if @_ != 1;
-    my $p;
-    $p = $m->[ _s ] ||= { };
-    my @p = $p;
-    my @k;
-    my $k = shift;
-    my $q = __strval($k, $f);
-    push @k, $q;
-    return (\@p, \@k);
+    my $f = $_[0]->[ _f ];
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", @_ - (1 + ($f & _MULTI))) if @_ != (2 + ($f & _MULTI));
+    [ $_[0]->[ _s ] ||= { } ], [ __strval($_[1], $f) ];
 }
 
 sub __set_path_node {
-    my ($m, $p, $l) = splice @_, 0, 3;
+    my ($m, $p, $l) = @_;
     my $f = $m->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    unless (exists $p->[-1]->{ $l }) {
-	my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
-	$m->[ _i ]->{ defined $i ? $i : "" } = $_[0];
-    } else {
-	$m->_inc_node( \$p->[-1]->{ $l }, $id );
-    }
+    my $id = $_[-1] if ($f & _MULTI);
+    return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
+    my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
+    $m->[ _i ]->{ defined $i ? $i : "" } = $_[3];
 }
 
 sub set_path {
@@ -75,17 +61,10 @@ sub set_path {
 }
 
 sub __has_path {
-    my $m = shift;
-    my $f = $m->[ _f ];
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_) if @_ != 1;
-    my $p = $m->[ _s ];
-    return unless defined $p;
-    my @p = $p;
-    my @k;
-    my $k = shift;
-    my $q = __strval($k, $f);
-    push @k, $q;
-    return (\@p, \@k);
+    my $f = $_[0]->[ _f ];
+    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_) if @_ != 2;
+    return unless defined(my $p = $_[0]->[ _s ]);
+    return ([$p], [ __strval($_[1], $f) ]);
 }
 
 sub has_path {
