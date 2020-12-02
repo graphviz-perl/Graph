@@ -1488,7 +1488,7 @@ sub add_edges {
 
 sub rename_vertex {
     my $g = shift;
-    $g->[ $_ ]->rename_path(@_) for _V, _E;
+    $g->[ _V ]->rename_path(@_);
     return $g;
 }
 
@@ -1496,7 +1496,7 @@ sub rename_vertices {
     my ($g, $code) = @_;
     my %seen;
     $g->rename_vertex($_, $code->($_))
-	for grep !$seen{$_}++, map ref() ? $_->[0] : $_, $g->vertices;
+	for grep !$seen{$_}++, map ref() ? $_->[0] : $_, $g->[ _V ]->paths(@_);
     return $g;
 }
 
