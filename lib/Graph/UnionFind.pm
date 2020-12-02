@@ -23,23 +23,21 @@ sub has {
 
 sub _parent {
     return undef unless defined $_[1];
+    Graph::__carp_confess(__PACKAGE__ . "::_parent: bad arity") if @_ < 2 or @_ > 3;
     if (@_ == 2) {
 	exists $_[0]->{ $_[ 1 ] } ? $_[0]->{ $_[1] }->[ _PARENT ] : undef;
-    } elsif (@_ == 3) {
-	$_[0]->{ $_[1] }->[ _PARENT ] = $_[2];
     } else {
-	Graph::__carp_confess(__PACKAGE__ . "::_parent: bad arity");
+	$_[0]->{ $_[1] }->[ _PARENT ] = $_[2];
     }
 }
 
 sub _rank {
     return unless defined $_[1];
+    Graph::__carp_confess(__PACKAGE__ . "::_rank: bad arity") if @_ < 2 or @_ > 3;
     if (@_ == 2) {
 	exists $_[0]->{ $_[1] } ? $_[0]->{ $_[1] }->[ _RANK ] : undef;
-    } elsif (@_ == 3) {
-	$_[0]->{ $_[1] }->[ _RANK ] = $_[2];
     } else {
-	Graph::__carp_confess(__PACKAGE__ . "::_rank: bad arity");
+	$_[0]->{ $_[1] }->[ _RANK ] = $_[2];
     }
 }
 
