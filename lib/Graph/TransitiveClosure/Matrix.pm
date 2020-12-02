@@ -14,8 +14,8 @@ sub _V() { 3 } # vertices
 sub _G() { 4 } # the original graph (OG)
 
 sub _new {
-    my ($g, $class, $opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices, $want_path_count) = @_;
-    my $m = Graph::AdjacencyMatrix->new($g, %$opt);
+    my ($g, $class, $am_opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices, $want_path_count) = @_;
+    my $m = Graph::AdjacencyMatrix->new($g, %$am_opt);
     my @V = $g->vertices;
     my $am = $m->adjacency_matrix;
     my $dm; # The distance matrix.
@@ -28,8 +28,10 @@ sub _new {
     my %pi;
     unless ($want_transitive) {
 	$dm = $m->distance_matrix;
-	@di = @{ $dm->[0] };
-	%di = %{ $dm->[1] };
+	$dm = $m->[ Graph::AdjacencyMatrix::_DM ] = Graph::Matrix->new($g)
+	    if !defined $dm; # if no distance_matrix in AM, we make our own
+        @di = @{ $dm->[0] };
+        %di = %{ $dm->[1] };
 	$pm = Graph::Matrix->new($g);
 	@pi = @{ $pm->[0] };
 	%pi = %{ $pm->[1] };
@@ -45,8 +47,8 @@ sub _new {
 			;
 		# $dm->set($u, $v, $u eq $v ? 0 : 1)
 		$di[$diu]->[$div] = $u eq $v ? 0 : 1
-		    unless
-			defined
+		    if  $want_path_count or
+			!defined
 			    # $dm->get($u, $v)
 			    $di[$diu]->[$div]
 			    ;
@@ -219,6 +221,7 @@ sub new {
     $want_reflexive = 1 unless defined $want_reflexive;
     my $want_path = $want_path_length || $want_path_vertices || $want_path_count;
     # $g->expect_dag if $want_path;
+    $am_opt{distance_matrix} = 0 if $want_path_count;
     _new($g, $class,
 	 \%am_opt,
 	 $want_transitive, $want_reflexive,

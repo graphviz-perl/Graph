@@ -31,13 +31,13 @@ sub new {
 	$tcm = Graph::TransitiveClosure::Matrix->new($g, %opt);
 	$g->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     }
-    my $tcm00 = $tcm->[0]->[0];
-    my $tcm11 = $tcm->[1]->[1];
+    my $tcm00 = $tcm->[0][0]; # 0=am, 0=bitmatrix
+    my $tcm01 = $tcm->[0][1]; #     , 1=hash mapping v-name to the offset into dm data structures (in retval of $g->vertices)
     for my $u ($tcm->vertices) {
-	my $tcm00i = $tcm00->[ $tcm11->{ $u } ];
+	my $tcm00i = $tcm00->[ $tcm01->{ $u } ];
 	for my $v ($tcm->vertices) {
 	    next if $u eq $v && ! $opt{ reflexive };
-	    my $j = $tcm11->{ $v };
+	    my $j = $tcm01->{ $v };
 	    if (
 		# $tcm->is_transitive($u, $v)
 		# $tcm->[0]->get($u, $v)
