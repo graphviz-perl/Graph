@@ -148,22 +148,16 @@ sub _new {
 			$didiv->[$diw]++ if $w ne $u and $w ne $v and $u ne $v;
 			next;
 		    }
-		    my ($d0, $d1a, $d1b);
-		    if (defined $dm) {
-			# See XXX above.
-			# $d0  = $dm->get($v, $w);
-			# $d1a = $dm->get($v, $u) || 1;
-			# $d1b = $dm->get($u, $w) || 1;
-			$d0  = $didiv->[$diw];
-			# no override sum-zero paths which can happen with negative weights
-			$d1a = $didiv->[$diu];
-			$d1a = 1 unless defined $d1a;
-			$d1b = $didiu->[$diw];
-			$d1b = 1 unless defined $d1b;
-		    } else {
-			$d1a = 1;
-			$d1b = 1;
-		    }
+		    # See XXX above.
+		    # $d0  = $dm->get($v, $w);
+		    # $d1a = $dm->get($v, $u) || 1;
+		    # $d1b = $dm->get($u, $w) || 1;
+		    my $d0  = $didiv->[$diw];
+		    # no override sum-zero paths which can happen with negative weights
+		    my $d1a = $didiv->[$diu];
+		    $d1a = 1 unless defined $d1a;
+		    my $d1b = $didiu->[$diw];
+		    $d1b = 1 unless defined $d1b;
 		    my $d1 = $d1a + $d1b;
 		    if (!defined $d0 || ($d1 < $d0)) {
 			# print "d1 = $d1a ($v, $u) + $d1b ($u, $w) = $d1 ($v, $w) (".(defined$d0?$d0:"-").")\n";
