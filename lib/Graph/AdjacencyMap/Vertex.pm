@@ -90,8 +90,7 @@ sub __has_path {
 
 sub has_path {
     my $m = shift;
-    my ($p, $k) = $m->__has_path( @_ );
-    return unless defined $p && defined $k;
+    return unless my ($p, $k) = $m->__has_path( @_ );
     return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
 }
 

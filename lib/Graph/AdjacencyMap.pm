@@ -138,9 +138,8 @@ sub __get_path_node {
 	$p = [ $m->[ _s ], $m->[ _s ]->{ $_[0] } ];
 	$k = [ $_[0], $_[1] ];
     } else {
-	($p, $k) = $m->__has_path( @_ );
+	return unless ($p, $k) = $m->__has_path( @_ );
     }
-    return unless defined $p && defined $k;
     my $l = defined $k->[-1] ? $k->[-1] : "";
     return ( exists $p->[-1]->{ $l }, $p->[-1]->{ $l }, $p, $k, $l );
 }
@@ -167,8 +166,7 @@ sub _has_path_attrs {
     my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	return keys %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } } ? 1 : 0;
     } else {
@@ -205,8 +203,7 @@ sub _has_path_attr {
     my $id   = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	exists $p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr };
     } else {
@@ -251,8 +248,7 @@ sub _get_path_attrs {
     my $id   = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	$p->[-1]->{ $l }->[ _nm ]->{ $id };
     } else {
@@ -270,8 +266,7 @@ sub _get_path_attr {
     my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	return $p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr };
     } else {
@@ -287,8 +282,7 @@ sub _get_path_attr_names {
     my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	keys %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } };
     } else {
@@ -305,8 +299,7 @@ sub _get_path_attr_values {
     my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	values %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } };
     } else {
@@ -323,8 +316,7 @@ sub _del_path_attrs {
     my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	delete $p->[-1]->{ $l }->[ _nm ]->{ $id };
 	delete $p->[-1]->{ $l }
@@ -348,8 +340,7 @@ sub _del_path_attr {
     my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
-	my ($p, $k) = $m->__has_path( @_ );
-	return unless defined $p && defined $k;
+	return unless my ($p, $k) = $m->__has_path( @_ );
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	delete $p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr };
 	$m->_del_path_attrs( @_, $id )
