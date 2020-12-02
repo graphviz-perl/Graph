@@ -49,6 +49,19 @@ sub new {
     return $bm;
 }
 
+sub stringify {
+    my ($m) = @_;
+    my @V = sort keys %{ $m->[1] };
+    my $top = join ' ', map sprintf('%4s', $_), 'to:', @V;
+    my @indices = map $m->[1]{$_}, @V;
+    my @rows;
+    for my $n (@V) {
+        my @vals = $m->get_row($n, @V);
+        push @rows, join ' ', map sprintf('%4s', defined()?$_:''), $n, @vals;
+    }
+    join '', map "$_\n", $top, @rows;
+}
+
 sub set {
     my ($m, $u, $v) = @_;
     my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
