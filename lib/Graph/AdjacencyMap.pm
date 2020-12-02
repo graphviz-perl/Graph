@@ -162,24 +162,14 @@ sub get_multi_ids {
 
 sub _has_path_attrs {
     my $m = shift;
-    my $f = $m->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    $m->__attr( \@_ );
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = $m->__has_path( @_ );
-	my $l = defined $k->[-1] ? $k->[-1] : "";
-	return keys %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } } ? 1 : 0;
-    } else {
-	my ($e, $n) = $m->__get_path_node( @_ );
-	return undef unless $e;
-	return ref $n && $#$n == _na && keys %{ $n->[ _na ] } ? 1 : 0;
-    }
+    return undef unless defined(my $attrs = $m->_get_path_attrs(@_));
+    keys %$attrs ? 1 : 0;
 }
 
 sub _set_path_attrs {
     my $m = shift;
     my $f = $m->[ _f ];
-    my $attr = pop;
+    my $attrs = pop;
     my $id   = pop if ($f & _MULTI);
     $m->__attr( @_ );
     push @_, $id if ($f & _MULTI);
@@ -188,29 +178,19 @@ sub _set_path_attrs {
     my $l = defined $k->[-1] ? $k->[-1] : "";
     $m->__set_path_node( $p, $l, @_ ) unless exists $p->[-1]->{ $l };
     if (($f & _MULTI)) {
-	$p->[-1]->{ $l }->[ _nm ]->{ $id } = $attr;
+	$p->[-1]->{ $l }->[ _nm ]->{ $id } = $attrs;
     } else {
 	# Extend the node if it is a simple id node.
 	$p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
-	$p->[-1]->{ $l }->[ _na ] = $attr;
+	$p->[-1]->{ $l }->[ _na ] = $attrs;
     }
 }
 
 sub _has_path_attr {
     my $m = shift;
-    my $f = $m->[ _f ];
     my $attr = pop;
-    my $id   = pop if ($f & _MULTI);
-    $m->__attr( \@_ );
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = $m->__has_path( @_ );
-	my $l = defined $k->[-1] ? $k->[-1] : "";
-	exists $p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr };
-    } else {
-	my ($e, $n) = $m->__get_path_node( @_ );
-	return undef unless $e;
-	return ref $n && $#$n == _na ? exists $n->[ _na ]->{ $attr } : undef;
-    }
+    return undef unless defined(my $attrs = $m->_get_path_attrs(@_));
+    exists $attrs->{$attr};
 }
 
 sub _set_path_attr {
@@ -219,16 +199,9 @@ sub _set_path_attr {
     my $val  = pop;
     my $attr = pop;
     my $id   = pop if ($f & _MULTI);
-    my ($p, $k);
     $m->__attr( \@_ ); # _LIGHT maps need this to get upgraded when needed, also sorts for _UNORD
     push @_, $id if ($f & _MULTI);
-    if ($m->[ _a ] == 2 && @_ == 2 && !($f & (_REF|_UNIQ|_HYPER))) {
-	$m->[ _s ]->{ $_[0] } ||= { };
-	$p = [ $m->[ _s ], $m->[ _s ]->{ $_[0] } ];
-	$k = [ $_[0], $_[1] ];
-    } else {
-	($p, $k) = $m->__set_path( @_ );
-    }
+    my ($p, $k) = $m->__set_path( @_ );
     return unless defined $p && defined $k;
     my $l = defined $k->[-1] ? $k->[-1] : "";
     $m->__set_path_node( $p, $l, @_ ) unless exists $p->[-1]->{ $l };
@@ -245,7 +218,7 @@ sub _set_path_attr {
 sub _get_path_attrs {
     my $m = shift;
     my $f = $m->[ _f ];
-    my $id   = pop if ($f & _MULTI);
+    my $id = pop if ($f & _MULTI);
     $m->__attr( \@_ );
     if (($f & _MULTI)) {
 	return unless my ($p, $k) = $m->__has_path( @_ );
@@ -261,53 +234,21 @@ sub _get_path_attrs {
 
 sub _get_path_attr {
     my $m = shift;
-    my $f = $m->[ _f ];
     my $attr = pop;
-    my $id = pop if ($f & _MULTI);
-    $m->__attr( \@_ );
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = $m->__has_path( @_ );
-	my $l = defined $k->[-1] ? $k->[-1] : "";
-	return $p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr };
-    } else {
-	my ($e, $n) = $m->__get_path_node( @_ );
-	return undef unless $e;
-	return ref $n && $#$n == _na ? $n->[ _na ]->{ $attr } : undef;
-    }
+    return undef unless defined(my $attrs = $m->_get_path_attrs(@_));
+    $attrs->{$attr};
 }
 
 sub _get_path_attr_names {
     my $m = shift;
-    my $f = $m->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    $m->__attr( \@_ );
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = $m->__has_path( @_ );
-	my $l = defined $k->[-1] ? $k->[-1] : "";
-	keys %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } };
-    } else {
-	my ($e, $n) = $m->__get_path_node( @_ );
-	return undef unless $e;
-	return keys %{ $n->[ _na ] } if ref $n && $#$n == _na;
-	return;
-    }
+    return unless defined(my $attrs = $m->_get_path_attrs(@_));
+    keys %$attrs;
 }
 
 sub _get_path_attr_values {
     my $m = shift;
-    my $f = $m->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    $m->__attr( \@_ );
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = $m->__has_path( @_ );
-	my $l = defined $k->[-1] ? $k->[-1] : "";
-	values %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } };
-    } else {
-	my ($e, $n) = $m->__get_path_node( @_ );
-	return undef unless $e;
-	return values %{ $n->[ _na ] } if ref $n && $#$n == _na;
-	return;
-    }
+    return unless defined(my $attrs = $m->_get_path_attrs(@_));
+    values %$attrs;
 }
 
 sub _del_path_attrs {
@@ -335,23 +276,13 @@ sub _del_path_attrs {
 
 sub _del_path_attr {
     my $m = shift;
-    my $f = $m->[ _f ];
     my $attr = pop;
-    my $id = pop if ($f & _MULTI);
-    $m->__attr( \@_ );
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = $m->__has_path( @_ );
-	my $l = defined $k->[-1] ? $k->[-1] : "";
-	delete $p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr };
-	$m->_del_path_attrs( @_, $id )
-	    unless keys %{ $p->[-1]->{ $l }->[ _nm ]->{ $id } };
-    } else {
-	my ($e, $n) = $m->__get_path_node( @_ );
-	return undef unless $e;
-	return 0 if !(ref $n && $#$n == _na && exists $n->[ _na ]->{ $attr });
-	delete $n->[ _na ]->{ $attr };
-	return 1;
-    }
+    return undef unless defined(my $attrs = $m->_get_path_attrs(@_));
+    return 0 unless exists $attrs->{$attr};
+    delete $attrs->{$attr};
+    return 1 if keys %$attrs;
+    $m->_del_path_attrs(@_);
+    1;
 }
 
 sub __arg {
