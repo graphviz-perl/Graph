@@ -26,7 +26,7 @@ sub new {
     }
     my $want_transitive = delete $opt{is_transitive};
     Graph::_opt_unknown(\%opt);
-    my $m = Graph::BitMatrix->new($g, connect_edges => $want_distance);
+    my $m = Graph::BitMatrix->new($g);
     my $self = bless [ $m, undef, \@V ], $class;
     return $self if !$want_distance;
     # for my $u (@V) {
