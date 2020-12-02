@@ -320,12 +320,7 @@ sub next {
 sub _order {
     my ($self, $order) = @_;
     1 while defined $self->next;
-    my $wantarray = wantarray;
-    if ($wantarray) {
-	@{ $self->{ $order } };
-    } elsif (defined $wantarray) {
-	shift @{ $self->{ $order } };
-    }
+    @{ $self->{ $order } };
 }
 
 sub preorder {
