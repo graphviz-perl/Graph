@@ -61,25 +61,8 @@ sub configure {
     $self->{ post_vertex } = $attr{ post_vertex } if exists $attr{ post_vertex };
     $self->{ pre_edge  } = $attr{ pre_edge  } if exists $attr{ pre_edge  };
     $self->{ post_edge } = $attr{ post_edge } if exists $attr{ post_edge };
-    if (exists $attr{ successor }) { # Graph 0.201 compatibility.
-	$self->{ tree_edge } = $self->{ non_tree_edge } = $attr{ successor };
-    }
-    if (exists $attr{ unseen_successor }) {
-	if (exists $self->{ tree_edge }) { # Graph 0.201 compatibility.
-	    my $old_tree_edge = $self->{ tree_edge };
-	    $self->{ tree_edge } = sub {
-		$old_tree_edge->( @_ );
-		$attr{ unseen_successor }->( @_ );
-	    };
-	} else {
-	    $self->{ tree_edge } = $attr{ unseen_successor };
-	}
-    }
     if ($self->graph->multiedged || $self->graph->countedged) {
 	$self->{ seen_edge } = $attr{ seen_edge } if exists $attr{ seen_edge };
-	if (exists $attr{ seen_successor }) { # Graph 0.201 compatibility.
-	    $self->{ seen_edge } = $attr{ seen_edge };
-	}
     }
     $self->{ non_tree_edge } = $attr{ non_tree_edge } if exists $attr{ non_tree_edge };
     $self->{ pre_edge  } = $attr{ tree_edge } if exists $attr{ tree_edge };
@@ -89,9 +72,6 @@ sub configure {
     if (exists $attr{ start }) {
 	$attr{ first_root } = $attr{ start };
 	$attr{ next_root  } = undef;
-    }
-    if (exists $attr{ get_next_root }) {
-	$attr{ next_root  } = $attr{ get_next_root }; # Graph 0.201 compat.
     }
     $self->{ next_root } =
 	exists $attr{ next_root } ?
@@ -141,10 +121,9 @@ sub configure {
     $self->{ see } = $see;
     delete @attr{ qw(
 		     pre post pre_edge post_edge
-		     successor unseen_successor seen_successor
 		     tree_edge non_tree_edge
 		     back_edge down_edge cross_edge seen_edge
-		     start get_next_root
+		     start
 		     next_root next_alphabetic next_numeric next_random next_successor
 		     first_root
 		     has_a_cycle find_a_cycle
@@ -662,31 +641,6 @@ Set the state 's' attached to the traversal.
     $t->delete_state('s')
 
 Delete the state 's' from the traversal.
-
-=back
-
-=head2 Backward compatibility
-
-The following parameters are for backward compatibility to Graph 0.2xx:
-
-=over 4
-
-=item get_next_root
-
-Like C<next_root>.
-
-=item successor
-
-Identical to having C<tree_edge> both C<non_tree_edge> defined
-to be the same.
-
-=item unseen_successor
-
-Like C<tree_edge>.
-
-=item seen_successor
-
-Like C<seed_edge>.
 
 =back
 
