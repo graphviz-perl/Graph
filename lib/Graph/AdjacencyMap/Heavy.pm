@@ -31,10 +31,6 @@ sub stringify {
 	for my $u (sort keys %p) {
 	    my @r = $u;
 	    for my $v (@s) {
-		if (!$m->__has_path($u, $v)) {
-		    push @r, '';
-		    next;
-		}
 		my $v = $s->{$u}{$v};
 		push @r, $m->_dumper(ref $v ? $v->[-1] : defined $v ? 1 : '');
 	    }
@@ -196,7 +192,7 @@ sub __attr {
     return unless @_ and ref $_[0] && @{ $_[0] };
     Graph::__carp_confess(sprintf
 		  "Graph::AdjacencyMap::Heavy: arguments %d expected %d\n",
-		  scalar @{ $_[0] }, $m->[ _a ])
+		  scalar @{ $_[0] }, $m->[ _a ]) # uncoverable statement
 	if @{ $_[0] } != $m->[ _a ];
     my $f = $m->[ _f ];
     if (@{ $_[0] } > 1 && ($f & _UNORDUNIQ)) {
