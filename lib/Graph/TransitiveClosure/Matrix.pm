@@ -117,7 +117,7 @@ sub _new {
 			# 	    ;
 			#     }
 			# }
-			$aiaiv |= $aiaiu;
+			$aiaiv |= $aiaiu; # uncoverable statement
 		    }
 		} else {
 		    $aiaiv |= $aiaiu;
