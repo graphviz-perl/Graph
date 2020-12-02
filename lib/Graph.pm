@@ -1089,11 +1089,7 @@ sub has_cycle {
 
 sub has_a_cycle {
     my $g = shift;
-    my @r = ( back_edge => \&Graph::Traversal::has_a_cycle );
-    push @r,
-      down_edge => \&Graph::Traversal::has_a_cycle
-       if $g->is_undirected;
-    my $t = Graph::Traversal::DFS->new($g, @r, @_);
+    my $t = Graph::Traversal::DFS->new($g, has_a_cycle => 1, @_);
     $t->dfs;
     return $t->get_state('has_a_cycle');
 }
