@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 63;
+use Test::More tests => 65;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -73,6 +73,9 @@ ok(!$g->has_edge_by_id('a', 'b', '2') );
 ok(!$g->has_edge_by_id('a', 'b', '3') );
 
 is( $g->get_multiedge_ids('a', 'b'), undef );
+
+is( $g->add_edge_get_id('a', 'b'), 0);
+ok( $g->delete_edge_by_id('a', 'b', 0) ); # exercise deleting last one
 
 my $h = Graph->new;
 
