@@ -45,8 +45,8 @@ use Graph::Undirected;
 # set up square graphs
 for my $size (0..3) {
     print "# size = $size\n";
-    my $g=Graph::Directed->new(compat02 => 1);
-    my $h=Graph::Undirected->new(compat02 => 1);
+    my $g=Graph::Directed->new;
+    my $h=Graph::Undirected->new;
     $g=construct($g, $size);
     $h=construct($h, $size);
     test_graph($g, $size);
@@ -70,10 +70,10 @@ sub construct {
     for (my $j=0;$j<$size;$j++) {
       my $node=node($i,$j);
       $g->add_vertex($node);
-      $g->add_weighted_edge(node($i-1,$j),1,$node) if $i>0;
-      $g->add_weighted_edge(node($i,$j-1),1,$node) if $j>0;
-      $g->add_weighted_edge(node($i-1,$j-1),1,$node) if $i>0 && $j>0; # down-right diagonal
-      $g->add_weighted_edge(node($i-1,$j+1),1,$node) 
+      $g->add_weighted_edge(node($i-1,$j),$node,1) if $i>0;
+      $g->add_weighted_edge(node($i,$j-1),$node,1) if $j>0;
+      $g->add_weighted_edge(node($i-1,$j-1),$node,1) if $i>0 && $j>0; # down-right diagonal
+      $g->add_weighted_edge(node($i-1,$j+1),$node,1)
 	if $g->undirected && $i>0 && $j<$size; # down-left diagonal
     }
   }

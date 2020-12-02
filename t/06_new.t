@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 50;
+use Test::More tests => 49;
 
 use Graph;
 
@@ -106,9 +106,8 @@ ok( !$g7b->countedged() );
 }
 
 {
-    my $g = Graph->new(compat02 => 1, hypervertexed => 1, multiedged => 1);
+    my $g = Graph->new(hypervertexed => 1, multiedged => 1);
     my $h = $g->new; # The flags should be inherited.
-    ok($h->is_compat02);
     ok($h->is_hypervertexed);
     ok($h->is_multiedged);
     $h = $g->new(multiedged => 0); # The flags should be overridable

@@ -111,16 +111,6 @@ t/83_bitmatrix.t
 t/84_all_cessors.t
 t/85_subgraph.t
 t/99_misc.t
-t/g02_00directed.t
-t/g02_01undirected.t
-t/g02_02multiple.t
-t/g02_03degree.t
-t/g02_04attribute.t
-t/g02_05copy.t
-t/g02_06transpose.t
-t/g02_07complete.t
-t/g02_08complement.t
-t/g02_09scc.t
 t/MyDGraph.pm
 t/MyGraph.pm
 t/MyUGraph.pm

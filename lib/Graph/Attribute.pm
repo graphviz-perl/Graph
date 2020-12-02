@@ -15,7 +15,6 @@ my @API = qw(get_attribute
 	     get_attribute_values);
 
 sub _F () { 0 }
-sub _COMPAT02 () { 0x00000001 }
 
 sub import {
     my $package = shift;
@@ -118,9 +117,7 @@ sub get_attribute_values {
 }
 
 sub get_attributes {
-    my $g = shift;
-    my $a = $g->_get_attributes;
-    ($g->[ _F ] & _COMPAT02) ? (defined $a ? %{ $a } : ()) : $a;
+    $_[0]->_get_attributes;
 }
 
 1;
