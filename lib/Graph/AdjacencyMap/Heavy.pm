@@ -190,10 +190,6 @@ sub _get_path_count {
 sub __attr {
     my $m = shift;
     return unless @_ and ref $_[0] && @{ $_[0] };
-    Graph::__carp_confess(sprintf
-		  "Graph::AdjacencyMap::Heavy: arguments %d expected %d\n",
-		  scalar @{ $_[0] }, $m->[ _a ]) # uncoverable statement
-	if @{ $_[0] } != $m->[ _a ];
     my $f = $m->[ _f ];
     if (@{ $_[0] } > 1 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @{ $_[0] } == 2) {

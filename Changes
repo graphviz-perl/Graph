@@ -9,6 +9,7 @@
 - remove compat02 features
 - drop untested scalar-context Traversal.postorder mutation behaviour
 - much more lazy-loading of modules
+- set_vertex_attribute_by_id now works on hypervertexed
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

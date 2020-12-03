@@ -3,75 +3,50 @@ use Test::More tests => 57;
 
 use Graph;
 my $g = Graph->new(multivertexed => 1);
+ok $g->multivertexed;
 
 is( $g->get_vertex_count('a'), 0 );
-
 ok( $g->add_vertex_by_id('a', 'red') );
-
 is( $g->get_vertex_count('a'), 1 );
 
-ok( $g->has_vertex('a') );
-ok(!$g->has_vertex('b') );
-
-ok( $g->has_vertex('a') );
-ok(!$g->has_vertex('b') );
-
-ok( $g->has_vertex_by_id('a', 'red') );
-ok(!$g->has_vertex_by_id('a', 'blue') );
-
-ok( $g->has_vertex_by_id('a', 'red') );
-ok(!$g->has_vertex_by_id('a', 'blue') );
+for (1,2) {
+    ok( $g->has_vertex('a') );
+    ok(!$g->has_vertex('b') );
+    ok( $g->has_vertex_by_id('a', 'red') );
+    ok(!$g->has_vertex_by_id('a', 'blue') );
+}
 
 $g->add_vertex_by_id('a', 'blue');
-
 is( $g->get_vertex_count('a'), 2 );
 
-ok( $g->has_vertex_by_id('a', 'blue') );
-ok( $g->has_vertex_by_id('a', 'red') );
+ok( $g->has_vertex_by_id('a', $_) ) for qw(blue red);
 
 $g->add_vertex('a');
 ok( $g->has_vertex('a') );
 ok(!$g->has_vertex('b') );
-
 is( $g->get_vertex_count('a'), 3 );
 
-is( $g->add_vertex_get_id('a'), 1);
-is( $g->add_vertex_get_id('a'), 2);
-is( $g->add_vertex_get_id('a'), 3);
+is( $g->add_vertex_get_id('a'), $_) for 1..3;
+ok( $g->has_vertex_by_id('a', $_) ) for 0..3;
 
 is( $g->get_vertex_count('a'), 6 );
 
 ok( $g->delete_vertex_by_id('a', 'blue') );
-
 ok(!$g->has_vertex_by_id('a', 'blue') );
 ok( $g->has_vertex_by_id('a', 'red') );
 
 ok(!$g->delete_vertex_by_id('a', 'green') );
+ok(!$g->has_vertex_by_id('a', $_)) for qw(blue green);
 
-ok(!$g->has_vertex_by_id('a', 'blue') );
 ok( $g->has_vertex_by_id('a', 'red') );
-ok(!$g->has_vertex_by_id('a', 'green') );
-
 ok( $g->delete_vertex_by_id('a', 'red') );
 
-my @i = sort $g->get_multivertex_ids('a');
-
-is("@i", "0 1 2 3");
-
-ok( $g->has_vertex_by_id('a', '0') );
-ok( $g->has_vertex_by_id('a', '1') );
-ok( $g->has_vertex_by_id('a', '2') );
-ok( $g->has_vertex_by_id('a', '3') );
-
+my $got = [ sort $g->get_multivertex_ids('a') ];
+is_deeply $got, [ qw(0 1 2 3) ] or diag explain $got;
 is( $g->get_vertex_count('a'), 4 );
 
 is( $g->delete_vertex('a'), '' );
-
-ok(!$g->has_vertex_by_id('a', '0') );
-ok(!$g->has_vertex_by_id('a', '1') );
-ok(!$g->has_vertex_by_id('a', '2') );
-ok(!$g->has_vertex_by_id('a', '3') );
-
+ok(!$g->has_vertex_by_id('a', $_) ) for 0..3;
 is( $g->get_multivertex_ids('a'), undef );
 
 my $h = Graph->new;
@@ -102,14 +77,8 @@ ok( $h->has_vertex() );
 ok( $h->has_vertex_by_id('u', 'v', 'genghis') );
 ok( $h->has_vertex_by_id('khan') );
 
-my $g1 = Graph->new;
+$h->set_vertex_attribute_by_id(qw(u v genghis height), 'short');
+is $h->get_vertex_attribute_by_id(qw(u v genghis height)), 'short';
 
-ok ( !$g1->multivertexed );
-
-my $g2 = Graph->new( multivertexed => 1 );
-
-ok (  $g2->multivertexed );
-
-eval { my $g3 = Graph->new( multivertexed => 1, countvertexed => 1 ) };
-
+eval { Graph->new( multivertexed => 1, countvertexed => 1 ) };
 like ( $@, qr/both countvertexed and multivertexed/ );
