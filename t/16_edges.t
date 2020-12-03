@@ -36,7 +36,7 @@ is( $e, 2 );
 
 is( "@e", "[a b] [b c]" );
 
-eval '$g->add_edges("x")';
+eval { $g->add_edges("x") };
 like($@, qr/Graph::add_edges: missing end vertex/);
 
 is($g->add_edges("x", "y"), $g);

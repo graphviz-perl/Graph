@@ -79,16 +79,16 @@ ok( $g->delete_edge_by_id('a', 'b', 0) ); # exercise deleting last one
 
 my $h = Graph->new;
 
-eval '$h->add_edge_by_id("b", "c", "black")';
+eval { $h->add_edge_by_id("b", "c", "black") };
 like($@, qr/add_edge_by_id: expected multiedged/);
 
-eval '$h->has_edge_by_id("b", "c", "black")';
+eval { $h->has_edge_by_id("b", "c", "black") };
 like($@, qr/has_edge_by_id: expected multiedged/);
 
-eval '$h->get_multiedge_ids()';
+eval { $h->get_multiedge_ids() };
 like($@, qr/get_multiedge_ids: expected multiedged/);
 
-eval '$h->delete_edge_by_id("b", "c", "black")';
+eval { $h->delete_edge_by_id("b", "c", "black") };
 like($@, qr/delete_edge_by_id: expected multiedged/);
 
 $h = Graph->new(multiedged => 1, hyperedged => 1);
@@ -113,7 +113,7 @@ my $g2 = Graph->new( multiedged => 1 );
 
 ok (  $g2->multiedged );
 
-eval 'my $g3 = Graph->new( multiedged => 1, countedged => 1 )';
+eval { my $g3 = Graph->new( multiedged => 1, countedged => 1 ) };
 
 like ( $@, qr/both countedged and multiedged/ );
 

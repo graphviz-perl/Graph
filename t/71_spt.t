@@ -94,7 +94,7 @@ $g3->add_weighted_path(qw(a 1 b 2 c 3 d -1 e 4 f));
 
 my $s3_da;
 
-eval '$s3_da = $g3->SPT_Dijkstra(first_root => "a")';
+eval { $s3_da = $g3->SPT_Dijkstra(first_root => "a") };
 
 like($@, qr/Graph::SPT_Dijkstra: edge d-e is negative \(-1\)/);
 
@@ -102,7 +102,7 @@ is( $s3_da, undef );
 
 my $s3_bf;
 
-eval '$s3_bf = $g3->SPT_Bellman_Ford(first_root => "a")';
+eval { $s3_bf = $g3->SPT_Bellman_Ford(first_root => "a") };
 
 is($@, '');
 
@@ -112,7 +112,7 @@ $g3->add_weighted_path(qw(b -2 a));
 
 undef $s3_bf;
 
-eval '$s3_bf = $g3->SPT_Bellman_Ford(first_root => "a")';
+eval { $s3_bf = $g3->SPT_Bellman_Ford(first_root => "a") };
 
 like($@, qr/Graph::SPT_Bellman_Ford: negative cycle exists/);
 

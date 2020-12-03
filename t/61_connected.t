@@ -96,40 +96,40 @@ sub test_graph {
 
 my $g4 = Graph::Directed->new;
 
-eval '$g4->is_connected';
+eval { $g4->is_connected };
 like($@, qr/Graph::is_connected: expected undirected graph, got directed/);
 
-eval '$g4->connected_components';
+eval { $g4->connected_components };
 like($@, qr/Graph::connected_components: expected undirected graph, got directed/);
 
-eval '$g4->connected_component_by_vertex';
+eval { $g4->connected_component_by_vertex };
 like($@, qr/Graph::connected_component_by_vertex: expected undirected graph, got directed/);
 
-eval '$g4->connected_component_by_index';
+eval { $g4->connected_component_by_index };
 like($@, qr/Graph::connected_component_by_index: expected undirected graph, got directed/);
 
-eval '$g4->same_connected_components';
+eval { $g4->same_connected_components };
 like($@, qr/Graph::same_connected_components: expected undirected graph, got directed/);
 
-eval '$g4->connected_graph';
+eval { $g4->connected_graph };
 like($@, qr/Graph::connected_graph: expected undirected graph, got directed/);
 
 my $g5 = Graph::Undirected->new;
 
-eval '$g5->is_weakly_connected';
+eval { $g5->is_weakly_connected };
 like($@, qr/Graph::is_weakly_connected: expected directed graph, got undirected/);
 
-eval '$g5->weakly_connected_components';
+eval { $g5->weakly_connected_components };
 like($@, qr/Graph::weakly_connected_components: expected directed graph, got undirected/);
 
-eval '$g5->weakly_connected_component_by_vertex';
+eval { $g5->weakly_connected_component_by_vertex };
 like($@, qr/Graph::weakly_connected_component_by_vertex: expected directed graph, got undirected/);
 
-eval '$g5->weakly_connected_component_by_index';
+eval { $g5->weakly_connected_component_by_index };
 like($@, qr/Graph::weakly_connected_component_by_index: expected directed graph, got undirected/);
 
-eval '$g5->same_weakly_connected_components';
+eval { $g5->same_weakly_connected_components };
 like($@, qr/Graph::same_weakly_connected_components: expected directed graph, got undirected/);
 
-eval '$g5->weakly_connected_graph';
+eval { $g5->weakly_connected_graph };
 like($@, qr/Graph::weakly_connected_graph: expected directed graph, got undirected/);

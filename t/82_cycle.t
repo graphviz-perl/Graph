@@ -2,7 +2,7 @@ use strict; use warnings;
 use Graph;
 use Test::More tests => 1;
 
-eval 'require Devel::Cycle';
+eval { require Devel::Cycle };
 SKIP: {
     skip("no Devel::Cycle", 1) if $@;
     import Devel::Cycle;

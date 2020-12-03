@@ -99,7 +99,7 @@ is($g3->strongly_connected_graph(super_component =>
 				       "(" . join("|", @v) . ")" } ),
    "(a|d)-(b),(b)-(c),(e|f)");
 
-eval '$g3->strongly_connected_graph(foobar => 1)';
+eval { $g3->strongly_connected_graph(foobar => 1) };
 like($@, qr/Graph::strongly_connected_graph: Unknown option: 'foobar' /);
 
 # Example from Sedgewick Algorithms in C Third Edition 19.1 Figure 19.8 (p 150)
@@ -152,13 +152,13 @@ is( $g4->strongly_connected_component_by_index(4),
 
 my $g5 = Graph::Undirected->new;
 
-eval '$g5->strongly_connected_components';
+eval { $g5->strongly_connected_components };
 like($@, qr/Graph::strongly_connected_components: expected directed graph, got undirected/);
 
-eval '$g5->strongly_connected_component_by_vertex';
+eval { $g5->strongly_connected_component_by_vertex };
 like($@, qr/Graph::strongly_connected_component_by_vertex: expected directed graph, got undirected/);
 
-eval '$g5->strongly_connected_component_by_index';
+eval { $g5->strongly_connected_component_by_index };
 like($@, qr/Graph::strongly_connected_component_by_index: expected directed graph, got undirected/);
 
 {

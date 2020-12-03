@@ -76,16 +76,16 @@ is( $g->get_multivertex_ids('a'), undef );
 
 my $h = Graph->new;
 
-eval '$h->add_vertex_by_id("b", "black")';
+eval { $h->add_vertex_by_id("b", "black") };
 like($@, qr/add_vertex_by_id: expected multivertexed/);
 
-eval '$h->has_vertex_by_id("b", "black")';
+eval { $h->has_vertex_by_id("b", "black") };
 like($@, qr/has_vertex_by_id: expected multivertexed/);
 
-eval '$h->get_multivertex_ids()';
+eval { $h->get_multivertex_ids() };
 like($@, qr/get_multivertex_ids: expected multivertexed/);
 
-eval '$h->delete_vertex_by_id("b", "black")';
+eval { $h->delete_vertex_by_id("b", "black") };
 like($@, qr/delete_vertex_by_id: expected multivertexed/);
 
 $h = Graph->new(multivertexed => 1, hypervertexed => 1);
@@ -110,6 +110,6 @@ my $g2 = Graph->new( multivertexed => 1 );
 
 ok (  $g2->multivertexed );
 
-eval 'my $g3 = Graph->new( multivertexed => 1, countvertexed => 1 )';
+eval { my $g3 = Graph->new( multivertexed => 1, countvertexed => 1 ) };
 
 like ( $@, qr/both countvertexed and multivertexed/ );

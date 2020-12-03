@@ -320,37 +320,37 @@ sub simple {
 
     ok(!$g->is_dag, "undirected is not dag");
 
-    eval '$g->topological_sort';
+    eval { $g->topological_sort };
     like($@, qr/^Graph::topological_sort: expected directed acyclic graph, got undirected, /, "topological_sort not for undirected");
 
     my $d = Graph::Directed->new;
 
     $d->add_cycle(qw(a b));
 
-    eval '$d->toposort';
+    eval { $d->toposort };
     like($@, qr/^Graph::topological_sort: expected directed acyclic graph, got cyclic, /, "topological_sort not for cyclic");
 }
 
 {
     ok( $g0->is_connected, "is_connected");
-    eval '$g1->is_connected';
+    eval { $g1->is_connected };
     like($@,
 	qr/Graph::is_connected: expected undirected graph, got directed, /,
 	"directed cannot be tested for connectedness/");
     ok( $g1->is_weakly_connected, "... directed is weakly connected");
     ok( $g2->is_connected, "... cyclic undirected" );
     ok(!$g3->is_connected, "... undirected unconnected");
-    eval '$g4->is_connected';
+    eval { $g4->is_connected };
     like($@,
 	qr/Graph::is_connected: expected undirected graph, got directed, /,
 	"... cyclic loop");
     ok( $g4->is_weakly_connected, "... cyclic loop weakly connected");
-    eval '$g5->is_connected';
+    eval { $g5->is_connected };
     like( $@,
 	 qr/Graph::is_connected: expected undirected graph, got directed, /,
 	"... cyclic directed");
     ok( $g5->is_weakly_connected, "... cyclic directed weakly connected");
-    eval '$g6->is_connected';
+    eval { $g6->is_connected };
     like($@,
          qr/Graph::is_connected: expected undirected graph, got directed, /,
          "... directed unconnected");
@@ -580,10 +580,10 @@ my $td1 = Graph::Traversal::DFS->new($gd, next_alphabetic => 1, pre => sub { pus
 $td1->dfs;
 is( "@gd1", "0 1 10 9", "next_alphabetic" );
 
-eval 'Graph::Traversal::DFS->new(next_alphabetic => 1)';
+eval { Graph::Traversal::DFS->new(next_alphabetic => 1) };
 like($@, qr/Graph::Traversal: first argument is not a Graph/, "sane args");
 
-eval 'Graph::Traversal::DFS->new($gd, next_alphazetic => 1)';
+eval { Graph::Traversal::DFS->new($gd, next_alphazetic => 1) };
 like($@, qr/Graph::Traversal: unknown attribute 'next_alphazetic'/, "zetic");
 
 ok(!$td1->has_state('zot'), "has_state");
@@ -611,7 +611,7 @@ is($td1->get_state('zot'), undef, "get_state");
     ok($g = $g->add_edge('b','a'));
     ok($g->has_edge('b','a'));
     my @toposort;
-    eval '@toposort = $g->toposort';
+    eval { @toposort = $g->toposort };
     like($@, qr/Graph::topological_sort: expected directed acyclic graph, got cyclic/);
     # http://rt.cpan.org/NoAuth/Bug.html?id=5168
     @toposort = $g->toposort(empty_if_cyclic => 1);

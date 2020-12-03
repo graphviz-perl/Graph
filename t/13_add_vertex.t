@@ -9,11 +9,11 @@ ok( $g->add_vertex("b") );
 
 is( $g->add_vertex("c"), $g );
 
-eval '$g->add_vertex("d", "e")';
+eval { $g->add_vertex("d", "e") };
 like($@,
      qr/Graph::add_vertex: expected hypervertexed graph/);
 
-eval '$g->add_vertex(undef)';
+eval { $g->add_vertex(undef) };
 like($@,
      qr/Graph::add_vertex: undef vertex/);
 

@@ -383,6 +383,6 @@ is($g3c->get_vertex_attribute('i+k+j', 'subvertices'), undef);
 
 my $d = Graph->new;
 
-eval '$d->biconnectivity';
+eval { $d->biconnectivity };
 like($@, qr/Graph::biconnectivity: expected undirected graph, got directed/);
 
