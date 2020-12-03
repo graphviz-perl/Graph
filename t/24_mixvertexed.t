@@ -35,14 +35,6 @@ for my $m (0, 1) {
 		}
 		is( $g->get_vertex_count("e"),      0 );
 	    }
-	    if (0) {
-		is( $g->get_vertex_value("a"), "a" );
-		is_deeply( $g->get_vertex_value($b), $b );
-		if ($g->hypervertexed) {
-		    is_deeply( $g->get_vertex_value("c", "d"), $h ? "d" : "c" ); # @todo
-		}
-		is( $g->get_vertex_value("e"), undef);
-	    }
 	}
     }
 }
