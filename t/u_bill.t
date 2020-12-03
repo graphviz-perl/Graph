@@ -1,7 +1,7 @@
 use Test::More tests => 30;
 
 use strict;
-use Graph;
+use Graph::Undirected;
 
 my$g = new Graph::Undirected;
 $g->add_edges(qw(a1 b1 b1 c1 c1 a1 a2 b2 b2 c2 c2 a2 a1 a2));

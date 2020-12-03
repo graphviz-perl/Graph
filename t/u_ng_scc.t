@@ -344,6 +344,7 @@ sub test_sc {
   my($graph)=@_;
   print OUT "+++ test_sc\n" if $OPTIONS{verbose};
   my @components=$graph->strongly_connected_components;
+  require Graph::TransitiveClosure;
   my $tc=new Graph::TransitiveClosure($graph);
   check_partition($graph,@components);	# check that components partition nodes
   check_reach($graph,$tc,@components);         # check reachability of components 

@@ -8,6 +8,7 @@
 - AdjacencyMatrix now always creates adjacency matrix (clue in name)
 - remove compat02 features
 - drop untested scalar-context Traversal.postorder mutation behaviour
+- much more lazy-loading of modules
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

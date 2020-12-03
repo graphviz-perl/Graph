@@ -1,6 +1,6 @@
 use Test::More tests => 20;
 
-use Graph;
+use Graph::Undirected;
 
 use strict;
 

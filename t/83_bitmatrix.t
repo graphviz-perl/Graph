@@ -2,6 +2,7 @@ use strict; use warnings;
 use Test::More tests => 28;
 
 use Graph;
+use Graph::BitMatrix;
 
 my $g = Graph->new;
 

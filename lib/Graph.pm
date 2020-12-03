@@ -30,20 +30,6 @@ sub _can_deep_copy_Storable () {
     $can_deep_copy_Storable = !$@;
 }
 
-use Graph::AdjacencyMap::Heavy;
-use Graph::AdjacencyMap::Light;
-use Graph::AdjacencyMap::Vertex;
-use Graph::UnionFind;
-use Graph::TransitiveClosure;
-use Graph::Traversal::DFS;
-use Graph::MSTHeapElem;
-use Graph::SPTHeapElem;
-use Graph::Undirected;
-
-use Heap::Fibonacci;
-use List::Util qw(shuffle first);
-use Scalar::Util qw(weaken);
-
 sub _F () { 0 } # Flags.
 sub _G () { 1 } # Generation.
 sub _V () { 2 } # Vertices.
@@ -267,13 +253,13 @@ sub new {
     $g->[ _F ] = $gflags;
     $g->[ _G ] = 0;
     $g->[ _V ] = ($vflags & (_HYPER | _MULTI)) ?
-	Graph::AdjacencyMap::Heavy->_new($uflags, 1) :
+	_am_heavy($uflags, 1) :
 	    (($vflags & ~_UNORD) ?
-	     Graph::AdjacencyMap::Vertex->_new($uflags, 1) :
-	     Graph::AdjacencyMap::Light->_new($uflags, 1, $g));
+	     _am_vertex($uflags, 1) :
+	     _am_light($uflags, 1, $g));
     $g->[ _E ] = (($vflags & _HYPER) || ($eflags & ~_UNORD)) ?
-	Graph::AdjacencyMap::Heavy->_new($eflags, 2) :
-	    Graph::AdjacencyMap::Light->_new($eflags, 2, $g);
+	_am_heavy($eflags, 2) :
+	    _am_light($eflags, 2, $g);
 
     $g->add_vertices(@V) if @V;
 
@@ -283,9 +269,25 @@ sub new {
 	$g->add_edge(@$e);
     }
 
-    $g->[ _U ] = Graph::UnionFind->new if $gflags & _UNIONFIND;
+    $g->[ _U ] = do { require Graph::UnionFind; Graph::UnionFind->new }
+	if $gflags & _UNIONFIND;
 
     return $g;
+}
+
+sub _am_vertex {
+    require Graph::AdjacencyMap::Vertex;
+    Graph::AdjacencyMap::Vertex->_new(@_);
+}
+
+sub _am_light {
+    require Graph::AdjacencyMap::Light;
+    Graph::AdjacencyMap::Light->_new(@_);
+}
+
+sub _am_heavy {
+    require Graph::AdjacencyMap::Heavy;
+    Graph::AdjacencyMap::Heavy->_new(@_);
 }
 
 sub countvertexed { $_[0]->[ _V ]->_is_COUNT }
@@ -1089,6 +1091,7 @@ sub has_cycle {
 
 sub has_a_cycle {
     my $g = shift;
+    require Graph::Traversal::DFS;
     my $t = Graph::Traversal::DFS->new($g, has_a_cycle => 1, @_);
     $t->dfs;
     return $t->get_state('has_a_cycle');
@@ -1096,6 +1099,7 @@ sub has_a_cycle {
 
 sub find_a_cycle {
     my $g = shift;
+    require Graph::Traversal::DFS;
     my @r = ( back_edge => \&Graph::Traversal::find_a_cycle);
     push @r,
       down_edge => \&Graph::Traversal::find_a_cycle
@@ -1680,6 +1684,7 @@ sub subgraph {
 
 sub is_transitive {
     my $g = shift;
+    require Graph::TransitiveClosure;
     Graph::TransitiveClosure::is_transitive($g);
 }
 
@@ -2011,7 +2016,7 @@ BEGIN {
     # bleadperl that calls itself 5.9.3 but doesn't yet have the
     # patches, oh, well.
     *_shuffle = $^P && $] < 5.009003 ?
-	\&__fisher_yates_shuffle : \&List::Util::shuffle;
+	\&__fisher_yates_shuffle : do { require List::Util; \&List::Util::shuffle };
 }
 
 sub random_graph {
@@ -2125,10 +2130,10 @@ sub _MST_edges {
 
 sub MST_Kruskal {
     my ($g, %attr) = @_;
-
     $g->expect_undirected;
+    require Graph::UnionFind;
 
-    my $MST = Graph::Undirected->new;
+    my $MST = Graph->new(directed => 0);
 
     my $UF  = Graph::UnionFind->new;
     $UF->add($_) for $g->_vertices05;
@@ -2191,6 +2196,7 @@ sub _heap_walk {
     my ($g, $h, $add, $etc) = splice @_, 0, 4; # Leave %opt in @_.
 
     my ($opt, $unseenh, $unseena, $r, $next, $code, $attr) = $g->_root_opt(@_);
+    require Heap::Fibonacci;
     my $HF = Heap::Fibonacci->new;
 
     while (defined $r) {
@@ -2221,7 +2227,8 @@ sub _heap_walk {
 sub MST_Prim {
     my $g = shift;
     $g->expect_undirected;
-    $g->_heap_walk(Graph::Undirected->new(), \&_MST_add, undef, @_);
+    require Graph::MSTHeapElem;
+    $g->_heap_walk(Graph->new(directed => 0), \&_MST_add, undef, @_);
 }
 
 *MST_Dijkstra = \&MST_Prim;
@@ -2260,6 +2267,7 @@ sub topological_sort {
     } else {
 	$g->expect_dag;
     }
+    require Graph::Traversal::DFS;
     my $t = Graph::Traversal::DFS->new($g, %opt);
     my @s = $t->dfs;
     $hac ? () : reverse @s;
@@ -2269,7 +2277,7 @@ sub topological_sort {
 
 sub _undirected_copy_compute {
   my $g = shift;
-  my $c = Graph::Undirected->new;
+  my $c = Graph->new(directed => 0);
   $c->add_vertex($_) for $g->isolated_vertices; # TODO: if iv ...
   $c->add_edge(@$_) for $g->_edges05;
   return $c;
@@ -2394,6 +2402,7 @@ sub _connected_components_compute {
 	    @cci{ keys %icci } = values %icci;
 	}
     } else {
+	require Graph::Traversal::DFS;
 	my @u = $g->unique_vertices;
 	my %r; @r{ @u } = @u;
 	my $froot = sub {
@@ -2535,6 +2544,7 @@ sub weakly_connected_graph {
 
 sub _strongly_connected_components_compute {
     my $g = shift;
+    require Graph::Traversal::DFS;
     my $t = Graph::Traversal::DFS->new($g);
     my @d = reverse $t->dfs;
     my @c;
@@ -2619,6 +2629,7 @@ sub same_strongly_connected_components {
 sub is_strongly_connected {
     my $g = shift;
     $g->expect_directed;
+    require Graph::Traversal::DFS;
     my $t = Graph::Traversal::DFS->new($g);
     my @d = reverse $t->dfs;
     my @c;
@@ -2659,6 +2670,7 @@ sub strongly_connected_graph {
     my %attr = @_;
 
     $g->expect_directed;
+    require Graph::Traversal::DFS;
 
     my $t = Graph::Traversal::DFS->new($g);
     my @d = reverse $t->dfs;
@@ -2822,7 +2834,7 @@ sub _biconnectivity_compute {
     my @sg;
     for my $bc (@{$state{BC}}) {
       my %v;
-      my $w = Graph::Undirected->new();
+      my $w = Graph->new(directed => 0);
       for my $e (@$bc) {
 	my ($u, $v) = @$e;
 	$v{$u}++;
@@ -2908,7 +2920,7 @@ sub same_biconnected_components {
 sub biconnected_graph {
     my ($g, %opt) = @_;
     my ($bc, $v2bc) = ($g->biconnectivity, %opt)[1, 3];
-    my $bcg = Graph::Undirected->new;
+    my $bcg = Graph->new(directed => 0);
     my $sc_cb =
 	exists $opt{super_component} ?
 	    $opt{super_component} : $super_component;
@@ -2973,6 +2985,7 @@ sub SPT_Dijkstra {
             exists $spt_di->{ $first_root } &&
             $spt_di->{ $first_root }->[ 0 ] == $g->[ _G ]) {
 	my %etc;
+	require Graph::SPTHeapElem;
 	my $sptg = $g->_heap_walk($g->new, \&_SPT_add, \%etc, %opt);
 	$spt_di->{ $first_root } = [ $g->[ _G ], $sptg ];
 	$g->set_graph_attribute('_spt_di', $spt_di);
@@ -3128,6 +3141,7 @@ sub TransitiveClosure_Floyd_Warshall {
     my $self = shift;
     my $class = ref $self || $self;
     $self = shift unless ref $self;
+    require Graph::TransitiveClosure;
     bless Graph::TransitiveClosure->new($self, @_), $class;
 }
 
@@ -3137,6 +3151,7 @@ sub APSP_Floyd_Warshall {
     my $self = shift;
     my $class = ref $self || $self;
     $self = shift unless ref $self;
+    require Graph::TransitiveClosure;
     bless Graph::TransitiveClosure->new($self, path => 1, @_), $class;
 }
 

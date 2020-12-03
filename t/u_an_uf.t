@@ -5,6 +5,7 @@ use strict; use warnings;
 use Test::More tests => 4;
 
 use Graph;
+use Graph::UnionFind;
 
 my $graph = Graph::UnionFind->new;
 $graph->add('a');
