@@ -48,7 +48,6 @@ t/19_delete_edge.t
 t/20_countvertexed.t
 t/21_multivertexed.t
 t/22_refvertexed.t
-t/23_hypervertexed.t
 t/24_mixvertexed.t
 t/25_countedged.t
 t/26_multiedged.t
