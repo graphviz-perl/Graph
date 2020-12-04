@@ -20,25 +20,15 @@ is_deeply [ $g0->as_hashes ], [
     },
 ];
 
-my $da0 = $g0->subgraph_by_radius('a', 0);
-my $da1 = $g0->subgraph_by_radius('a', 1);
-my $da2 = $g0->subgraph_by_radius('a', 2);
-my $da3 = $g0->subgraph_by_radius('a', 3);
+is($g0->subgraph_by_radius('a', 0)->stringify, "a");
+is($g0->subgraph_by_radius('a', 1)->stringify, "a-b,a-c");
+is($g0->subgraph_by_radius('a', 2)->stringify, "a-b,a-c,b-d,b-e,c-f,c-g");
+is($g0->subgraph_by_radius('a', 3)->stringify, "a-b,a-c,b-d,b-e,c-f,c-g");
 
-is($da0, "a");
-is($da1, "a-b,a-c");
-is($da2, "a-b,a-c,b-d,b-e,c-f,c-g");
-is($da3, "a-b,a-c,b-d,b-e,c-f,c-g");
-
-my $db0 = $g0->subgraph_by_radius('b', 0);
-my $db1 = $g0->subgraph_by_radius('b', 1);
-my $db2 = $g0->subgraph_by_radius('b', 2);
-my $db3 = $g0->subgraph_by_radius('b', 3);
-
-is($db0, "b");
-is($db1, "b-d,b-e");
-is($db2, "b-d,b-e");
-is($db3, "b-d,b-e");
+is($g0->subgraph_by_radius('b', 0)->stringify, "b");
+is($g0->subgraph_by_radius('b', 1)->stringify, "b-d,b-e");
+is($g0->subgraph_by_radius('b', 2)->stringify, "b-d,b-e");
+is($g0->subgraph_by_radius('b', 3)->stringify, "b-d,b-e");
 
 {
     my $gi0 = Graph->new;
@@ -72,33 +62,17 @@ for ({}, {countvertexed => 1}, {hypervertexed => 1}) {
 }
 
 my $g1 = Graph::Undirected->new;
+$g1->add_edge(@$_) for @E;
 
-$g1->add_edge(qw(a b));
-$g1->add_edge(qw(a c));
-$g1->add_edge(qw(b d));
-$g1->add_edge(qw(b e));
-$g1->add_edge(qw(c f));
-$g1->add_edge(qw(c g));
+is($g1->subgraph_by_radius('a', 0)->stringify, "a");
+is($g1->subgraph_by_radius('a', 1)->stringify, "a=b,a=c");
+is($g1->subgraph_by_radius('a', 2)->stringify, "a=b,a=c,b=d,b=e,c=f,c=g");
+is($g1->subgraph_by_radius('a', 3)->stringify, "a=b,a=c,b=d,b=e,c=f,c=g");
 
-my $ua0 = $g1->subgraph_by_radius('a', 0);
-my $ua1 = $g1->subgraph_by_radius('a', 1);
-my $ua2 = $g1->subgraph_by_radius('a', 2);
-my $ua3 = $g1->subgraph_by_radius('a', 3);
-
-is($ua0, "a");
-is($ua1, "a=b,a=c");
-is($ua2, "a=b,a=c,b=d,b=e,c=f,c=g");
-is($ua3, "a=b,a=c,b=d,b=e,c=f,c=g");
-
-my $ub0 = $g1->subgraph_by_radius('b', 0);
-my $ub1 = $g1->subgraph_by_radius('b', 1);
-my $ub2 = $g1->subgraph_by_radius('b', 2);
-my $ub3 = $g1->subgraph_by_radius('b', 3);
-
-is($ub0, "b");
-is($ub1, "a=b,b=d,b=e");
-is($ub2, "a=b,a=c,b=d,b=e");
-is($ub3, "a=b,a=c,b=d,b=e,c=f,c=g");
+is($g1->subgraph_by_radius('b', 0)->stringify, "b");
+is($g1->subgraph_by_radius('b', 1)->stringify, "a=b,b=d,b=e");
+is($g1->subgraph_by_radius('b', 2)->stringify, "a=b,a=c,b=d,b=e");
+is($g1->subgraph_by_radius('b', 3)->stringify, "a=b,a=c,b=d,b=e,c=f,c=g");
 
 my $g2 = Graph->new;
 is_deeply [ $g2->clustering_coefficient ], [],
