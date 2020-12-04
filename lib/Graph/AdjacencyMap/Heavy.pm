@@ -39,7 +39,7 @@ sub stringify {
     } elsif ($a == 1) {
         my $s = $m->[ _s ];
 	my $d;
-	push @rows, map [ $_, ref($d=$s->{$_}) ? $m->_dumper($d->[-1]) : $d ],
+	push @rows, map [ $_, ref($d=$s->{$_}) ? "$d->[0],".$m->_dumper($d->[-1]) : $d ],
 	    sort map @$_, $m->paths;
     }
     $m->SUPER::stringify . join '',

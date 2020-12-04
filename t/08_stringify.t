@@ -84,7 +84,7 @@ $g1->set_edge_attribute(qw(a b weight 2)); # trigger re-edging in ::Light
 $g1->set_vertex_attribute(qw(a size 2)); # trigger re-vertexing in ::Light
 is $g1->[ Graph::_V ]->stringify, <<'EOF';
 Graph::AdjacencyMap::Vertex flags: _UNORD|_UNIQ
-   a {'size' => '2'}
+   a 0,{'size' => '2'}
    b    1
    c    2
    d    3
@@ -109,9 +109,9 @@ $g2->set_vertex_attribute_by_id(qw(a z other 5));
 $g2->set_vertex_attribute_by_id(qw(a 0 other2 6));
 is $g2->[ Graph::_V ]->stringify, <<'EOF';
 Graph::AdjacencyMap::Heavy flags: _MULTI|_UNORD|_UNIQ
-   a {'0' => {'other2' => '6'},'z' => {'other' => '5'}}
-   b {'0' => {}}
-   c {'0' => {}}
+   a 0,{'0' => {'other2' => '6'},'z' => {'other' => '5'}}
+   b 2,{'0' => {}}
+   c 1,{'0' => {}}
 EOF
 is $g2->[ Graph::_E ]->stringify, <<'EOF';
 Graph::AdjacencyMap::Heavy flags: _MULTI
