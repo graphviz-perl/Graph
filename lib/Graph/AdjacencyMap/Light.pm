@@ -185,7 +185,7 @@ sub _successors {
 	@s = keys %s;
     }
     my $V = $g->[ _V ];
-    return wantarray ? map { $V->[ _i ]->[ $_ ] } @s : @s;
+    return wantarray ? map $V->[ _i ][ $_ ], @s : @s;
 }
 
 sub __predecessors {
@@ -213,7 +213,7 @@ sub _predecessors {
 	@p = keys %p;
     }
     my $V = $g->[ _V ];
-    return wantarray ? map { $V->[ _i ]->[ $_ ] } @p : @p;
+    return wantarray ? map $V->[ _i ][ $_ ], @p : @p;
 }
 
 sub __attr {
