@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 38;
+use Test::More tests => 40;
 
 use Graph::Undirected;
 use Graph::Directed;
@@ -117,6 +117,27 @@ is $g2->[ Graph::_E ]->stringify, <<'EOF';
 Graph::AdjacencyMap::Heavy arity=2 flags: _MULTI
  to:    1    2
    0 {'0' => {}} {'x' => {'weight' => '2'}}
+EOF
+
+my $g3 = Graph::Directed->new(hypervertexed => 1);
+$g3->add_edge(qw(a c));
+$g3->set_vertex_attribute(qw(attr 4));
+$g3->set_vertex_attribute(qw(a other1 5));
+$g3->set_vertex_attribute(qw(a c), qw(other2 6));
+$g3->set_vertex_attribute(qw(a b c), qw(other3 7));
+is $g3->[ Graph::_V ]->stringify, <<'EOF';
+Graph::AdjacencyMap::Heavy arity=1 flags: _HYPER|_UNORD|_UNIQ
+  [] 2,{'attr' => '4'}
+ [a] 0,{'other1' => '5'}
+[a,b,c] 5,{'other3' => '7'}
+[a,c] 3,{'other2' => '6'}
+ [b]    4
+ [c]    1
+EOF
+is $g3->[ Graph::_E ]->stringify, <<'EOF';
+Graph::AdjacencyMap::Heavy arity=2 flags: 
+ to:    1
+   0    1
 EOF
 
 {

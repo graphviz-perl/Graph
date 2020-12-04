@@ -20,9 +20,14 @@ sub stringify {
     my @rows;
     my $a = $m->[ _a ];
     my $s = $m->[ _s ];
+    my $f = $m->[ _f ];
+    my $hyper = $f & _HYPER;
+    my $multi = $f & _MULTI;
+    my @p = map ref()?$_:[$_], $m->paths; # normalise to all array-refs
+    @p = map $_->[0], sort _s_sort map [$_,"@$_"], @p; # use the Schwartz
     if ($a == 2) {
 	my (%p, %s);
-	for my $t ($m->paths) {
+	for my $t (@p) {
 	    my ($u, $v) = @$t;
 	    $p{$u} = $s{$v} = 1;
 	}
@@ -37,22 +42,31 @@ sub stringify {
 	    push @rows, \@r;
 	}
     } elsif ($a == 1) {
-        my $s = $m->[ _s ];
-	my $d;
-	push @rows, map [ $_, ref($d=$s->{$_}) ? "$d->[0],".$m->_dumper($d->[-1]) : $d ],
-	    sort map @$_, $m->paths;
+	for my $v (@p) {
+	    my @r = $hyper ? '['.join(',', @$v).']' : $v->[0];
+	    my $text = $m->_get_path_id(@$v);
+	    my $attrs = $multi
+		? ( $m->__get_path_node( @$v ) )[1]->[-1]
+		: $m->_get_path_attrs(@$v);
+	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
+	    push @r, $text;
+	    push @rows, \@r;
+	}
     }
     $m->SUPER::stringify . join '',
-        map "$_\n",
-        map join(' ', map sprintf('%4s', $_), @$_),
-        @rows;
+	map "$_\n",
+	map join(' ', map sprintf('%4s', $_), @$_),
+	@rows;
 }
+
+# because in BLOCK mode, $a is 1 while $b is right - probable perl bug
+sub _s_sort { $a->[1] cmp $b->[1] }
 
 sub __set_path {
     my $m = shift;
     my $f = $m->[ _f ];
     my $id = pop if $f & _MULTI;
-    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$m->stringify,
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
 	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
     my $p;
     $p = ($f & _HYPER) ?
@@ -81,7 +95,7 @@ sub __set_path_node {
     unless (exists $p->[-1]->{ $l }) {
 	my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
 	$m->[ _i ]->{ defined $i ? $i : "" } = [ @_ ];
-        return defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
+	return defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
     } else {
 	return $m->_inc_node( \$p->[-1]->{ $l }, $id );
     }
@@ -93,7 +107,7 @@ sub set_path {
     return if @_ == 0 && !($f & _HYPER);
     if (@_ > 1 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ == 2) { @_ = sort @_ }
-        else { $m->__arg(\@_) }
+	else { $m->__arg(\@_) }
     }
     my ($p, $k) = $m->__set_path( @_ );
     return unless defined $p && defined $k;
@@ -104,11 +118,11 @@ sub set_path {
 sub __has_path {
     my $m = shift;
     my $f = $m->[ _f ];
-    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$m->stringify,
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
 	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
     if (@_ > 1 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ > 1) { @_ = sort @_ }
-        else { $m->__arg(\@_) }
+	else { $m->__arg(\@_) }
     }
     my $p = $m->[ _s ];
     return unless defined $p;

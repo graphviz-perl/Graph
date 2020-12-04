@@ -14,16 +14,8 @@ use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
 
 sub stringify {
-    my $m = shift;
-    my @rows;
-    my $s = $m->[ _s ];
-    my $d;
-    push @rows, map [ $_, ref($d=$s->{$_}) ? "$d->[0],".$m->_dumper($d->[-1]) : $d ],
-	sort map @$_, $m->paths;
-    $m->SUPER::stringify . join '',
-        map "$_\n",
-        map join(' ', map sprintf('%4s', $_), @$_),
-        @rows;
+    require Graph::AdjacencyMap::Heavy;
+    goto &Graph::AdjacencyMap::Heavy::stringify;
 }
 
 require overload; # for de-overloading
@@ -37,7 +29,7 @@ sub __strval {
 
 sub __set_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
 	if @_ != (2 + ($f & _MULTI));
     [ $_[0]->[ _s ] ||= { } ], [ __strval($_[1], $f) ];
 }
@@ -63,7 +55,7 @@ sub set_path {
 
 sub __has_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
 	if @_ != (2 + ($f & _MULTI));
     return unless defined(my $p = $_[0]->[ _s ]);
     return ([$p], [ __strval($_[1], $f) ]);
@@ -104,7 +96,7 @@ sub _get_path_count {
 sub __attr {
     my $m = shift;
     return unless @_ && ref $_[0] && @{ $_[0] };
-    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$m->stringify,
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
 		  scalar @{ $_[0] }, $m->[ _a ])
         if @{ $_[0] } != $m->[ _a ];
     my $f = $m->[ _f ];
