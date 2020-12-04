@@ -87,7 +87,7 @@ sub _ids {
 
 sub has_paths {
     my $m = shift;
-    return defined $m->[ _i ] && keys %{ $m->[ _i ] };
+    return defined $m->[ _i ] && @{ $m->[ _i ] };
 }
 
 sub _del_id {

@@ -602,7 +602,8 @@ sub vertices_at {
     }
     my $Vi = $V->_ids;
     my @v;
-    while (my ($i, $v) = each %{ $Vi }) {
+    for (my $i = $#$Vi; $i >= 0; $i--) {
+	next if !defined(my $v = $Vi->[$i]);
 	my %i;
 	my $h = $V->[_f ] & _HYPER;
 	@i{ @i } = @i if @i; # @todo: nonuniq hyper vertices?
@@ -632,7 +633,8 @@ sub _edges_at {
 	my $vi = $V->_get_path_id( ref $v eq 'ARRAY' && $h ? @$v : $v );
 	next unless defined $vi;
 	my $Ei = $E->_ids;
-	while (my ($ei, $ev) = each %{ $Ei }) {
+	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
+	    next if !defined(my $ev = $Ei->[$ei]);
 	    if (wantarray) {
 		push @e, [ $ei, $ev ] for grep $_ == $vi && !$ev{$ei}++, @$ev;
 	    } else {
@@ -656,7 +658,8 @@ sub _edges {
 	$N = $g->[ $n ];
 	my $u = $E->[ _f ] & _UNORD;
 	my $Ei = $E->_ids;
-	while (my ($ei, $ev) = each %{ $Ei }) {
+	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
+	    next if !defined(my $ev = $Ei->[$ei]);
 	    next unless @$ev;
 	    my $e = [ $ei, $ev ];
 	    if ($u) {

@@ -11,6 +11,7 @@ use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
 
 use Scalar::Util qw(weaken);
+use List::Util qw(first);
 
 sub _V () { 2 } # Graph::_V
 sub _E () { 3 } # Graph::_E
@@ -18,7 +19,7 @@ sub _F () { 0 } # Graph::_F
 
 sub _new {
     my ($class, $flags, $arity, $graph) = @_;
-    my $m = $class->SUPER::_new($flags | _LIGHT, $arity, {}, {}, {}, $graph);
+    my $m = $class->SUPER::_new($flags | _LIGHT, $arity, [], {}, {}, $graph);
     weaken $m->[ _g ]; # So that DESTROY finds us earlier.
     return $m;
 }
@@ -54,7 +55,7 @@ sub set_path {
 	my $e1 = shift;
 	unless (exists $s->{ $e0 } && exists $s->{ $e0 }->{ $e1 }) {
 	    $n = $m->[ _n ]++;
-	    $i->{ $n } = [ $e0, $e1 ];
+	    $i->[ $n ] = [ $e0, $e1 ];
 	    $s->{ $e0 }->{ $e1 } = $n;
 	    $p->{ $e1 }->{ $e0 } = $n;
 	}
@@ -62,7 +63,7 @@ sub set_path {
 	unless (exists $s->{ $e0 }) {
 	    $n = $m->[ _n ]++;
 	    $s->{ $e0 } = $n;
-	    $i->{ $n } = $e0;
+	    $i->[ $n ] = $e0;
 	}
     }
 }
@@ -116,15 +117,15 @@ sub has_paths { keys %{ $_[0]->[ _s ] } }
 sub paths {
     my $m = shift;
     return if !defined(my $i = $m->[ _i ]);
-    my ($k, $v) = each %$i;
-    return values %$i if ref $v;
-    return map [ $_ ], values %$i;
+    my ($v) = first { defined } @$i;
+    return grep defined, @$i if ref $v;
+    return map [ $_ ], grep defined, @$i;
 }
 
 sub _get_id_path {
     my $m = shift;
     my ($n, $f, $a, $i) = @$m;
-    my $p = $i->{ $_[ 0 ] };
+    my $p = $i->[ $_[ 0 ] ];
     defined $p ? ( ref $p eq 'ARRAY' ? @$p : $p ) : ( );
 }
 
@@ -137,13 +138,13 @@ sub del_path {
     if (@_ == 1) {
 	my $e1 = shift;
 	return 0 if !defined($n = $n->{ $e1 }); # "actual" n ie id
-	delete $i->{ $n };
+	delete $i->[ $n ];
 	delete $s->{ $e0 }->{ $e1 };
 	delete $p->{ $e1 }->{ $e0 };
 	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
 	delete $p->{ $e1 } unless keys %{ $p->{ $e1 } };
     } else {
-	delete $i->{ $n };
+	delete $i->[ $n ];
 	delete $s->{ $e0 };
     }
     return 1;
@@ -155,7 +156,7 @@ sub rename_path {
     return 1 if $a > 1; # arity > 1, all integers, no names
     return 0 unless exists $s->{ $from };
     $s->{ $to } = delete $s->{ $from };
-    $i->{ $s->{ $to } } = $to;
+    $i->[ $s->{ $to } ] = $to;
     return 1;
 }
 
@@ -184,7 +185,7 @@ sub _successors {
 	@s = keys %s;
     }
     my $V = $g->[ _V ];
-    return wantarray ? map { $V->[ _i ]->{ $_ } } @s : @s;
+    return wantarray ? map { $V->[ _i ]->[ $_ ] } @s : @s;
 }
 
 sub __predecessors {
@@ -212,7 +213,7 @@ sub _predecessors {
 	@p = keys %p;
     }
     my $V = $g->[ _V ];
-    return wantarray ? map { $V->[ _i ]->{ $_ } } @p : @p;
+    return wantarray ? map { $V->[ _i ]->[ $_ ] } @p : @p;
 }
 
 sub __attr {
@@ -221,7 +222,7 @@ sub __attr {
     # The other map types will sort @_ for _UNORD purposes.
     my $m = $_[0];
     my ($n, $f, $a, $i, $s, $p, $g) = @$m;
-    my ($k, $v) = each %$i;
+    my ($v) = first { defined } @$i;
     my @V = @{ $g->[ _V ] };
     my @E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
     # ZZZ: an example of failing tests is t/52_edge_attributes.t.

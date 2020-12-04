@@ -94,7 +94,8 @@ sub __set_path_node {
     my $id = pop if ($f & _MULTI);
     unless (exists $p->[-1]->{ $l }) {
 	my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
-	$m->[ _i ]->{ defined $i ? $i : "" } = [ @_ ];
+	die "undefined index" if !defined $i;
+	$m->[ _i ]->[ $i ] = [ @_ ];
 	return defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
     } else {
 	return $m->_inc_node( \$p->[-1]->{ $l }, $id );
@@ -214,7 +215,7 @@ sub __attr {
 
 sub _get_id_path {
     my ($m, $i) = @_;
-    my $p = defined $i ? $m->[ _i ]->{ $i } : undef;
+    my $p = defined $i ? $m->[ _i ]->[ $i ] : undef;
     return defined $p ? @$p : ( );
 }
 
@@ -225,7 +226,7 @@ sub del_path {
     return unless $e;
     my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
     if ($c == 0) {
-	delete $m->[ _i ]->{ ref $n ? $n->[ _ni ] : $n };
+	delete $m->[ _i ]->[ ref $n ? $n->[ _ni ] : $n ];
 	delete $p->[-1]->{ $l };
 	while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
 	    delete $p->[-1]->{ $k->[-1] };
@@ -243,7 +244,7 @@ sub _rename_path {
     if (!ref $this_path) {
 	# at a leaf
 	return if !defined $found;
-	$vertices->{ $this_path }[ $found ] = $to;
+	$vertices->[ $this_path ][ $found ] = $to;
 	return;
     }
     my %recurse = map +($_ => undef), keys %$this_path;
@@ -275,7 +276,7 @@ sub del_path_by_multi_id {
     return unless $e;
     delete $n->[ _nm ]->{ $id };
     unless (keys %{ $n->[ _nm ] }) {
-	delete $m->[ _i ]->{ $n->[ _ni ] };
+	delete $m->[ _i ]->[ $n->[ _ni ] ];
 	delete $p->[-1]->{ $l };
 	while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
 	    delete $p->[-1]->{ $k->[-1] };
@@ -288,7 +289,7 @@ sub del_path_by_multi_id {
 
 sub paths {
     my $m = shift;
-    return values %{ $m->[ _i ] } if defined $m->[ _i ];
+    return grep defined, @{ $m->[ _i ] } if defined $m->[ _i ];
     wantarray ? ( ) : 0;
 }
 

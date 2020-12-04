@@ -39,17 +39,18 @@ sub new {
     # }
     my $n = $self->[ _DM ] = Graph::Matrix->new($g);
     $n->set($_, $_, 0) for @V;
-    my $Vi = $g->[_V]->[_i];
-    my $Ei = $g->[_E]->[_i];
+    my $Vi = $g->[_V][_i];
+    my $Ei = $g->[_E][_i];
     my %V; @V{ @V } = 0 .. $#V;
     my $n0 = $n->[0];
     my $n1 = $n->[1];
     my $undirected = $g->is_undirected;
     my $multiedged = $g->multiedged;
-    for my $e (keys %{ $Ei }) {
-	my ($i0, $j0) = @{ $Ei->{ $e } };
-	my $i1 = $V{ $Vi->{ $i0 } };
-	my $j1 = $V{ $Vi->{ $j0 } };
+    for (my $e = $#$Ei; $e >= 0; $e--) {
+	next if !defined $Ei->[ $e ];
+	my ($i0, $j0) = @{ $Ei->[ $e ] };
+	my $i1 = $V{ $Vi->[ $i0 ] };
+	my $j1 = $V{ $Vi->[ $j0 ] };
 	my $u = $V[ $i1 ];
 	my $v = $V[ $j1 ];
 	$n0->[ $i1 ]->[ $j1 ] = $multiedged

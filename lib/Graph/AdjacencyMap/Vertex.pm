@@ -40,7 +40,8 @@ sub __set_path_node {
     my $id = $_[-1] if ($f & _MULTI);
     return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
     my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
-    $m->[ _i ]->{ defined $i ? $i : "" } = $_[3];
+    die "undefined index" if !defined $i;
+    $m->[ _i ][ $i ] = $_[3];
 }
 
 sub set_path {
@@ -108,7 +109,7 @@ sub __attr {
 
 sub _get_id_path {
     my ($m, $i) = @_;
-    return defined $m->[ _i ] ? $m->[ _i ]->{ $i } : undef;
+    return defined $m->[ _i ] ? $m->[ _i ][ $i ] : undef;
 }
 
 sub del_path {
@@ -118,8 +119,8 @@ sub del_path {
     return unless $e;
     my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
     if ($c == 0) {
-	delete $m->[ _i ]->{ ref $n ? $n->[ _ni ] : $n };
-	delete $p->[ -1 ]->{ $l };
+	delete $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ];
+	delete $p->[ -1 ]{ $l };
     }
     return 1;
 }
@@ -128,8 +129,8 @@ sub rename_path {
     my ($m, $from, $to) = @_;
     my ($e, $n, $p, $k, $l) = $m->__get_path_node( $from );
     return unless $e;
-    $m->[ _i ]{ ref $n ? $n->[ _ni ] : $n } = $to;
-    $p->[ -1 ]->{ $to } = delete $p->[ -1 ]->{ $l };
+    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = $to;
+    $p->[ -1 ]{ $to } = delete $p->[ -1 ]{ $l };
     return 1;
 }
 
@@ -141,15 +142,15 @@ sub del_path_by_multi_id {
     return unless $e;
     delete $n->[ _nm ]->{ $id };
     unless (keys %{ $n->[ _nm ] }) {
-	delete $m->[ _i ]->{ $n->[ _ni ] };
-	delete $p->[-1]->{ $l };
+	delete $m->[ _i ][ $n->[ _ni ] ];
+	delete $p->[-1]{ $l };
     }
     return 1;
 }
 
 sub paths {
     my $m = shift;
-    return map { [ $_ ] } values %{ $m->[ _i ] } if defined $m->[ _i ];
+    return map [ $_ ], grep defined, @{ $m->[ _i ] } if defined $m->[ _i ];
     wantarray ? ( ) : 0;
 }
 
