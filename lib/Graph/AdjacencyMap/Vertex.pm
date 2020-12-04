@@ -37,7 +37,8 @@ sub __strval {
 
 sub __set_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", @_ - (1 + ($f & _MULTI))) if @_ != (2 + ($f & _MULTI));
+    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
+	if @_ != (2 + ($f & _MULTI));
     [ $_[0]->[ _s ] ||= { } ], [ __strval($_[1], $f) ];
 }
 
@@ -62,7 +63,8 @@ sub set_path {
 
 sub __has_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Vertex: arguments %d expected 1", scalar @_) if @_ != 2;
+    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
+	if @_ != (2 + ($f & _MULTI));
     return unless defined(my $p = $_[0]->[ _s ]);
     return ([$p], [ __strval($_[1], $f) ]);
 }
@@ -102,7 +104,7 @@ sub _get_path_count {
 sub __attr {
     my $m = shift;
     return unless @_ && ref $_[0] && @{ $_[0] };
-    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d",
+    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$m->stringify,
 		  scalar @{ $_[0] }, $m->[ _a ])
         if @{ $_[0] } != $m->[ _a ];
     my $f = $m->[ _f ];

@@ -52,7 +52,7 @@ sub __set_path {
     my $m = shift;
     my $f = $m->[ _f ];
     my $id = pop if $f & _MULTI;
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Heavy: arguments %d expected %d",
+    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$m->stringify,
 	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
     my $p;
     $p = ($f & _HYPER) ?
@@ -104,7 +104,7 @@ sub set_path {
 sub __has_path {
     my $m = shift;
     my $f = $m->[ _f ];
-    Graph::__carp_confess(sprintf "Graph::AdjacencyMap::Heavy(@{[Graph::AdjacencyMap::_stringify_fields($f)]}): arguments %d expected %d",
+    Graph::__carp_confess(sprintf __PACKAGE__.": arguments %d expected %d for\n".$m->stringify,
 	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
     if (@_ > 1 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ > 1) { @_ = sort @_ }
