@@ -56,11 +56,13 @@ sub _V () { 2 }  # Graph::_V()
 
 sub stringify {
     my $m = shift;
-    my $f = $m->[ _f ];
-    my $fs  = join '|', grep $f & $FLAG2I{$_}, @FLAGS;
     <<EOF;
-@{[ref $m]} flags: $fs
+@{[ref $m]} arity=@{[$m->[ _a ]]} flags: @{[_stringify_fields($m->[ _f ])]}
 EOF
+}
+
+sub _stringify_fields {
+    join '|', grep $_[0] & $FLAG2I{$_}, @FLAGS;
 }
 
 sub _dumper {
