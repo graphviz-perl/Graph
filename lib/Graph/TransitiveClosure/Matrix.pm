@@ -30,7 +30,12 @@ sub _new {
 	$dm = $m->distance_matrix;
 	$dm = $m->[ Graph::AdjacencyMatrix::_DM ] = Graph::Matrix->new($g)
 	    if !defined $dm; # if no distance_matrix in AM, we make our own
-        @di = @{ $dm->[0] };
+	if ($want_path_count) {
+	    # force defined
+	    @di = map [ (0) x @V ], 0..$#V;
+	} else {
+	    @di = @{ $dm->[0] };
+	}
         %di = %{ $dm->[1] };
 	$pm = Graph::Matrix->new($g);
 	@pi = @{ $pm->[0] };
@@ -134,7 +139,6 @@ sub _new {
 		for my $w (@V) {
 		    my $aiw = $ai{$w};
 		    my $diw = $di{$w};
-		    $didiv->[$diw] ||= 0 if $want_path_count; # force defined
 		    next unless
 			# See XXX above.
 			# $am->get($v, $u)
