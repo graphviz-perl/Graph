@@ -36,8 +36,8 @@ sub _new {
 	}
 	$pm = Graph::Matrix->new($g);
 	@pi = @{ $pm->[0] };
-	for (my $iu = 0; $iu < @V; $iu++) {
-	    for (my $iv = 0; $iv < @V; $iv++) {
+	for (my $iu = $#V; $iu >= 0; $iu--) {
+	    for (my $iv = $#V; $iv >= 0; $iv--) {
 		next unless
 		    # $am->get($u, $v)
 		    vec($ai[$iu], $iv, 1)
@@ -57,10 +57,10 @@ sub _new {
     # wrong thing to do.  In this case, using the public API for graph
     # transitive matrices and bitmatrices makes things awfully slow.
     # Instead, we go straight for the jugular of the data structures.
-    for (my $iu = 0; $iu < @V; $iu++) {
+    for (my $iu = $#V; $iu >= 0; $iu--) {
 	my $didiu = $di[$iu];
 	my $aiaiu = $ai[$iu];
-	for (my $iv = 0; $iv < @V; $iv++) {
+	for (my $iv = $#V; $iv >= 0; $iv--) {
 	    my $didiv = $di[$iv];
 	    my $aiaiv = $ai[$iv];
 	    if (
@@ -70,7 +70,7 @@ sub _new {
 		my $aivivo = $aiaiv;
 		if ($want_transitive) {
 		    if ($want_reflexive) {
-			for (my $iw = 0; $iw < @V; $iw++) {
+			for (my $iw = $#V; $iw >= 0; $iw--) {
 			    next if $iw == $iu;
 			    return 0
 				if  vec($aiaiu, $iw, 1) &&
@@ -124,7 +124,7 @@ sub _new {
 	    }
 						   # $am->get($v, $u)
 	    if ($want_path && !$want_transitive && vec($aiaiv, $iu, 1)) {
-		for (my $iw = 0; $iw < @V; $iw++) {
+		for (my $iw = $#V; $iw >= 0; $iw--) {
 		    next unless
 			# See XXX above.
 			# $am->get($u, $w)
