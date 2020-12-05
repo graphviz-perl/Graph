@@ -17,15 +17,13 @@ sub _new {
     my ($g, $class, $am_opt, $want_transitive, $want_reflexive, $want_path, $want_path_vertices, $want_path_count) = @_;
     my $m = Graph::AdjacencyMatrix->new($g, %$am_opt);
     my @V = $g->vertices;
+    my %v2i; @v2i{ @V } = 0..$#V; # paths are in array -> stable ordering
     my $am = $m->adjacency_matrix;
     my $dm; # The distance matrix.
     my $pm; # The predecessor matrix.
     my @di;
-    my %di; @di{ @V } = 0..$#V;
     my @ai = @{ $am->[0] };
-    my %ai = %{ $am->[1] };
     my @pi;
-    my %pi;
     unless ($want_transitive) {
 	$dm = $m->distance_matrix;
 	$dm = $m->[ Graph::AdjacencyMatrix::_DM ] = Graph::Matrix->new($g)
@@ -36,28 +34,24 @@ sub _new {
 	} else {
 	    @di = @{ $dm->[0] };
 	}
-        %di = %{ $dm->[1] };
 	$pm = Graph::Matrix->new($g);
 	@pi = @{ $pm->[0] };
-	%pi = %{ $pm->[1] };
 	for my $u (@V) {
-	    my $diu = $di{$u};
-	    my $aiu = $ai{$u};
+	    my $iu = $v2i{$u};
 	    for my $v (@V) {
-		my $div = $di{$v};
-		my $aiv = $ai{$v};
+		my $iv = $v2i{$v};
 		next unless
 		    # $am->get($u, $v)
-		    vec($ai[$aiu], $aiv, 1)
+		    vec($ai[$iu], $iv, 1)
 			;
 		# $dm->set($u, $v, $u eq $v ? 0 : 1)
-		$di[$diu]->[$div] = $u eq $v ? 0 : 1
+		$di[$iu]->[$iv] = $u eq $v ? 0 : 1
 		    if  $want_path_count or
 			!defined
 			    # $dm->get($u, $v)
-			    $di[$diu]->[$div]
+			    $di[$iu]->[$iv]
 			    ;
-		$pi[$diu]->[$div] = $v unless $u eq $v;
+		$pi[$iu]->[$iv] = $v unless $u eq $v;
 	    }
 	}
     }
@@ -66,28 +60,26 @@ sub _new {
     # transitive matrices and bitmatrices makes things awfully slow.
     # Instead, we go straight for the jugular of the data structures.
     for my $u (@V) {
-	my $diu = $di{$u};
-	my $aiu = $ai{$u};
-	my $didiu = $di[$diu];
-	my $aiaiu = $ai[$aiu];
+	my $iu = $v2i{$u};
+	my $didiu = $di[$iu];
+	my $aiaiu = $ai[$iu];
 	for my $v (@V) {
-	    my $div = $di{$v};
-	    my $aiv = $ai{$v};
-	    my $didiv = $di[$div];
-	    my $aiaiv = $ai[$aiv];
+	    my $iv = $v2i{$v};
+	    my $didiv = $di[$iv];
+	    my $aiaiv = $ai[$iv];
 	    if (
 		# $am->get($v, $u)
-		vec($aiaiv, $aiu, 1)
+		vec($aiaiv, $iu, 1)
 		|| ($want_reflexive && $u eq $v)) {
 		my $aivivo = $aiaiv;
 		if ($want_transitive) {
 		    if ($want_reflexive) {
 			for my $w (@V) {
 			    next if $w eq $u;
-			    my $aiw = $ai{$w};
+			    my $iw = $v2i{$w};
 			    return 0
-				if  vec($aiaiu, $aiw, 1) &&
-				   !vec($aiaiv, $aiw, 1);
+				if  vec($aiaiu, $iw, 1) &&
+				   !vec($aiaiv, $iw, 1);
 			}
 			# See XXX above.
 			# for my $w (@V) {
@@ -128,69 +120,68 @@ sub _new {
 		    }
 		} else {
 		    $aiaiv |= $aiaiu;
-		    vec($aiaiv, $aiu, 1) = 1 if $want_reflexive;
+		    vec($aiaiv, $iu, 1) = 1 if $want_reflexive;
 		}
 		if ($aiaiv ne $aivivo) {
-		    $ai[$aiv] = $aiaiv;
+		    $ai[$iv] = $aiaiv;
 		    $aiaiu = $aiaiv if $u eq $v;
 		}
 	    }
 						   # $am->get($v, $u)
-	    if ($want_path && !$want_transitive && vec($aiaiv, $aiu, 1)) {
+	    if ($want_path && !$want_transitive && vec($aiaiv, $iu, 1)) {
 		for my $w (@V) {
-		    my $aiw = $ai{$w};
+		    my $iw = $v2i{$w};
 		    next unless
 			# See XXX above.
 			# $am->get($u, $w)
-			vec($aiaiu, $aiw, 1)
+			vec($aiaiu, $iw, 1)
 			    ;
-		    my $diw = $di{$w};
 		    if ($want_path_count) {
-			$didiv->[$diw]++ if $w ne $u and $w ne $v and $u ne $v;
+			$didiv->[$iw]++ if $w ne $u and $w ne $v and $u ne $v;
 			next;
 		    }
 		    # See XXX above.
 		    # $d0  = $dm->get($v, $w);
 		    # $d1a = $dm->get($v, $u) || 1;
 		    # $d1b = $dm->get($u, $w) || 1;
-		    my $d0  = $didiv->[$diw];
+		    my $d0  = $didiv->[$iw];
 		    # no override sum-zero paths which can happen with negative weights
-		    my $d1a = $didiv->[$diu];
+		    my $d1a = $didiv->[$iu];
 		    $d1a = 1 unless defined $d1a;
-		    my $d1b = $didiu->[$diw];
+		    my $d1b = $didiu->[$iw];
 		    $d1b = 1 unless defined $d1b;
 		    my $d1 = $d1a + $d1b;
 		    if (!defined $d0 || ($d1 < $d0)) {
 			# print "d1 = $d1a ($v, $u) + $d1b ($u, $w) = $d1 ($v, $w) (".(defined$d0?$d0:"-").")\n";
 			# See XXX above.
 			# $dm->set($v, $w, $d1);
-			$didiv->[$diw] = $d1;
-			$pi[$div]->[$diw] = $pi[$div]->[$diu]
+			$didiv->[$iw] = $d1;
+			$pi[$iv]->[$iw] = $pi[$iv]->[$iu]
 			    if $want_path_vertices;
 		    }
 		}
 		# $dm->set($u, $v, 1)
-		$didiu->[$div] = 1
+		$didiu->[$iv] = 1
 		    if $u ne $v &&
 		       # $am->get($u, $v)
-		       vec($aiaiu, $aiv, 1)
+		       vec($aiaiu, $iv, 1)
 			   &&
 		       # !defined $dm->get($u, $v);
-		       !defined $didiu->[$div];
+		       !defined $didiu->[$iv];
 	    }
 	}
     }
     return 1 if $want_transitive;
     my %V; @V{ @V } = @V;
     $am->[0] = \@ai;
-    $am->[1] = \%ai;
+    $am->[1] = \%v2i;
     if (defined $dm) {
 	$dm->[0] = \@di;
-	$dm->[1] = \%di;
+	$dm->[1] = \%v2i;
     }
     if (defined $pm) {
 	$pm->[0] = \@pi;
-	$pm->[1] = \%pi;
+	$pm->[1] = \%v2i;
     }
     weaken(my $og = $g);
     bless [ $am, $dm, $pm, \%V, $og ], $class;

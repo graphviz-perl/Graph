@@ -12,6 +12,7 @@
 - set_vertex_attribute_by_id now works on hypervertexed
 - internal AdjacencyMap uses array not hash for mapping index to path
 - successors/predecessors/rename_path work right with multivertex
+- AdjacencyMap array -> stable vertices ordering, TCM performance benefit
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right
