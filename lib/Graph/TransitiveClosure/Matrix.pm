@@ -6,6 +6,7 @@ use warnings;
 use Graph::AdjacencyMatrix;
 use Graph::Matrix;
 use Scalar::Util qw(weaken);
+use List::Util qw(min);
 
 sub _A() { 0 } # adjacency
 sub _D() { 1 } # distance
@@ -24,6 +25,7 @@ sub _new {
     my @di;
     my @ai = @{ $am->[0] };
     my @pi;
+    my $multi = $g->multiedged;
     unless ($want_transitive) {
 	$dm = $m->distance_matrix;
 	$dm = $m->[ Graph::AdjacencyMatrix::_DM ] = Graph::Matrix->new($g)
@@ -42,13 +44,14 @@ sub _new {
 		    # $am->get($u, $v)
 		    vec($ai[$iu], $iv, 1)
 			;
-		# $dm->set($u, $v, $u eq $v ? 0 : 1)
-		$di[$iu]->[$iv] = $iu == $iv ? 0 : 1
-		    if  $want_path_count or
-			!defined
-			    # $dm->get($u, $v)
-			    $di[$iu]->[$iv]
-			    ;
+		if ($want_path_count or
+		    !defined $di[$iu][$iv] # $dm->get($u, $v)
+		) {
+		    # $dm->set($u, $v, $u eq $v ? 0 : 1)
+		    $di[$iu][$iv] = $iu == $iv ? 0 : 1;
+		} elsif ($multi and ref($di[$iu][$iv]) eq 'HASH') {
+		    $di[$iu][$iv] = min values %{ $di[$iu][$iv] };
+		}
 		$pi[$iu]->[$iv] = $V[$iv] unless $iu == $iv;
 	    }
 	}

@@ -13,6 +13,7 @@
 - internal AdjacencyMap uses array not hash for mapping index to path
 - successors/predecessors/rename_path work right with multivertex
 - AdjacencyMap array -> stable vertices ordering, TCM performance benefit
+- TransitiveClosure etc handle multiedged
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

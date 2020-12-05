@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 268;
+use Test::More tests => 292;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -491,5 +491,38 @@ EOF
         my ($u, $v, $paths) = @$t;
         my $got = [ sort { $a->[1] <=> $b->[1] } $g->all_paths($u, $v) ];
         is_deeply $got, $paths, "paths $u $v" or diag explain $got;
+    }
+}
+
+{
+    my @example = ( [ 1, 2, [[qw(a weight 1)], [qw(b weight 2)]] ],
+		    [ 1, 3, [[qw(c other 1)], [qw(b weight 2)]] ],
+		    [ 1, 4, [[qw(d weight 4)], [qw(b weight 5)]] ], # direct link to two away
+		    [ 3, 4, [[qw(d weight 3)], [qw(3 weight 2)]] ] );
+    my $g = Graph::Directed->new(multiedged => 1);
+    for my $t (@example) {
+	my ($u, $v, $e) = @$t;
+	$g->set_edge_attribute_by_id($u, $v, @$_) for @$e;
+    }
+    my $tcg = $g->transitive_closure;
+    my @paths = (
+	[ 1, 2, 1, [[1,2]] ],
+	[ 1, 3, 2, [[1,3]] ],
+	[ 1, 4, 4, [[1,3,4], [1,4]] ],
+	[ 2, 1, undef, [] ],
+	[ 2, 3, undef, [] ],
+	[ 2, 4, undef, [] ],
+	[ 3, 1, undef, [] ],
+	[ 3, 2, undef, [] ],
+	[ 3, 4, 2, [[3,4]] ],
+	[ 4, 1, undef, [] ],
+	[ 4, 2, undef, [] ],
+	[ 4, 3, undef, [] ],
+    );
+    foreach my $t (@paths) {
+	my ($u, $v, $dist, $paths) = @$t;
+	my $got = [ sort { $a->[1] <=> $b->[1] } $g->all_paths($u, $v) ];
+	is_deeply $got, $paths, "paths $u $v" or diag explain $got;
+	is $tcg->path_length($u, $v), $dist, "dist $u $v";
     }
 }

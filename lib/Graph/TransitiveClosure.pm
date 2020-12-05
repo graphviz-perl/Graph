@@ -14,7 +14,6 @@ sub _G () { Graph::_G() }
 
 sub new {
     my ($class, $g, %opt) = @_;
-    $g->expect_non_multiedged;
     %opt = (path_vertices => 1) unless %opt;
     my $attr = Graph::_defattr();
     if (exists $opt{ attribute_name }) {
@@ -22,8 +21,10 @@ sub new {
 	# No delete $opt{ attribute_name } since we need to pass it on.
     }
     $opt{ reflexive } = 1 unless exists $opt{ reflexive };
-    my $tcg = $g->new( $opt{ reflexive } ?
-		       ( vertices => [ $g->vertices ] ) : ( ) );
+    my $tcg = $g->new(
+	multiedged => 0,
+	($opt{ reflexive } ? (vertices => [$g->vertices]) : ()),
+    );
     my $tcm = $g->get_graph_attribute('_tcm');
     if (defined $tcm && $tcm->[ 0 ] == $g->[ _G ]) {
 	$tcm = $tcm->[ 1 ];
@@ -44,10 +45,8 @@ sub new {
 		vec($tcm00i, $j, 1)
 	       ) {
 		my $val = $g->_get_edge_attribute($u, $v, $attr);
-		$tcg->_set_edge_attribute($u, $v, $attr,
-					  defined $val ? $val :
-					  $u eq $v ?
-					  0 : 1);
+		$val = $u eq $v ? 0 : 1 if !defined $val;
+		$tcg->_set_edge_attribute($u, $v, $attr, $val);
 	    }
 	}
     }
