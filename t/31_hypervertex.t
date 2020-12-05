@@ -10,9 +10,7 @@ $g->add_vertex("b", "c");
 
 is( $g->vertices, 5 ); # [], [a], [b], [c], [b, c]
 
-my @v = $g->vertices;
-
-is ( "@{[ sort map { qq'[@$_]' } @v ]}", "[] [a] [b c] [b] [c]" );
+is ( $g->stringify, "[],[a],[b c],[b],[c]" );
 
 ok(   $g->has_vertex() );
 ok(   $g->has_vertex("a") );
