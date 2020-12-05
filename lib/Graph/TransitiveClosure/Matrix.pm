@@ -135,19 +135,16 @@ sub _new {
 		    $aiaiu = $aiaiv if $u eq $v;
 		}
 	    }
-	    if ($want_path && !$want_transitive) {
+						   # $am->get($v, $u)
+	    if ($want_path && !$want_transitive && vec($aiaiv, $aiu, 1)) {
 		for my $w (@V) {
 		    my $aiw = $ai{$w};
-		    my $diw = $di{$w};
 		    next unless
-			# See XXX above.
-			# $am->get($v, $u)
-			vec($aiaiv, $aiu, 1)
-			    &&
 			# See XXX above.
 			# $am->get($u, $w)
 			vec($aiaiu, $aiw, 1)
 			    ;
+		    my $diw = $di{$w};
 		    if ($want_path_count) {
 			$didiv->[$diw]++ if $w ne $u and $w ne $v and $u ne $v;
 			next;
