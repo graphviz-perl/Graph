@@ -63,22 +63,23 @@ sub stringify {
 sub _s_sort { $a->[1] cmp $b->[1] }
 
 sub __set_path {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
     my $id = pop if $f & _MULTI;
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
-	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
+	scalar @_ - 1, $m->[ _a ]) if @_ - 1 != $m->[ _a ] && !($f & _HYPER);
     my $p;
     $p = ($f & _HYPER) ?
-	(( $m->[ _s ] ||= [ ] )->[ @_ ] ||= { }) :
-	(  $m->[ _s ]                   ||= { });
+	(( $m->[ _s ] ||= [ ] )->[ @_-1 ] ||= { }) :
+	(  $m->[ _s ]                     ||= { });
     my @p = $p;
     my @k;
-    @_ = sort @_ if $f & _UNORD;
-    while (@_) {
-	my $k = shift;
+    my @a = ($f & _UNORD) ? sort @_[1..$#_] : @_[1..$#_];
+    push @_, $id if $f & _MULTI;
+    while (@a) {
+	my $k = shift @a;
 	my $q = ref $k && ($f & _REF) && overload::Method($k, '""') ? overload::StrVal($k) : $k;
-	if (@_) {
+	if (@a) {
 	    $p = $p->{ $q } ||= {};
 	    return unless $p;
 	    push @p, $p;
@@ -103,38 +104,39 @@ sub __set_path_node {
 }
 
 sub set_path {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
-    return if @_ == 0 && !($f & _HYPER);
-    if (@_ > 1 && ($f & _UNORDUNIQ)) {
-	if (($f & _UNORDUNIQ) == _UNORD && @_ == 2) { @_ = sort @_ }
-	else { $m->__arg(\@_) }
+    return if @_ == 1 && !($f & _HYPER);
+    if (@_ > 2 && ($f & _UNORDUNIQ)) {
+	if (($f & _UNORDUNIQ) == _UNORD && @_ == 3) { @_ = ($_[0], sort @_[1..$#_]) }
+	else { &Graph::AdjacencyMap::__arg }
     }
-    my ($p, $k) = $m->__set_path( @_ );
+    my ($p, $k) = &__set_path;
     return unless defined $p && defined $k;
     my $l = defined $k->[-1] ? $k->[-1] : "";
-    return $m->__set_path_node( $p, $l, @_ );
+    return $m->__set_path_node( $p, $l, @_[1..$#_] );
 }
 
 sub __has_path {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
-	scalar @_, $m->[ _a ]) if @_ != $m->[ _a ] && !($f & _HYPER);
-    if (@_ > 1 && ($f & _UNORDUNIQ)) {
-	if (($f & _UNORDUNIQ) == _UNORD && @_ > 1) { @_ = sort @_ }
-	else { $m->__arg(\@_) }
+	@_ - 1, $m->[ _a ]) if @_ != $m->[ _a ] + 1 && !($f & _HYPER);
+    if (@_ > 2 && ($f & _UNORDUNIQ)) {
+	if (($f & _UNORDUNIQ) == _UNORD && @_ > 2) { @_ = ($_[0], sort @_[1..$#_]) }
+	else { &Graph::AdjacencyMap::__arg }
     }
     my $p = $m->[ _s ];
     return unless defined $p;
-    $p = $p->[ @_ ] if ($f & _HYPER);
+    $p = $p->[ @_ - 1 ] if ($f & _HYPER);
     return unless defined $p;
     my @p = $p;
     my @k;
-    while (@_) {
-	my $k = shift;
+    my @a = @_[1..$#_];
+    while (@a) {
+	my $k = shift @a;
 	my $q = ref $k && ($f & _REF) && overload::Method($k, '""') ? overload::StrVal($k) : $k;
-	if (@_) {
+	if (@a) {
 	    $p = $p->{ $q };
 	    return unless defined $p;
 	    push @p, $p;
@@ -145,72 +147,70 @@ sub __has_path {
 }
 
 sub has_path {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
-    my ($p, $k) = $m->__has_path( @_ );
+    my ($p, $k) = &__has_path;
     return unless defined $p && defined $k;
     return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
 }
 
 sub has_path_by_multi_id {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
     my $id = pop;
-    my ($e, $n) = $m->__get_path_node( @_ );
+    my ($e, $n) = &{ $m->can('__get_path_node') };
     return undef unless $e;
     return exists $n->[ _nm ]->{ $id };
 }
 
 sub _get_path_node {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
-    if ($m->[ _a ] == 2 && @_ == 2 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@_ = sort @_ if $f & _UNORD;
-	return unless exists $m->[ _s ]->{ $_[0] };
-	my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[0] } ];
-	my $k = [ $_[0], $_[1] ];
-	my $l = $_[1];
+    if ($m->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+	@_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
+	return unless exists $m->[ _s ]->{ $_[1] };
+	my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
+	my $k = [ $_[1], $_[2] ];
+	my $l = $_[2];
 	return ( exists $p->[-1]->{ $l }, $p->[-1]->{ $l }, $p, $k, $l );
     }
-    $m->__get_path_node( @_ );
+    goto &{ $m->can('__get_path_node') };
 }
 
 sub _get_path_id {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
     my ($e, $n);
-    if ($m->[ _a ] == 2 && @_ == 2 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@_ = sort @_ if $f & _UNORD;
-	return unless exists $m->[ _s ]->{ $_[0] };
-	my $p = $m->[ _s ]->{ $_[0] };
-	$e = exists $p->{ $_[1] };
-	$n = $p->{ $_[1] };
+    if ($m->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+	@_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
+	return unless exists $m->[ _s ]->{ $_[1] };
+	my $p = $m->[ _s ]->{ $_[1] };
+	$e = exists $p->{ $_[2] };
+	$n = $p->{ $_[2] };
     } else {
-	($e, $n) = $m->_get_path_node( @_ );
+	($e, $n) = &_get_path_node;
     }
     return undef unless $e;
     return ref $n ? $n->[ _ni ] : $n;
 }
 
 sub _get_path_count {
-    my $m = shift;
-    my $f = $m->[ _f ];
-    my ($e, $n) = $m->_get_path_node( @_ );
+    my $m = $_[0];
+    my ($e, $n) = &_get_path_node;
     return undef unless $e && defined $n;
+    my $f = $m->[ _f ];
     return
 	($f & _COUNT) ? $n->[ _nc ] :
 	($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
 }
 
 sub __attr {
-    my $m = shift;
-    return unless @_ and ref $_[0] && @{ $_[0] };
+    my ($m) = @_;
+    return if @_ < 3;
     my $f = $m->[ _f ];
-    if (@{ $_[0] } > 1 && ($f & _UNORDUNIQ)) {
-	if (($f & _UNORDUNIQ) == _UNORD && @{ $_[0] } == 2) {
-	    @{ $_[0] } = sort @{ $_[0] }
-	} else { $m->__arg(\@_) }
-    }
+    return if !($f & _UNORDUNIQ);
+    goto &Graph::AdjacencyMap::__arg if ($f & _UNORDUNIQ) != _UNORD;
+    @_ = ($_[0], sort @_[1..$#_]);
 }
 
 sub _get_id_path {
@@ -220,9 +220,9 @@ sub _get_id_path {
 }
 
 sub del_path {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
-    my ($e, $n, $p, $k, $l) = $m->__get_path_node( @_ );
+    my ($e, $n, $p, $k, $l) = &{ $m->can('__get_path_node') };
     return unless $e;
     my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
     if ($c == 0) {
@@ -276,10 +276,10 @@ sub rename_path {
 }
 
 sub del_path_by_multi_id {
-    my $m = shift;
+    my $m = $_[0];
     my $f = $m->[ _f ];
     my $id = pop;
-    my ($e, $n, $p, $k, $l) = $m->__get_path_node( @_ );
+    my ($e, $n, $p, $k, $l) = &{ $m->can('__get_path_node') };
     return unless $e;
     delete $n->[ _nm ]->{ $id };
     unless (keys %{ $n->[ _nm ] }) {

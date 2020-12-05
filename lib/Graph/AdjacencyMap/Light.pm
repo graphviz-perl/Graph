@@ -161,26 +161,24 @@ sub rename_path {
 }
 
 sub __successors {
-    my $E = shift;
+    my ($E, $g) = @_;
     return wantarray ? () : 0 unless defined $E->[ _s ];
-    my $g = shift;
     my $V = $g->[ _V ];
     return wantarray ? () : 0 unless defined $V && defined $V->[ _s ];
     # my $i = $V->_get_path_id( $_[0] );
     my $i =
 	($V->[ _f ] & _LIGHT) ?
-	    $V->[ _s ]->{ $_[0] } :
-	    $V->_get_path_id( $_[0] );
+	    $V->[ _s ]->{ $_[2] } :
+	    $V->_get_path_id( $_[2] );
     return wantarray ? () : 0 unless defined $i && defined $E->[ _s ]->{ $i };
     return keys %{ $E->[ _s ]->{ $i } };
 }
 
 sub _successors {
-    my $E = shift;
-    my $g = shift;
-    my @s = $E->__successors($g, @_);
+    my ($E, $g) = @_;
+    my @s = &__successors;
     if ($E->[ _f ] & _UNORD) {
-	push @s, $E->__predecessors($g, @_);
+	push @s, &__predecessors;
 	my %s; @s{ @s } = ();
 	@s = keys %s;
     }
@@ -192,26 +190,24 @@ sub _successors {
 }
 
 sub __predecessors {
-    my $E = shift;
+    my ($E, $g) = @_;
     return wantarray ? () : 0 unless defined $E->[ _p ];
-    my $g = shift;
     my $V = $g->[ _V ];
     return wantarray ? () : 0 unless defined $V && defined $V->[ _s ];
     # my $i = $V->_get_path_id( $_[0] );
     my $i =
 	($V->[ _f ] & _LIGHT) ?
-	    $V->[ _s ]->{ $_[0] } :
-	    $V->_get_path_id( $_[0] );
+	    $V->[ _s ]->{ $_[2] } :
+	    $V->_get_path_id( $_[2] );
     return wantarray ? () : 0 unless defined $i && defined $E->[ _p ]->{ $i };
     return keys %{ $E->[ _p ]->{ $i } };
 }
 
 sub _predecessors {
-    my $E = shift;
-    my $g = shift;
-    my @p = $E->__predecessors($g, @_);
+    my ($E, $g) = @_;
+    my @p = &__predecessors;
     if ($E->[ _f ] & _UNORD) {
-	push @p, $E->__successors($g, @_);
+	push @p, &__successors;
 	my %p; @p{ @p } = ();
 	@p = keys %p;
     }

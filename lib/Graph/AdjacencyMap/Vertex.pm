@@ -45,49 +45,49 @@ sub __set_path_node {
 }
 
 sub set_path {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
-    my ($p, $k) = $m->__set_path( @_ );
+    my ($p, $k) = &__set_path;
     return unless defined $p && defined $k;
     my $l = defined $k->[-1] ? $k->[-1] : "";
-    my $set = $m->__set_path_node( $p, $l, @_ );
+    my $set = $m->__set_path_node( $p, $l, @_[1..$#_] );
     return $set;
 }
 
 sub __has_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
-	if @_ != (2 + ($f & _MULTI));
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, (1 + ($f & _MULTI)))
+	if @_ - 1 != (1 + ($f & _MULTI));
     return unless defined(my $p = $_[0]->[ _s ]);
     return ([$p], [ __strval($_[1], $f) ]);
 }
 
 sub has_path {
-    my $m = shift;
-    return unless my ($p, $k) = $m->__has_path( @_ );
+    my $m = $_[0];
+    return unless my ($p, $k) = &__has_path;
     return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
 }
 
 sub has_path_by_multi_id {
-    my $m = shift;
+    my ($m) = @_;
     my $id = pop;
-    my ($e, $n) = $m->__get_path_node( @_ );
+    my ($e, $n) = &{ $_[0]->can('__get_path_node') };
     return undef unless $e;
     return exists $n->[ _nm ]->{ $id };
 }
 
 sub _get_path_id {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
-    my ($e, $n) = $m->__get_path_node( @_ );
+    my ($e, $n) = &{ $_[0]->can('__get_path_node') };
     return undef unless $e;
     return ref $n ? $n->[ _ni ] : $n;
 }
 
 sub _get_path_count {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
-    my ($e, $n) = $m->__get_path_node( @_ );
+    my ($e, $n) = &{ $_[0]->can('__get_path_node') };
     return 0 unless $e && defined $n;
     return
 	($f & _COUNT) ? $n->[ _nc ] :
@@ -95,16 +95,15 @@ sub _get_path_count {
 }
 
 sub __attr {
-    my $m = shift;
-    return unless @_ && ref $_[0] && @{ $_[0] };
+    my ($m) = @_;
+    return if @_ < 3;
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
-		  scalar @{ $_[0] }, $m->[ _a ])
-        if @{ $_[0] } != $m->[ _a ];
+		  @_ - 1, $m->[ _a ])
+        if @_ - 1 != $m->[ _a ];
     my $f = $m->[ _f ];
-    return if !(@{ $_[0] } > 1 && ($f & _UNORDUNIQ));
-    if (($f & _UNORDUNIQ) == _UNORD && @{ $_[0] } > 1) {
-	@{ $_[0] } = sort @{ $_[0] }
-    } else { $m->__arg(\@_) }
+    return if !($f & _UNORDUNIQ);
+    goto &Graph::AdjacencyMap::__arg if ($f & _UNORDUNIQ) != _UNORD;
+    @_ = ($_[0], sort @_[1..$#_]);
 }
 
 sub _get_id_path {
@@ -113,9 +112,9 @@ sub _get_id_path {
 }
 
 sub del_path {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
-    my ($e, $n, $p, $k, $l) = $m->__get_path_node( @_ );
+    my ($e, $n, $p, $k, $l) = &{ $_[0]->can('__get_path_node') };
     return unless $e;
     my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
     if ($c == 0) {
@@ -135,10 +134,10 @@ sub rename_path {
 }
 
 sub del_path_by_multi_id {
-    my $m = shift;
+    my ($m) = @_;
     my $f = $m->[ _f ];
-    my $id = pop;
-    my ($e, $n, $p, $k, $l) = $m->__get_path_node( @_ );
+    my $id = $_[-1];
+    my ($e, $n, $p, $k, $l) = &{ $_[0]->can('__get_path_node') };
     return unless $e;
     delete $n->[ _nm ]->{ $id };
     unless (keys %{ $n->[ _nm ] }) {
