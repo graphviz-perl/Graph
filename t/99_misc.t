@@ -1,6 +1,6 @@
 use strict; use warnings;
 
-use Test::More tests => 36;
+use Test::More tests => 38;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -52,7 +52,7 @@ is($g0->subgraph_by_radius('b', 3)->stringify, "b-d,b-e");
   is $gh, "a-b,c-d,[],[a b c],[a c d],[a c e],[a c],[a],[b],[c],[d],[e]";
 }
 
-for ({}, {countvertexed => 1}, {hypervertexed => 1}) {
+for ({}, {countvertexed => 1}, {hypervertexed => 1}, {multivertexed => 1}) {
   my $gr = Graph::Directed->new(%$_);
   $gr->add_edge(@$_) for @E;
   $gr->rename_vertex('b', 'b1');

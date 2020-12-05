@@ -46,7 +46,7 @@ sub stringify {
 	    my @r = $hyper ? '['.join(',', @$v).']' : $v->[0];
 	    my $text = $m->_get_path_id(@$v);
 	    my $attrs = $multi
-		? ( $m->__get_path_node( @$v ) )[1]->[-1]
+		? (( $m->__get_path_node( @$v ) )[1] || [])->[-1]
 		: $m->_get_path_attrs(@$v);
 	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
 	    push @r, $text;
@@ -262,6 +262,13 @@ sub _rename_path {
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _a ] > 1; # arity > 1, all integers, no names
+    if ($m->_is_MULTI and !$m->_is_HYPER) {
+	my ($n, $f, $a, $i, $s, $p) = @$m;
+	return 0 unless exists $s->{ $from };
+	$i->[ $s->{ $from }[0] ][0] = $to;
+	$s->{ $to } = delete $s->{ $from };
+	return 1;
+    }
     for my $node_length (0..$#{$m->[ _s ]}) {
 	next unless my $this_path = $m->[ _s ][$node_length];
 	_rename_path($from, $to, $m->[ _i ], $this_path, 0);
