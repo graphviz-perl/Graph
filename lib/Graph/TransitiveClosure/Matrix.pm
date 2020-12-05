@@ -364,9 +364,6 @@ By default the transitive closure matrix is not reflexive: that is,
 the adjacency matrix has zeroes on the diagonal.  To have ones on
 the diagonal, use true for the C<reflexive> option.
 
-B<NOTE>: this behaviour has changed from Graph 0.2xxx: transitive
-closure graphs were by default reflexive.
-
 =item path => boolean
 
 If set true, sets C<path_length> and C<path_vertices>. If either of
