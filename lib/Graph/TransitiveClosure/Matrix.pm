@@ -36,22 +36,20 @@ sub _new {
 	}
 	$pm = Graph::Matrix->new($g);
 	@pi = @{ $pm->[0] };
-	for my $u (@V) {
-	    my $iu = $v2i{$u};
-	    for my $v (@V) {
-		my $iv = $v2i{$v};
+	for (my $iu = 0; $iu < @V; $iu++) {
+	    for (my $iv = 0; $iv < @V; $iv++) {
 		next unless
 		    # $am->get($u, $v)
 		    vec($ai[$iu], $iv, 1)
 			;
 		# $dm->set($u, $v, $u eq $v ? 0 : 1)
-		$di[$iu]->[$iv] = $u eq $v ? 0 : 1
+		$di[$iu]->[$iv] = $iu == $iv ? 0 : 1
 		    if  $want_path_count or
 			!defined
 			    # $dm->get($u, $v)
 			    $di[$iu]->[$iv]
 			    ;
-		$pi[$iu]->[$iv] = $v unless $u eq $v;
+		$pi[$iu]->[$iv] = $V[$iv] unless $iu == $iv;
 	    }
 	}
     }
@@ -59,24 +57,21 @@ sub _new {
     # wrong thing to do.  In this case, using the public API for graph
     # transitive matrices and bitmatrices makes things awfully slow.
     # Instead, we go straight for the jugular of the data structures.
-    for my $u (@V) {
-	my $iu = $v2i{$u};
+    for (my $iu = 0; $iu < @V; $iu++) {
 	my $didiu = $di[$iu];
 	my $aiaiu = $ai[$iu];
-	for my $v (@V) {
-	    my $iv = $v2i{$v};
+	for (my $iv = 0; $iv < @V; $iv++) {
 	    my $didiv = $di[$iv];
 	    my $aiaiv = $ai[$iv];
 	    if (
 		# $am->get($v, $u)
 		vec($aiaiv, $iu, 1)
-		|| ($want_reflexive && $u eq $v)) {
+		|| ($want_reflexive && $iu == $iv)) {
 		my $aivivo = $aiaiv;
 		if ($want_transitive) {
 		    if ($want_reflexive) {
-			for my $w (@V) {
-			    next if $w eq $u;
-			    my $iw = $v2i{$w};
+			for (my $iw = 0; $iw < @V; $iw++) {
+			    next if $iw == $iu;
 			    return 0
 				if  vec($aiaiu, $iw, 1) &&
 				   !vec($aiaiv, $iw, 1);
@@ -124,20 +119,19 @@ sub _new {
 		}
 		if ($aiaiv ne $aivivo) {
 		    $ai[$iv] = $aiaiv;
-		    $aiaiu = $aiaiv if $u eq $v;
+		    $aiaiu = $aiaiv if $iu == $iv;
 		}
 	    }
 						   # $am->get($v, $u)
 	    if ($want_path && !$want_transitive && vec($aiaiv, $iu, 1)) {
-		for my $w (@V) {
-		    my $iw = $v2i{$w};
+		for (my $iw = 0; $iw < @V; $iw++) {
 		    next unless
 			# See XXX above.
 			# $am->get($u, $w)
 			vec($aiaiu, $iw, 1)
 			    ;
 		    if ($want_path_count) {
-			$didiv->[$iw]++ if $w ne $u and $w ne $v and $u ne $v;
+			$didiv->[$iw]++ if $iw != $iu and $iw != $iv and $iu != $iv;
 			next;
 		    }
 		    # See XXX above.
@@ -162,7 +156,7 @@ sub _new {
 		}
 		# $dm->set($u, $v, 1)
 		$didiu->[$iv] = 1
-		    if $u ne $v &&
+		    if $iu != $iv &&
 		       # $am->get($u, $v)
 		       vec($aiaiu, $iv, 1)
 			   &&
