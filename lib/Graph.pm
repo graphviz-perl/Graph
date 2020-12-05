@@ -638,7 +638,7 @@ sub _edges_at {
 	    if (wantarray) {
 		push @e, [ $ei, $ev ] for grep $_ == $vi && !$ev{$ei}++, @$ev;
 	    } else {
-		$en++ for grep $_ == $vi, @$ev;
+		$en += grep $_ == $vi && !$ev{$ei}++, @$ev;
 	    }		    
 	}
     }
@@ -708,6 +708,7 @@ sub _edges_id_path {
 
 sub edges_at {
     my $g = shift;
+    return $g->_edges_at( @_ ) if !wantarray;
     map $g->_edges_id_path($_), $g->_edges_at( @_ );
 }
 

@@ -42,9 +42,8 @@ is( at("a", "b", "d"), "");
     use Graph::Directed;
     my $g1 = new Graph::Directed();
     $g1->add_edge(0,0);
-    my @e = $g1->edges_at(0);
-    is(@e, 1);
-    is("@{ $e[0] }", "0 0");
+    is(scalar $g1->edges_at(0), 1);
+    is("@{ ($g1->edges_at(0))[0] }", "0 0");
 }
 
 {

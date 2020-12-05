@@ -1,3 +1,5 @@
+- fix edges_at on self-edges in scalar context
+
 0.9712 2020-12-05
 - bug-fix: set_edge_attribute_by_id add_edge_by_id if not exist
 - connected_component_by_index behaves same with/without unionfind

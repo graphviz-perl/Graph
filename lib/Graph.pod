@@ -1377,7 +1377,7 @@ Related methods are
 
     @e = $g->edges_at($v)
 
-The union of edges from and edges to at the vertex.
+The union of edges from, and edges to, the vertex.
 
 =item edges_from
 
