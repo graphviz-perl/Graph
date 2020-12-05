@@ -14,6 +14,7 @@
 - successors/predecessors/rename_path work right with multivertex
 - AdjacencyMap array -> stable vertices ordering, TCM performance benefit
 - TransitiveClosure etc handle multiedged
+- all_paths ignore self-loops
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

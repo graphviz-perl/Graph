@@ -275,7 +275,7 @@ sub all_paths {
         map [$u, @$_],
         map $tc->all_paths($_, $v),
         grep $tc->is_reachable($_, $v),
-        grep $_ ne $v, $tc->[ _G ]->successors($u);
+        grep $_ ne $v && $_ ne $u, $tc->[ _G ]->successors($u);
     @found;
 }
 
@@ -434,7 +434,8 @@ going back to vertex $u.
 
 =item all_paths($u, $v)
 
-Return list of array-refs with all the paths from $u to $v.
+Return list of array-refs with all the paths from $u to $v. Will ignore
+self-loops.
 
 =back
 

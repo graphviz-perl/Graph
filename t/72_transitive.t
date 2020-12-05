@@ -462,6 +462,7 @@ is($t3apspfw->path_predecessor(qw(c c)), undef);
     my @example = ( [ 1, 2 ],
                     [ 1, 3 ],
                     [ 1, 4 ], # direct link to two away
+                    [ 1, 1 ], # self-loop
                     [ 3, 4 ] );
     my $g = Graph::Directed->new;
     $g->add_edge(@$_) for @example;
