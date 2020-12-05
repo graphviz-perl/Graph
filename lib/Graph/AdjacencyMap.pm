@@ -300,20 +300,25 @@ sub __arg {
 sub _successors {
     my $E = shift;
     my $g = shift;
+    return $g->_edges_from( @_ ) if !wantarray;
     my $V = $g->[ _V ];
-    map +(
+    my @v = map +(
 	map $V->_get_id_path($_), @{ $_->[ 1 ] }[ 1 .. $#{$_->[ 1 ]} ]
     ), $g->_edges_from( @_ );
+    return @v if !($V->[ _f ] & _MULTI);
+    map @$_, @v;
 }
 
 sub _predecessors {
     my $E = shift;
     my $g = shift;
-    my $V = $g->[ _V ];
     return $g->_edges_to( @_ ) if !wantarray;
-    map +(
+    my $V = $g->[ _V ];
+    my @v = map +(
 	map $V->_get_id_path($_), @{ $_->[ 1 ] }[ 0 .. $#{$_->[ 1 ]}-1 ]
     ), $g->_edges_to( @_ );
+    return @v if !($V->[ _f ] & _MULTI);
+    map @$_, @v;
 }
 
 1;

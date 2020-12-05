@@ -724,17 +724,13 @@ sub edges_to {
 sub successors {
     my $g = shift;
     my $E = $g->[ _E ];
-    ($E->[ _f ] & _LIGHT) ?
-	$E->_successors($g, @_) :
-	Graph::AdjacencyMap::_successors($E, $g, @_);
+    $E->_successors($g, @_);
 }
 
 sub predecessors {
     my $g = shift;
     my $E = $g->[ _E ];
-    ($E->[ _f ] & _LIGHT) ?
-	$E->_predecessors($g, @_) :
-	Graph::AdjacencyMap::_predecessors($E, $g, @_);
+    $E->_predecessors($g, @_);
 }
 
 sub _all_cessors {

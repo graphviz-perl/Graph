@@ -11,6 +11,7 @@
 - much more lazy-loading of modules
 - set_vertex_attribute_by_id now works on hypervertexed
 - internal AdjacencyMap uses array not hash for mapping index to path
+- successors/predecessors work right with multivertex
 
 0.9711 2020-11-27
 - ingest handle multivertexed, multiedged right

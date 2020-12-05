@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 57;
+use Test::More tests => 60;
 
 use Graph;
 my $g = Graph->new(multivertexed => 1);
@@ -45,7 +45,13 @@ my $got = [ sort $g->get_multivertex_ids('a') ];
 is_deeply $got, [ qw(0 1 2 3) ] or diag explain $got;
 is( $g->get_vertex_count('a'), 4 );
 
-is( $g->delete_vertex('a'), '' );
+ok $g->add_edge('a', 'b');
+$got = [ $g->successors('a') ];
+is_deeply $got, [ 'b' ] or diag explain $got;
+$got = [ $g->predecessors('b') ];
+is_deeply $got, [ 'a' ] or diag explain $got;
+
+is( $g->delete_vertex('a'), 'b' );
 ok(!$g->has_vertex_by_id('a', $_) ) for 0..3;
 is( $g->get_multivertex_ids('a'), undef );
 

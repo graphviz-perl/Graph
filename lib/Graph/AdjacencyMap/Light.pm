@@ -179,13 +179,16 @@ sub _successors {
     my $E = shift;
     my $g = shift;
     my @s = $E->__successors($g, @_);
-    if (($E->[ _f ] & _UNORD)) {
+    if ($E->[ _f ] & _UNORD) {
 	push @s, $E->__predecessors($g, @_);
 	my %s; @s{ @s } = ();
 	@s = keys %s;
     }
     my $V = $g->[ _V ];
-    return wantarray ? map $V->[ _i ][ $_ ], @s : @s;
+    return @s if !wantarray;
+    @s = map $V->[ _i ][ $_ ], @s;
+    return @s if !($V->[ _f ] & _MULTI);
+    map @$_, @s;
 }
 
 sub __predecessors {
@@ -213,7 +216,10 @@ sub _predecessors {
 	@p = keys %p;
     }
     my $V = $g->[ _V ];
-    return wantarray ? map $V->[ _i ][ $_ ], @p : @p;
+    return @p if !wantarray;
+    @p = map $V->[ _i ][ $_ ], @p;
+    return @p if !($V->[ _f ] & _MULTI);
+    map @$_, @p;
 }
 
 sub __attr {
