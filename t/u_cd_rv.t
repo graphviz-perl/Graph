@@ -1,6 +1,6 @@
 use Graph;
 use strict; use warnings;
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 package MyNode;
 use overload ('""' => '_asstring', fallback=>1);
@@ -19,6 +19,7 @@ package main;
 use strict; use warnings;
 my $gnoref = new Graph;
 my $gwithref = new Graph(refvertexed_stringified=>1);
+ok $gwithref->refvertexed_stringified;
 my $n1 = new MyNode('name'=>'alpha');
 my $n2 = new MyNode('name'=>'beta');
 $gnoref->add_edge($n1, $n2);

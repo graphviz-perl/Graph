@@ -24,6 +24,7 @@ BEGIN {
 	$f |= $_ for map $FLAG2I{$_}, @{ $FLAG_COMBOS{$k} };
 	no strict 'refs';
 	*$k = sub () { return $f }; # return to dodge pointless 5.22 stricture
+	*{"_is$k"} = sub { $_[0]->[ 1 ] & $f }; # 1 = _f
     }
 }
 
