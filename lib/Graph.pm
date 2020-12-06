@@ -63,8 +63,8 @@ sub Infinity () { $Inf }
 # - The fourth element is the attributes of the whole graph.
 # The defined flags for Graph are:
 # - unionfind
-# The vertices are contained in either a "simplemap"
-# (if no hypervertices) or in a "map".
+# The vertices are contained in a "simplemap"
+# (if no attributes) or in a "map".
 # The edges are always in a "map".
 # The defined flags for maps are:
 # - _COUNT for countedness: more than one instance
@@ -79,21 +79,12 @@ sub Infinity () { $Inf }
 
 use Graph::Attribute array => _A, map => 'graph';
 
-sub _stringify_vertex {
-    return "$_[0]" unless ref($_[0]) eq 'ARRAY';
-    "[" . join(" ", @{ $_[0] }) . "]";
-}
-
 sub stringify {
     my $g = shift;
     my $u = $g->is_undirected;
     my $e = $u ? '=' : '-';
-    my @e =
-	map {
-	    my @v = map _stringify_vertex($_), @$_;
-	    join($e, $u ? sort { "$a" cmp "$b" } @v : @v) } $g->_edges05;
-    my @s = sort { "$a" cmp "$b" } @e;
-    push @s, sort { "$a" cmp "$b" } map _stringify_vertex($_), $g->isolated_vertices;
+    my @s = sort map join($e, $u ? sort { "$a" cmp "$b" } @$_ : @$_), $g->_edges05;
+    push @s, sort { "$a" cmp "$b" } $g->isolated_vertices;
     join(",", @s);
 }
 
@@ -150,15 +141,15 @@ sub _opt_unknown {
 sub new {
     my $class = shift;
     my $gflags = 0;
-    my $vflags;
-    my $eflags;
+    my $vflags = _UNORDUNIQ;
+    my $eflags = 0;
     my %opt = _get_options( \@_ );
 
     if (ref $class && $class->isa('Graph')) {
 	my %existing;
 	no strict 'refs';
         for my $c (qw(undirected refvertexed
-                      hypervertexed countvertexed multivertexed
+                      countvertexed multivertexed
                       hyperedged countedged multiedged omniedged
 		      __stringified)) {
 	    $existing{$c}++ if $class->$c;
@@ -172,19 +163,9 @@ sub new {
 
     $opt{omniedged} = !delete $opt{directed} if exists $opt{directed};
 
-    my $vnonomni =
-	$opt{nonomnivertexed} ||
-	    (exists $opt{omnivertexed} && !$opt{omnivertexed});
-    my $vnonuniq =
-	$opt{nonuniqvertexed} ||
-	    (exists $opt{uniqvertexed} && !$opt{uniqvertexed});
-
     _opt(\%opt, \$vflags,
 	 countvertexed	=> _COUNT,
 	 multivertexed	=> _MULTI,
-	 hypervertexed	=> _HYPER,
-	 omnivertexed	=> _UNORD,
-	 uniqvertexed	=> _UNIQ,
 	 refvertexed	=> _REF,
 	 refvertexed_stringified => _REFSTR ,
 	 __stringified => _STR,
@@ -218,31 +199,6 @@ sub new {
 
     _opt_unknown(\%opt);
 
-    my $uflags;
-    if (defined $vflags) {
-	$uflags = $vflags;
-	$uflags |= _UNORD unless $vnonomni;
-	$uflags |= _UNIQ  unless $vnonuniq;
-    } else {
-	$uflags = _UNORDUNIQ;
-	$vflags = 0;
-    }
-
-    if (!($vflags & _HYPER) && ($vflags & _UNORDUNIQ)) {
-	my @but;
-	push @but, 'unordered' if ($vflags & _UNORD);
-	push @but, 'unique'    if ($vflags & _UNIQ);
-	__carp_confess sprintf "Graph: not hypervertexed but %s",
-		      join(' and ', @but);
-    }
-
-    unless (defined $eflags) {
-	$eflags = 0;
-    }
-
-    __carp_confess "Graph: not hypervertexed but uniqvertexed"
-	if !($vflags & _HYPER) && ($vflags & _UNIQ);
-
     __carp_confess "Graph: both countvertexed and multivertexed"
 	if ($vflags & _COUNT) && ($vflags & _MULTI);
 
@@ -253,12 +209,12 @@ sub new {
 
     $g->[ _F ] = $gflags;
     $g->[ _G ] = 0;
-    $g->[ _V ] = ($vflags & (_HYPER | _MULTI)) ?
-	_am_heavy($uflags, 1) :
-	    (($vflags & ~_UNORD) ?
-	     _am_vertex($uflags, 1) :
-	     _am_light($uflags, 1, $g));
-    $g->[ _E ] = (($vflags & _HYPER) || ($eflags & ~_UNORD)) ?
+    $g->[ _V ] = ($vflags & _MULTI) ?
+	_am_heavy($vflags, 1) :
+	    (($vflags & ~_UNORDUNIQ) ?
+	     _am_vertex($vflags, 1) :
+	     _am_light($vflags, 1, $g));
+    $g->[ _E ] = ($eflags & ~_UNORD) ?
 	_am_heavy($eflags, 2) :
 	    _am_light($eflags, 2, $g);
 
@@ -293,9 +249,6 @@ sub _am_heavy {
 
 sub countvertexed { $_[0]->[ _V ]->_is_COUNT }
 sub multivertexed { $_[0]->[ _V ]->_is_MULTI }
-sub hypervertexed { $_[0]->[ _V ]->_is_HYPER }
-sub omnivertexed  { $_[0]->[ _V ]->_is_UNORD }
-sub uniqvertexed  { $_[0]->[ _V ]->_is_UNIQ  }
 sub refvertexed   { $_[0]->[ _V ]->_is_REF   }
 sub refvertexed_stringified { $_[0]->[ _V ]->_is_REFSTR }
 sub __stringified { $_[0]->[ _V ]->_is_STR   }
@@ -315,9 +268,7 @@ sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 
 *is_countvertexed = \&countvertexed;
 *is_multivertexed = \&multivertexed;
-*is_hypervertexed = \&hypervertexed;
 *is_omnidirected  = \&omnidirected;
-*is_uniqvertexed  = \&uniqvertexed;
 *is_refvertexed   = \&refvertexed;
 *is_refvertexed_stringified = \&refvertexed_stringified;
 
@@ -333,15 +284,10 @@ sub _union_find_add_vertex {
 }
 
 sub add_vertex {
-    &expect_hypervertexed if @_ != 2;
+    __carp_confess "Graph::add_vertex: use add_vertices for more than one vertex" if @_ != 2;
     my $g = shift;
     return $g->add_vertex_by_id(@_, _GEN_ID) if $g->is_multivertexed;
     __carp_confess "Graph::add_vertex: undef vertex" if grep !defined, @_;
-    if (@_ > 1) {
-	__carp_confess "Graph::add_vertex: use add_vertices for more than one vertex or use hypervertexed"
-	    unless $g->is_countvertexed || $g->is_hypervertexed;
-	$g->[ _V ]->set_path( $_ ) for grep !$g->has_vertex( $_ ), @_;
-    }
     $g->[ _V ]->set_path( @_ );
     $g->[ _G ]++;
     $g->_union_find_add_vertex( @_ ) if $g->has_union_find;
@@ -352,14 +298,14 @@ sub has_vertex {
     my $g = $_[0];
     my $V = $g->[ _V ];
     return exists $V->[ _s ]->{ $_[1] } if ($V->[ _f ] & _LIGHT);
-    $V->has_path( @_[1..$#_] );
+    $V->has_path( $_[1] );
 }
 
 sub _vertices05 {
     my $g = $_[0];
     my @v = $g->[ _V ]->paths( @_[1..$#_] );
     return scalar @v if !wantarray;
-    $g->[ _V ]->_is_HYPER ? @v : map ref $_ eq 'ARRAY' ? @$_ : $_, @v;
+    map ref $_ eq 'ARRAY' ? @$_ : $_, @v;
 }
 
 sub vertices {
@@ -387,11 +333,9 @@ sub _add_edge {
 	return map $V->[ _s ]->{ $_ }, @_[1..$#_];
     }
     my @e;
-    my $h = $V->_is_HYPER;
     for my $v ( @_[1..$#_] ) {
-	my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
-	$g->add_vertex( @v ) unless $V->has_path( @v );
-	push @e, $V->_get_path_id( @v );
+	$g->add_vertex( $v ) unless $V->has_path( $v );
+	push @e, $V->_get_path_id( $v );
     }
     return @e;
 }
@@ -425,11 +369,9 @@ sub _vertex_ids {
 	return map $V->[ _s ]->{ $_ }, @_[1..$#_];
     }
     my @e;
-    my $h = $V->_is_HYPER;
     for my $v ( @_[1..$#_] ) {
-	my @v = ref $v eq 'ARRAY' && $h ? @$v : $v;
-	return () unless $V->has_path( @v );
-	push @e, $V->_get_path_id( @v );
+	return () unless $V->has_path( $v );
+	push @e, $V->_get_path_id( $v );
     }
     return @e;
 }
@@ -449,7 +391,7 @@ sub has_edge {
 	return 0 if @i == 0 && @_ - 1;
     }
     my $f = $E->[ _f ];
-    if ($E->[ _a ] == 2 && @i == 2 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+    if (@i == 2 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
 	@i = sort @i if ($f & _UNORD);
 	return exists $E->[ _s ]->{ $i[0] } &&
 	       exists $E->[ _s ]->{ $i[0] }->{ $i[1] } ? 1 : 0;
@@ -500,7 +442,7 @@ sub add_vertex_by_id {
 sub add_vertex_get_id {
     my $g = $_[0];
     &expect_multivertexed;
-    my $id = $g->[ _V ]->set_path_by_multi_id( @_[1..$#_], _GEN_ID );
+    my $id = $g->[ _V ]->set_path_by_multi_id( $_[1], _GEN_ID );
     $g->[ _G ]++;
     &_union_find_add_vertex if &has_union_find;
     return $id;
@@ -587,38 +529,6 @@ sub get_multiedge_ids {
 # Neighbourhood.
 #
 
-sub vertices_at {
-    my $g = $_[0];
-    my $V = $g->[ _V ];
-    return @_[1..$#_] unless $V->[ _f ] & _HYPER;
-    my %v;
-    my @i;
-    for my $v ( @_[1..$#_] ) {
-	my $i = $V->_get_path_id( $v );
-	return unless defined $i;
-	push @i, ( $v{ $v } = $i );
-    }
-    my $Vi = $V->_ids;
-    my @v;
-    for (my $i = $#$Vi; $i >= 0; $i--) {
-	next if !defined(my $v = $Vi->[$i]);
-	my %i;
-	my $h = $V->[_f ] & _HYPER;
-	@i{ @i } = @i if @i; # @todo: nonuniq hyper vertices?
-	for my $u (ref $v eq 'ARRAY' && $h ? @$v : $v) {
-	    my $j = exists $v{ $u } ? $v{ $u } : ( $v{ $u } = $i );
-	    if (defined $j && exists $i{ $j }) {
-		delete $i{ $j };
-		unless (keys %i) {
-		    push @v, $v;
-		    last;
-		}
-	    }
-	}
-    }
-    return @v;
-}
-
 sub _edges_at {
     my $g = $_[0];
     my $V = $g->[ _V ];
@@ -626,9 +536,8 @@ sub _edges_at {
     my @e;
     my $en = 0;
     my %ev;
-    my $h = $V->[_f ] & _HYPER;
-    for my $v ( $h ? &vertices_at : @_[1..$#_] ) {
-	my $vi = $V->_get_path_id( ref $v eq 'ARRAY' && $h ? @$v : $v );
+    for my $v ( @_[1..$#_] ) {
+	my $vi = $V->_get_path_id( $v );
 	next unless defined $vi;
 	my $Ei = $E->_ids;
 	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
@@ -650,7 +559,6 @@ sub _edges {
     my $V = $g->[ _V ];
     my $E = $g->[ _E ];
     my $N = $g->[ $n ];
-    my $h = $V->[ _f ] & _HYPER;
     unless (defined $N && $N->[ 0 ] == $g->[ _G ]) {
 	$g->[ $n ]->[ 1 ] = { };
 	$N = $g->[ $n ];
@@ -671,10 +579,10 @@ sub _edges {
 	$N->[ 0 ] = $g->[ _G ];
     }
     my @e;
-    my @at = $h ? &vertices_at : @_[1..$#_];
+    my @at = @_[1..$#_];
     my %at; @at{@at} = ();
     for my $v ( @at ) {
-	my $vi = $V->_get_path_id( ref $v eq 'ARRAY' && $h ? @$v : $v );
+	my $vi = $V->_get_path_id( $v );
 	next unless defined $vi && exists $N->[ 1 ]->{ $vi };
 	push @e, @{ $N->[ 1 ]->{ $vi } };
     }
@@ -814,8 +722,9 @@ sub delete_edge {
 sub delete_vertex {
     &expect_non_unionfind;
     my $g = $_[0];
+    return $g if @_ != 2;
     my $V = $g->[ _V ];
-    return $g unless $V->has_path( @_[1..$#_] );
+    return $g unless $V->has_path( $_[1] );
     if (@_ == 2 && !($g->[ _f ] & (_HYPER|_REF|_UNIQ))) {
       $g->delete_edge($_[1], $_) for $g->successors($_[1]);
       $g->delete_edge($_, $_[1]) for $g->predecessors($_[1]);
@@ -824,7 +733,7 @@ sub delete_vertex {
       my $E = $g->[ _E ];
       $E->_del_id( $_->[ 0 ] ) for &_edges_at;
     }
-    $V->del_path( @_[1..$#_] );
+    $V->del_path( $_[1] );
     $g->[ _G ]++;
     return $g;
 }
@@ -950,7 +859,7 @@ sub is_exterior_vertex {
 
 sub is_self_loop_vertex {
     return 0 unless @_ > 1;
-    return 1 if grep $_ eq $_[1], &successors; # @todo: multiedges, hypervertices
+    return 1 if grep $_ eq $_[1], &successors; # @todo: multiedges
     return 0;
 }
 
@@ -1092,7 +1001,7 @@ sub set_vertex_attribute {
     my $value = pop;
     my $attr  = pop;
     $g->add_vertex( @_[1..$#_] ) unless &has_vertex;
-    $g->[ _V ]->_set_path_attr( @_[1..$#_], $attr, $value );
+    $g->[ _V ]->_set_path_attr( $_[1], $attr, $value );
 }
 
 sub set_vertex_attribute_by_id {
@@ -1500,7 +1409,6 @@ sub copy {
 	(ref $g)->new(map +($_ => $g->$_ ? 1 : 0),
 		      qw(directed
 			 refvertexed
-			 hypervertexed
 			 countvertexed
 			 multivertexed
 			 hyperedged
@@ -1873,10 +1781,6 @@ sub expect_dag {
     push @got, 'undirected' unless $_[0]->is_directed;
     push @got, 'cyclic'     unless $_[0]->is_acyclic;
     _expected('directed acyclic', "@got") if @got;
-}
-
-sub expect_hypervertexed {
-    _expected('hypervertexed') unless $_[0]->is_hypervertexed;
 }
 
 sub expect_hyperedged {
@@ -2621,15 +2525,10 @@ sub strongly_connected_graph {
     $u->dfs;
 
     my $sc_cb;
-    my $hv_cb;
 
     _opt_get(\%attr, super_component => \$sc_cb);
-    _opt_get(\%attr, hypervertex => \$hv_cb);
     _opt_unknown(\%attr);
 
-    if (defined $hv_cb && !defined $sc_cb) {
-	$sc_cb = sub { $hv_cb->( [ @_ ] ) };
-    }
     unless (defined $sc_cb) {
 	$sc_cb = $super_component;
     }

@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 40;
+use Test::More tests => 36;
 
 use Graph::Undirected;
 use Graph::Directed;
@@ -119,27 +119,6 @@ Graph::AdjacencyMap::Heavy arity=2 flags: _MULTI
    0 {'0' => {}} {'x' => {'weight' => '2'}}
 EOF
 
-my $g3 = Graph::Directed->new(hypervertexed => 1);
-$g3->add_edge(qw(a c));
-$g3->set_vertex_attribute(qw(attr 4));
-$g3->set_vertex_attribute(qw(a other1 5));
-$g3->set_vertex_attribute(qw(a c), qw(other2 6));
-$g3->set_vertex_attribute(qw(a b c), qw(other3 7));
-is $g3->[ Graph::_V ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Heavy arity=1 flags: _HYPER|_UNORD|_UNIQ
-  [] 2,{'attr' => '4'}
- [a] 0,{'other1' => '5'}
-[a,b,c] 5,{'other3' => '7'}
-[a,c] 3,{'other2' => '6'}
- [b]    4
- [c]    1
-EOF
-is $g3->[ Graph::_E ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Heavy arity=2 flags: 
- to:    1
-   0    1
-EOF
-
 {
   my $null = Graph->new;
   ok($null, "boolify wins over stringify for empty graph");
@@ -153,14 +132,7 @@ EOF
   my $null = Graph::Directed->new;
   for ( 1..5 ) {  # Adds _NOTHING_ -- but dies.
     eval { $null->add_vertex };
-    like($@, qr/Graph::add_vertex: expected hypervertexed graph/);
+    like($@, qr/Graph::add_vertex: use add_vertices for more than one vertex/);
   }
   is($null, "");
-
-  my $hyper = Graph::Directed->new(hypervertexed => 1);
-  $hyper->add_vertex for 1..5;  # Adds the "empty vertex", five times.
-  is($hyper->vertices, 1);
-
-  $hyper->add_vertex($_) for 1..5;
-  is($hyper->vertices, 6);
 }

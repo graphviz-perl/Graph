@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 60;
+use Test::More tests => 50;
 
 use Graph;
 my $g = Graph->new(multivertexed => 1);
@@ -68,23 +68,6 @@ like($@, qr/get_multivertex_ids: expected multivertexed/);
 
 eval { $h->delete_vertex_by_id("b", "black") };
 like($@, qr/delete_vertex_by_id: expected multivertexed/);
-
-$h = Graph->new(multivertexed => 1, hypervertexed => 1);
-
-ok( $h->add_vertex_by_id('u', 'v', 'genghis') );
-ok( $h->add_vertex_by_id('khan') );
-
-ok(!$h->has_vertex('u' ,'v', 'w') );
-ok( $h->has_vertex('u' ,'v') );
-ok(!$h->has_vertex('u') );
-ok(!$h->has_vertex('v') );
-ok( $h->has_vertex() );
-
-ok( $h->has_vertex_by_id('u', 'v', 'genghis') );
-ok( $h->has_vertex_by_id('khan') );
-
-$h->set_vertex_attribute_by_id(qw(u v genghis height), 'short');
-is $h->get_vertex_attribute_by_id(qw(u v genghis height)), 'short';
 
 eval { Graph->new( multivertexed => 1, countvertexed => 1 ) };
 like ( $@, qr/both countvertexed and multivertexed/ );

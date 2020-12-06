@@ -55,14 +55,7 @@ t/27_omnidirected.t
 t/28_hyperedged.t
 t/29_uniqedged.t
 t/30_mixedged.t
-t/31_hypervertex.t
-t/32_hypervertex_edges.t
 t/33_hyperedge.t
-t/34_omnivertexed.t
-t/35_uniqvertexed.t
-t/36_omniuniqvertexed.t
-t/37_hypervertex_implicit.t
-t/38_vertices_at.t
 t/39_edges_at.t
 t/40_edges_from.t
 t/41_edges_to.t

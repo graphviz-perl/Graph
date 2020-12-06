@@ -144,7 +144,7 @@ original.
 
 Also the following vertex/edge attributes are copied:
 
-  refvertexed/hypervertexed/countvertexed/multivertexed
+  refvertexed/countvertexed/multivertexed
   hyperedged/countedged/multiedged/omniedged
 
 B<NOTE>: You can get an even shallower copy of a graph by
@@ -2625,8 +2625,6 @@ graph call is not as expected.
 
 =item expect_hyperedged
 
-=item expect_hypervertexed
-
 =item expect_multiedged
 
 =item expect_multivertexed
@@ -2672,7 +2670,7 @@ The numbers are for a 32-bit platform and for Perl 5.8.8.
 Roughly, the above numbers mean that in a megabyte of memory you can
 fit for example a graph of about 1000 vertices and about 2500 edges.
 
-=head2 Hyperedges, hypervertices, hypergraphs
+=head2 Hyperedges, hypergraphs
 
 B<BEWARE>: this is a rather thinly tested feature, and the theory
 is even less so.  Do not expect this to stay as it is (or at all)
@@ -2685,43 +2683,16 @@ Caveat emptor.
 Hyperedges are edges that connect a number of vertices different
 from the usual two.
 
-Hypervertices are vertices that consist of a number of vertices
-different from the usual one.
-
-Note that for hypervertices there is an asymmetry: when adding
-hypervertices, the single vertices are also implicitly added.
-
 Hypergraphs are graphs with hyperedges.
 
 To enable hyperness when constructing Graphs use the C<hyperedged>
-and C<hypervertexed> attributes:
+attribute:
 
-   my $h = Graph->new(hyperedged => 1, hypervertexed => 1);
-
-To add hypervertexes, either explicitly use more than one vertex (or,
-indeed, I<no> vertices) when using add_vertex()
-
-   $h->add_vertex("a", "b")
-   $h->add_vertex()
-
-or implicitly with array references when using add_edge()
-
-   $h->add_edge(["a", "b"], "c")
-   $h->add_edge()
-
-Testing for existence and deletion of hypervertices and hyperedges
-works similarly.
+   my $h = Graph->new(hyperedged => 1);
 
 To test for hyperness of a graph use the
 
 =over 4
-
-=item is_hypervertexed
-
-=item hypervertexed
-
-    $g->is_hypervertexed
-    $g->hypervertexed
 
 =item is_hyperedged
 
@@ -2731,19 +2702,6 @@ To test for hyperness of a graph use the
     $g->hyperedged
 
 =back
-
-Since hypervertices consist of more than one vertex:
-
-=over 4
-
-=item vertices_at
-
-    $g->vertices_at($v)
-
-=back
-
-Return the vertices at the vertex.  This may return just the vertex
-or also other vertices.
 
 To go with the concept of undirected in normal (non-hyper) graphs,
 there is a similar concept of omnidirected I<(this is my own coinage,
@@ -2772,41 +2730,17 @@ false if not.
 
 =back
 
-You may be wondering why on earth did I make up this new concept, why
-didn't the "undirected" work for me?  Well, because of this:
-
-   $g = Graph->new(hypervertexed => 1, omnivertexed => 1);
-
-That's right, vertices can be omni, too - and that is indeed the
-default.  You can turn it off and then $g->add_vertex(qw(a b)) no
-more means adding also the (hyper)vertex qw(b a).  In other words,
-the "directivity" is orthogonal to (or independent of) the number of
-vertices in the vertex/edge.
-
-=over 4
-
-=item is_omnivertexed
-
-=item omnivertexed
-
-=back
-
 Another oddity that fell out of the implementation is the uniqueness
-attribute, that comes naturally in C<uniqedged> and C<uniqvertexed>
-flavours.  It does what it sounds like, to unique or not the vertices
-participating in edges and vertices (is the hypervertex qw(a b a) the
-same as the hypervertex qw(a b), for example).  Without too much
-explanation:
+attribute, that comes naturally in C<uniqedged> flavour. It does what
+it sounds like, to unique or not the vertices participating in edges -
+for example, is the hyperedge C<qw(a b a)> the same as the hyperedge
+C<qw(a b)>. Without too much explanation:
 
 =over 4
 
 =item is_uniqedged
 
 =item uniqedged
-
-=item is_uniqvertexed
-
-=item uniqvertexed
 
 =back
 

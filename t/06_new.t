@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 50;
+use Test::More tests => 45;
 
 use Graph;
 
@@ -18,13 +18,6 @@ my $g2b = Graph->new(countvertexed => 0);
 ok( !$g0 ->countvertexed() );
 ok(  $g2a->countvertexed() );
 ok( !$g2b->countvertexed() );
-
-my $g3a = Graph->new(hypervertexed => 1);
-my $g3b = Graph->new(hypervertexed => 0);
-
-ok( !$g0 ->hypervertexed() );
-ok(  $g3a->hypervertexed() );
-ok( !$g3b->hypervertexed() );
 
 my $g4a = Graph->new(omnidirected => 1);
 my $g4b = Graph->new(omnidirected => 0);
@@ -83,9 +76,6 @@ ok( !$g7b->countedged() );
 
     eval { my $gna = Graph->new(foobar => 1, barfoo => 1) };
     like($@, qr/Graph::new: Unknown options: 'barfoo' 'foobar' /);
-
-    eval { Graph->new(omnivertexed => 1) };
-    like($@, qr/Graph: not hypervertexed but/);
 }
 
 {
@@ -109,9 +99,8 @@ ok( !$g7b->countedged() );
 }
 
 {
-    my $g = Graph->new(hypervertexed => 1, multiedged => 1);
+    my $g = Graph->new(multiedged => 1);
     my $h = $g->new; # The flags should be inherited.
-    ok($h->is_hypervertexed);
     ok($h->is_multiedged);
     $h = $g->new(multiedged => 0); # The flags should be overridable
     ok !$h->is_multiedged;

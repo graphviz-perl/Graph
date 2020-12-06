@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 57;
+use Test::More tests => 56;
 
 use Graph;
 use Graph::Undirected;
@@ -88,11 +88,6 @@ ok(!$g3->is_strongly_connected);
 
 $g3->add_cycle('d', 'a');
 $g3->add_cycle('e', 'f');
-
-is($g3->strongly_connected_graph(hypervertex =>
-				 sub { my @v = sort @{ $_[0] };
-				       "(" . join(",", @v) . ")" } ),
-   "(a,d)-(b),(b)-(c),(e,f)");
 
 is($g3->strongly_connected_graph(super_component =>
 				 sub { my @v = sort @_;

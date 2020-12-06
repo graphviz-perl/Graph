@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 96;
+use Test::More tests => 95;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -162,7 +162,6 @@ SKIP: {
 }
 
 for my $a (qw(refvertexed
-	      hypervertexed
 	      countvertexed
 	      multivertexed
 	      hyperedged
