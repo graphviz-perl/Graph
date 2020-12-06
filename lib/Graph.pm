@@ -1240,25 +1240,6 @@ sub delete_vertex_attribute_by_id {
 
 # Edge attributes.
 
-sub _set_edge_attribute {
-    my $g = $_[0];
-    my $value = pop;
-    my $attr  = pop;
-    my $E = $g->[ _E ];
-    my $f = $E->[ _f ];
-    my @i;
-    if ($E->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@_ = ($g, sort @_[1..$#_]) if $f & _UNORD;
-	my $s = $E->[ _s ];
-	&add_edge unless exists $s->{ $_[1] } && exists $s->{ $_[1] }->{ $_[2] };
-	@i = @{ $g->[ _V ]->[ _s ] }{ @_[1..$#_] };
-    } else {
-	&add_edge unless &has_edge;
-	@i = &_vertex_ids;
-    }
-    $g->[ _E ]->_set_path_attr( @i, $attr, $value );
-}
-
 sub set_edge_attribute {
     my $g = $_[0];
     &expect_non_multiedged;

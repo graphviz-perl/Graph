@@ -46,7 +46,7 @@ sub new {
 	       ) {
 		my $val = $g->_get_edge_attribute($u, $v, $attr);
 		$val = $u eq $v ? 0 : 1 if !defined $val;
-		$tcg->_set_edge_attribute($u, $v, $attr, $val);
+		$tcg->set_edge_attribute($u, $v, $attr, $val);
 	    }
 	}
     }
