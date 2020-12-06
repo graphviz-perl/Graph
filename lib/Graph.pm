@@ -43,13 +43,14 @@ my $Inf;
 
 BEGIN {
   if ($] >= 5.022) {
-    $Inf = eval '+"Inf"';
+    $Inf = eval '+"Inf"'; # uncoverable statement
   } else {
-    local $SIG{FPE};
-    eval { $Inf = exp(999) } ||
-	eval { $Inf = 9**9**9 } ||
-	    eval { $Inf = 1e+999 } ||
-		{ $Inf = 1e+99 };  # Close enough for most practical purposes.
+    local $SIG{FPE}; # uncoverable statement
+    eval { $Inf = exp(999) } || # uncoverable statement
+	eval { $Inf = 9**9**9 } || # uncoverable statement
+	    eval { $Inf = 1e+999 } || # uncoverable statement
+		{ $Inf = 1e+99 }; # uncoverable statement
+                # Close enough for most practical purposes.
   }
 }
 

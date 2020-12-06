@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 49;
+use Test::More tests => 50;
 
 use Graph;
 
@@ -83,6 +83,9 @@ ok( !$g7b->countedged() );
 
     eval { my $gna = Graph->new(foobar => 1, barfoo => 1) };
     like($@, qr/Graph::new: Unknown options: 'barfoo' 'foobar' /);
+
+    eval { Graph->new(omnivertexed => 1) };
+    like($@, qr/Graph: not hypervertexed but/);
 }
 
 {
