@@ -1,6 +1,6 @@
 use strict; use warnings;
 
-use Test::More tests => 38;
+use Test::More tests => 39;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -117,3 +117,5 @@ $g3->add_edge(0,1);
 my @dummy = $g3->SP_Dijkstra(1,0);
 is $w, '';
 }
+
+is_deeply [ sort(Graph::__fisher_yates_shuffle(1..3)) ], [ 1..3 ];

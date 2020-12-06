@@ -47,7 +47,7 @@ for (1..$N) {
     is($v, 2 * $u);
 }
 
-my $g0 = Graph->random_graph(vertices => 30, directed => 0);
+my $g0 = Graph->random_graph(vertices => [1..30], directed => 0);
 my $g1 = Graph->random_graph(vertices => 30, directed => 1);
 my $g2 = Graph->random_graph(vertices => 30, edges      => 100);
 my $g3 = Graph->random_graph(vertices => 30, edges_fill => 0.1);

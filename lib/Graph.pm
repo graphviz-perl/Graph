@@ -1537,9 +1537,9 @@ sub _deep_copy_DataDumper {
 
 sub deep_copy {
     if (_can_deep_copy_Storable()) {
-	return _deep_copy_Storable(@_);
+	return _deep_copy_Storable(@_); # uncoverable statement
     } else {
-	return _deep_copy_DataDumper(@_);
+	return _deep_copy_DataDumper(@_); # uncoverable statement
     }
 }
 
@@ -1844,16 +1844,16 @@ sub _expected {
     if (my @caller2 = caller(2)) {
 	die "$caller2[3]: expected $exp graph$got, at $caller2[1] line $caller2[2].\n";
     } else {
-	my @caller1 = caller(1);
-	die "$caller1[3]: expected $exp graph$got, at $caller1[1] line $caller1[2].\n";
+	my @caller1 = caller(1); # uncoverable statement
+	die "$caller1[3]: expected $exp graph$got, at $caller1[1] line $caller1[2].\n"; # uncoverable statement
     }
 }
 
 sub expect_no_args {
     my $g = shift;
     return unless @_;
-    my @caller1 = caller(1);
-    die "$caller1[3]: expected no arguments, got " . scalar @_ . ", at $caller1[1] line $caller1[2]\n";
+    my @caller1 = caller(1); # uncoverable statement
+    die "$caller1[3]: expected no arguments, got " . scalar @_ . ", at $caller1[1] line $caller1[2]\n"; # uncoverable statement
 }
 
 sub expect_undirected {
@@ -1910,7 +1910,7 @@ sub _get_options {
     }
     my @opt = @{ $_[0] };
     unless (@opt  % 2 == 0) {
-	die "$caller[3]: expected an options hash, got a non-even number of arguments, at $caller[1] line $caller[2].\n";
+	die "$caller[3]: expected an options hash, got a non-even number of arguments, at $caller[1] line $caller[2].\n"; # uncoverable statement
     }
     return @opt;
 }
