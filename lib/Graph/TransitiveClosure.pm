@@ -39,15 +39,9 @@ sub new {
 	for my $v ($tcm->vertices) {
 	    next if $u eq $v && ! $opt{ reflexive };
 	    my $j = $tcm01->{ $v };
-	    if (
-		# $tcm->is_transitive($u, $v)
-		# $tcm->[0]->get($u, $v)
-		vec($tcm00i, $j, 1)
-	       ) {
-		my $val = $g->_get_edge_attribute($u, $v, $attr);
-		$val = $u eq $v ? 0 : 1 if !defined $val;
-		$tcg->set_edge_attribute($u, $v, $attr, $val);
-	    }
+	    $tcg->add_edge($u, $v) if vec($tcm00i, $j, 1);
+				      # $tcm->is_transitive($u, $v)
+				      # $tcm->[0]->get($u, $v)
 	}
     }
     $tcg->set_graph_attribute('_tcm', $tcm);

@@ -1324,21 +1324,6 @@ sub get_edge_attributes_by_id {
     scalar $g->[ _E ]->_get_path_attrs( &_vertex_ids, $id );
 }
 
-sub _get_edge_attribute { # Fast path; less checks.
-    my $g = $_[0];
-    my $attr = pop;
-    my $E = $g->[ _E ];
-    my $f = $E->[ _f ];
-    if ($E->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@_ = ($g, sort @_[1..$#_]) if $f & _UNORD;
-	my $s = $E->[ _s ];
-	return unless exists $s->{ $_[1] } && exists $s->{ $_[1] }->{ $_[2] };
-    } else {
-	return unless &has_edge;
-    }
-    $E->_get_path_attr( &_vertex_ids, $attr );
-}
-
 sub get_edge_attribute {
     my $g = $_[0];
     &expect_non_multiedged;
