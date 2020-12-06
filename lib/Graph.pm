@@ -305,7 +305,7 @@ sub _vertices05 {
     my $g = $_[0];
     my @v = $g->[ _V ]->paths( @_[1..$#_] );
     return scalar @v if !wantarray;
-    map ref $_ eq 'ARRAY' ? @$_ : $_, @v;
+    map @$_, @v;
 }
 
 sub vertices {
