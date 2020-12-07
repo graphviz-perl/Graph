@@ -237,42 +237,14 @@ sub del_path {
     return 1;
 }
 
-# $vertices = hash index => array-ref of vertex-names
-# $this_path = tree-hash of vertex-name to next depth or leaf=index
-sub _rename_path {
-    my ($from, $to, $vertices, $this_path, $depth, $found) = @_;
-    if (!ref $this_path) {
-	# at a leaf
-	return if !defined $found;
-	$vertices->[ $this_path ][ $found ] = $to;
-	return;
-    }
-    my %recurse = map +($_ => undef), keys %$this_path;
-    if (exists $recurse{ $from }) {
-	delete $recurse{ $from };
-	my $tp = $this_path->{ $to } = delete $this_path->{ $from };
-	# recurse with $found defined
-	_rename_path($from, $to, $vertices, $tp, $depth + 1, $depth);
-    }
-    # recurse with $found not further specified
-    _rename_path($from, $to, $vertices, $this_path->{ $_ }, $depth + 1, $found)
-	for keys %recurse;
-}
-
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _a ] > 1; # arity > 1, all integers, no names
-    if ($m->_is_MULTI and !$m->_is_HYPER) {
-	my ($n, $f, $a, $i, $s, $p) = @$m;
-	return 0 unless exists $s->{ $from };
-	$i->[ $s->{ $from }[0] ][0] = $to;
-	$s->{ $to } = delete $s->{ $from };
-	return 1;
-    }
-    for my $node_length (0..$#{$m->[ _s ]}) {
-	next unless my $this_path = $m->[ _s ][$node_length];
-	_rename_path($from, $to, $m->[ _i ], $this_path, 0);
-    }
+    my ($n, $f, $a, $i, $s, $p) = @$m;
+    return 0 unless exists $s->{ $from };
+    $i->[ $s->{ $from }[0] ][0] = $to;
+    $s->{ $to } = delete $s->{ $from };
+    return 1;
 }
 
 sub del_path_by_multi_id {
