@@ -725,14 +725,9 @@ sub delete_vertex {
     return $g if @_ != 2;
     my $V = $g->[ _V ];
     return $g unless $V->has_path( $_[1] );
-    if (@_ == 2 && !($g->[ _f ] & (_HYPER|_REF|_UNIQ))) {
-      $g->delete_edge($_[1], $_) for $g->successors($_[1]);
-      $g->delete_edge($_, $_[1]) for $g->predecessors($_[1]);
-    } else {
-      # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
-      my $E = $g->[ _E ];
-      $E->_del_id( $_->[ 0 ] ) for &_edges_at;
-    }
+    # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
+    my $E = $g->[ _E ];
+    $E->_del_id( $_->[ 0 ] ) for &_edges_at;
     $V->del_path( $_[1] );
     $g->[ _G ]++;
     return $g;

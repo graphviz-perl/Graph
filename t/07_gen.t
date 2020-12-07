@@ -5,19 +5,24 @@ use Graph;
 
 my $g = Graph->new;
 
-is( $g->[1], 0 ); # [1] is the generational index
+gen_changed( $g->[1] ); # [1] is the generational index
 ok( $g->add_vertex('a') );
-is( $g->[1], 1 );
+gen_changed( $g->[1] );
 ok( $g->add_vertex('b') );
-is( $g->[1], 2 );
+gen_changed( $g->[1] );
 ok( $g->add_edge('a', 'b') );
-is( $g->[1], 3 );
+gen_changed( $g->[1] );
 ok( $g->delete_edge('a', 'b') );
-is( $g->[1], 4 );
+gen_changed( $g->[1] );
 ok( $g->add_edge('a', 'c') );
-is( $g->[1], 6 );
+gen_changed( $g->[1] );
 ok( $g->delete_vertex('a') );
-is( $g->[1], 7 );
+gen_changed( $g->[1] );
 ok( $g->delete_vertex('b') );
-is( $g->[1], 8 ); # delete vertex
+gen_changed( $g->[1] ); # delete vertex
 
+my $gen_old;
+sub gen_changed {
+  isnt $_[0], $gen_old;
+  $gen_old = $_[0],;
+}
