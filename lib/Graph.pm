@@ -139,11 +139,11 @@ sub _opt_unknown {
 }
 
 sub new {
-    my $class = shift;
+    my ($class, @args) = @_;
     my $gflags = 0;
     my $vflags = _UNORDUNIQ;
     my $eflags = 0;
-    my %opt = _get_options( \@_ );
+    my %opt = _get_options( \@args );
 
     if (ref $class && $class->isa('Graph')) {
 	my %existing;
@@ -1472,13 +1472,13 @@ sub transpose_graph {
 *transpose = \&transpose_graph;
 
 sub complete_graph {
-    my $g = shift;
-    my $c = $g->new( directed => $g->directed );
-    my @v = $g->_vertices05;
-    for (my $i = 0; $i <= $#v; $i++ ) {
-	for (my $j = $i + 1; $j <= $#v; $j++ ) {
+    my $directed = &is_directed;
+    my $c = &new;
+    my @v = &_vertices05;
+    for (my $i = $#v; $i >= 0; $i-- ) {
+	for (my $j = $i - 1; $j >= 0; $j-- ) {
 	    $c->add_edge($v[$i], $v[$j]);
-	    $c->add_edge($v[$j], $v[$i]) if !$g->is_undirected;
+	    $c->add_edge($v[$j], $v[$i]) if $directed;
 	}
     }
     return $c;
@@ -1487,16 +1487,8 @@ sub complete_graph {
 *complement = \&complement_graph;
 
 sub complement_graph {
-    my $g = shift;
-    my $c = $g->new( directed => $g->directed );
-    $c->add_vertices(my @v = $g->_vertices05);
-    for (my $i = 0; $i <= $#v; $i++ ) {
-	for (my $j = $i + 1; $j <= $#v; $j++ ) {
-	    $c->add_edge($v[$i], $v[$j]) if !$g->has_edge($v[$i], $v[$j]);
-	    $c->add_edge($v[$j], $v[$i])
-		if !$g->is_undirected and !$g->has_edge($v[$j], $v[$i]);
-	}
-    }
+    my $c = &complete_graph;
+    $c->delete_edge(@$_) for &edges;
     return $c;
 }
 
