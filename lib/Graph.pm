@@ -627,6 +627,7 @@ sub edges_from {
 }
 
 sub edges_to {
+    goto &edges_from if &is_undirected;
     my $g = $_[0];
     map $g->_edges_id_path($_), &_edges_to;
 }
@@ -640,7 +641,8 @@ sub predecessors {
 }
 
 sub _all_cessors {
-    my ($g, $method, @init) = @_;
+    my $method = pop;
+    my ($g, @init) = @_;
     my %todo;
     @todo{@init} = @init;
     my %seen;
@@ -650,25 +652,25 @@ sub _all_cessors {
       for my $t (values %todo) {
         $seen{$t} = delete $todo{$t};
         for my $v ($g->$method($t)) {
-	  $self{$v} = $v if exists $init{$v};
+	  $self{$v} = undef if exists $init{$v};
 	  $todo{$v} = $v unless exists $seen{$v};
         }
       }
     }
-    delete @seen{ grep !($g->has_edge($_, $_) || exists $self{$_}), @init };
+    delete @seen{ grep !(exists $self{$_} || $g->has_edge($_, $_)), @init };
     return values %seen;
 }
 
 sub all_successors {
     &expect_directed;
-    my $g = shift;
-    return $g->_all_cessors('successors', @_);
+    push @_, 'successors';
+    goto &_all_cessors;
 }
 
 sub all_predecessors {
     &expect_directed;
-    my $g = shift;
-    return $g->_all_cessors('predecessors', @_);
+    push @_, 'predecessors';
+    goto &_all_cessors;
 }
 
 sub neighbours {
@@ -691,8 +693,8 @@ sub all_neighbours {
     my %n;
     my $o = 0;
     while (1) {
-      my @p = $g->_all_cessors('predecessors', @v);
-      my @s = $g->_all_cessors('successors', @v);
+      my @p = $g->_all_cessors(@v, 'predecessors');
+      my @s = $g->_all_cessors(@v, 'successors');
       @n{@p} = @p;
       @n{@s} = @s;
       @v = values %n;
@@ -706,8 +708,7 @@ sub all_neighbours {
 *all_neighbors = \&all_neighbours;
 
 sub all_reachable {
-    my $g = shift;
-    $g->directed ? $g->all_successors(@_) : $g->all_neighbors(@_);
+    &directed ? goto &all_successors : goto &all_neighbors;
 }
 
 sub delete_edge {

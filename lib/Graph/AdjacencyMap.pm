@@ -307,6 +307,7 @@ sub _successors {
 
 sub _predecessors {
     my ($E, $g) = @_;
+    goto &_successors if $g->is_undirected;
     return $g->_edges_to( @_[2..$#_] ) if !wantarray;
     my $V = $g->[ _V ];
     my @v = map +(
