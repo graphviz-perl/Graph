@@ -36,8 +36,8 @@ sub _V () { 2 } # Vertices.
 sub _E () { 3 } # Edges.
 sub _A () { 4 } # Attributes.
 sub _U () { 5 } # Union-Find.
-sub _S () { 6 } # Successors.
-sub _P () { 7 } # Predecessors.
+sub _S () { 6 } # Successors cache, [1] is the graph generation
+sub _P () { 7 } # Predecessors cache, not made if undirected
 
 my $Inf;
 
@@ -555,46 +555,35 @@ sub _edges_at {
     return wantarray ? @e : $en;
 }
 
-sub _edges {
+sub _edge_cache {
     my $g = $_[0];
-    my $n = pop;
-    my $i = $n == _S ? 0 : -1;  # _edges_from() or _edges_to()
-    my $V = $g->[ _V ];
-    my $E = $g->[ _E ];
-    my $N = $g->[ $n ];
-    unless (defined $N && $N->[ 0 ] == $g->[ _G ]) {
-	$g->[ $n ]->[ 1 ] = { };
-	$N = $g->[ $n ];
-	my $u = $E->[ _f ] & _UNORD;
-	my $Ei = $E->_ids;
-	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
-	    next if !defined(my $ev = $Ei->[$ei]);
-	    next unless @$ev;
-	    my $e = [ $ei, $ev ];
-	    if ($u) {
-		push @{ $N->[ 1 ]->{ $ev->[ 0] } }, $e;
-		push @{ $N->[ 1 ]->{ $ev->[-1] } }, $e;
-	    } else {
-		my $e = [ $ei, $ev ];
-		push @{ $N->[ 1 ]->{ $ev->[$i] } }, $e;
-	    }
+    return if $g->[ _S ] && $g->[ _S ][1] == $g->[ _G ];
+    my $directed = &is_directed;
+    $g->[ _S ] = [ my $S0 = {}, $g->[ _G ] ];
+    $g->[ _P ] = [ my $P0 = {} ]; # only store generation in _S
+    my $Ei = $g->[ _E ]->_ids;
+    for (my $ei = $#$Ei; $ei >= 0; $ei--) {
+	next if !defined(my $ev = $Ei->[$ei]);
+	next unless @$ev;
+	my $e = [ $ei, $ev ];
+	if ($directed) {
+	    push @{ $S0->{ $ev->[ 0] } }, $e;
+	    push @{ $P0->{ $ev->[-1] } }, $e;
+	} else {
+	    push @{ $S0->{ $ev->[ 0] } }, $e;
+	    push @{ $S0->{ $ev->[-1] } }, [ $ei, [ reverse @$ev ] ];
 	}
-	$N->[ 0 ] = $g->[ _G ];
     }
-    my @e;
-    my @at = @_[1..$#_];
-    my %at; @at{@at} = ();
-    for my $v ( @at ) {
-	my $vi = $V->_get_path_id( $v );
-	next unless defined $vi && exists $N->[ 1 ]->{ $vi };
-	push @e, @{ $N->[ 1 ]->{ $vi } };
-    }
-    if (wantarray && &is_undirected) {
-	my @i = map $V->_get_path_id( $_ ), @_[1..$#_];
-	$_ = [ $_->[ 0 ], [ reverse @{ $_->[ 1 ] } ] ]
-	    for grep $_->[ 1 ]->[ $i ] != $i[ $i ], @e;
-    }
-    return @e;
+}
+
+sub _edges {
+    my $n = pop;
+    my ($g, @at) = @_;
+    &_edge_cache;
+    my $N0 = $g->[ $n ][0];
+    @at = values %{{ @at, reverse @at }};
+    my $V = $g->[ _V ];
+    map @{ $N0->{ $_ } }, grep defined && exists $N0->{ $_ }, map $V->_get_path_id( $_ ), @at;
 }
 
 sub _edges_from {
@@ -603,6 +592,7 @@ sub _edges_from {
 }
 
 sub _edges_to {
+    goto &_edges_from if &is_undirected;
     push @_, _P;
     goto &_edges;
 }
@@ -677,7 +667,7 @@ sub neighbours {
     my $g = $_[0];
     my $V  = $g->[ _V ];
     my @s = map { my @v = @{ $_->[ 1 ] }; shift @v; @v } &_edges_from;
-    my @p = map { my @v = @{ $_->[ 1 ] }; pop   @v; @v } &_edges_to;
+    my @p = map { my @v = @{ $_->[ 1 ] }; pop   @v; @v } &_edges_to if &is_directed;
     my %n;
     @n{ @s } = @s;
     @n{ @p } = @p;
