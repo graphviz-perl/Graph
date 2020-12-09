@@ -406,11 +406,9 @@ sub has_edge {
 
 sub _edges05 {
     my $g = shift;
-    my $V = $g->[ _V ];
     my @e = $g->[ _E ]->paths( @_ );
     return @e if !wantarray;
-    map [ map { my @v = $V->_get_id_path($_);
-		@v == 1 ? $v[0] : \@v } @$_ ], @e;
+    _edges_id_paths($g->[ _V ], \@e);
 }
 
 *unique_edges = \&_edges05;
@@ -598,31 +596,27 @@ sub _edges_to {
     goto &_edges;
 }
 
-sub _edges_id_path {
-    my $g = shift;
-    my $V  = $g->[ _V ];
-    [ map { my @v = $V->_get_id_path($_);
-	    @v == 1 ? $v[0] : [ @v ] }
-          @$_ ];
+sub _edges_id_paths {
+    my ($V, $list) = @_;
+    map [ map { my @v = $V->_get_id_path($_);
+	    @v == 1 ? $v[0] : \@v }
+          @$_ ], @$list;
 }
 
 sub edges_at {
     goto &_edges_at if !wantarray;
-    my $g = $_[0];
-    map $g->_edges_id_path($_), &_edges_at;
+    _edges_id_paths($_[0]->[ _V ], [ &_edges_at ]);
 }
 
 sub edges_from {
     goto &_edges_from if !wantarray;
-    my $g = $_[0];
-    map $g->_edges_id_path($_), &_edges_from;
+    _edges_id_paths($_[0]->[ _V ], [ &_edges_from ]);
 }
 
 sub edges_to {
     goto &edges_from if &is_undirected;
     goto &_edges_to if !wantarray;
-    my $g = $_[0];
-    map $g->_edges_id_path($_), &_edges_to;
+    _edges_id_paths($_[0]->[ _V ], [ &_edges_to ]);
 }
 
 sub successors {
@@ -676,7 +670,7 @@ sub neighbours {
     my %n;
     @n{ @s } = @s;
     @n{ @p } = @p;
-    map $V->_get_id_path($_), keys %n;
+    map @$_, _edges_id_paths($V, [ map [$_], keys %n ]);
 }
 
 *neighbors = \&neighbours;
