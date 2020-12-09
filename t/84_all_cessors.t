@@ -4,248 +4,153 @@ use Test::More tests => 181;
 use Graph::Directed;
 use Graph::Undirected;
 
+sub test_graphs {
+  my ($graphs, $methods, $label) = @_;
+  for my $m (sort keys %$methods) {
+    my $this_m = $methods->{$m};
+    for my $k (sort keys %$this_m) {
+      my $g = $graphs->{$k};
+      my $gs = $g->stringify;
+      for my $call ( @{ $this_m->{$k} } ) {
+	my ($arg, $expected) = @$call;
+	is "@{[sort $g->$m($arg)]}", $expected, "$label $k($gs) $m ($arg)";
+      }
+    }
+  }
+}
+
+sub make_graphs {
+    my ($spec, $class, $l) = @_;
+    +{ map {
+	my ($V, $E) = @{ $spec->{$_} };
+	my $g = $class->new;
+	$g->add_vertices(@$V);
+	$g->add_edge(@$_) for @$E;
+	($l.$_ => $g);
+    } keys %$spec };
+}
+
+my %V_E = (
+    0 => [ [], [] ],
+    1 => [ [qw(a)], [] ],
+    '2a' => [ [qw(a b)], [] ],
+    '2b' => [ [], [[qw(a b)]] ],
+    '2c' => [ [], [[qw(a b)], [qw(b a)]] ],
+    3 => [ [], [[qw(a b)], [qw(a c)], [qw(b d)], [qw(b e)], [qw(c f)], [qw(c g)]] ],
+    4 => [ [], [[qw(a b)], [qw(b a)], [qw(a a)]] ],
+    5 => [ [], [[qw(a a)]] ],
+);
+
 {
-    my $d0  = Graph::Directed->new;
-    my $d1  = Graph::Directed->new;
-    my $d2a = Graph::Directed->new;
-    my $d2b = Graph::Directed->new;
-    my $d2c = Graph::Directed->new;
-    my $d3  = Graph::Directed->new;
-    my $d4  = Graph::Directed->new;
-    my $d5  = Graph::Directed->new;
-
-    $d1->add_vertex('a');
-    $d2a->add_vertices('a', 'b');
-    $d2b->add_edge('a', 'b');
-    $d2c->add_edge('a', 'b');
-    $d2c->add_edge('b', 'a');
-    $d3->add_edge('a', 'b');
-    $d3->add_edge('a', 'c');
-    $d3->add_edge('b', 'd');
-    $d3->add_edge('b', 'e');
-    $d3->add_edge('c', 'f');
-    $d3->add_edge('c', 'g');
-    $d4->add_edge('a', 'b');
-    $d4->add_edge('b', 'a');
-    $d4->add_edge('a', 'a');
-    $d5->add_edge('a', 'a');
-
-    is("@{[sort $d0->successors('a')]}",    "");
-    is("@{[sort $d1->successors('a')]}",    "");
-    is("@{[sort $d2a->successors('a')]}",   "");
-    is("@{[sort $d2a->successors('b')]}",   "");
-    is("@{[sort $d2b->successors('a')]}",   "b");
-    is("@{[sort $d2b->successors('b')]}",   "");
-    is("@{[sort $d2c->successors('a')]}",   "b");
-    is("@{[sort $d2c->successors('b')]}",   "a");
-    is("@{[sort $d3->successors('a')]}",    "b c");
-    is("@{[sort $d3->successors('b')]}",    "d e");
-    is("@{[sort $d3->successors('c')]}",    "f g");
-    is("@{[sort $d3->successors('d')]}",    "");
-    is("@{[sort $d3->successors('e')]}",    "");
-    is("@{[sort $d3->successors('f')]}",    "");
-    is("@{[sort $d3->successors('g')]}",    "");
-    is("@{[sort $d4->successors('a')]}",    "a b");
-    is("@{[sort $d4->successors('b')]}",    "a");
-    is("@{[sort $d5->successors('a')]}",    "a");
-
-    is("@{[sort $d0->all_successors('a')]}",    "");
-    is("@{[sort $d1->all_successors('a')]}",    "");
-    is("@{[sort $d2a->all_successors('a')]}",   "");
-    is("@{[sort $d2a->all_successors('b')]}",   "");
-    is("@{[sort $d2b->all_successors('a')]}",   "b");
-    is("@{[sort $d2b->all_successors('b')]}",   "");
-    is("@{[sort $d2c->all_successors('a')]}",   "a b");
-    is("@{[sort $d2c->all_successors('b')]}",   "a b");
-    is("@{[sort $d3->all_successors('a')]}",    "b c d e f g");
-    is("@{[sort $d3->all_successors('b')]}",    "d e");
-    is("@{[sort $d3->all_successors('c')]}",    "f g");
-    is("@{[sort $d3->all_successors('d')]}",    "");
-    is("@{[sort $d3->all_successors('e')]}",    "");
-    is("@{[sort $d3->all_successors('f')]}",    "");
-    is("@{[sort $d3->all_successors('g')]}",    "");
-    is("@{[sort $d4->all_successors('a')]}",    "a b");
-    is("@{[sort $d4->all_successors('b')]}",    "a b");
-    is("@{[sort $d5->all_successors('a')]}",    "a");
-
-    is("@{[sort $d0->predecessors('a')]}",    "");
-    is("@{[sort $d1->predecessors('a')]}",    "");
-    is("@{[sort $d2a->predecessors('a')]}",   "");
-    is("@{[sort $d2a->predecessors('b')]}",   "");
-    is("@{[sort $d2b->predecessors('a')]}",   "");
-    is("@{[sort $d2b->predecessors('b')]}",   "a");
-    is("@{[sort $d2c->predecessors('a')]}",   "b");
-    is("@{[sort $d2c->predecessors('b')]}",   "a");
-    is("@{[sort $d3->predecessors('a')]}",    "");
-    is("@{[sort $d3->predecessors('b')]}",    "a");
-    is("@{[sort $d3->predecessors('c')]}",    "a");
-    is("@{[sort $d3->predecessors('d')]}",    "b");
-    is("@{[sort $d3->predecessors('e')]}",    "b");
-    is("@{[sort $d3->predecessors('f')]}",    "c");
-    is("@{[sort $d3->predecessors('g')]}",    "c");
-    is("@{[sort $d4->predecessors('a')]}",    "a b");
-    is("@{[sort $d4->predecessors('b')]}",    "a");
-    is("@{[sort $d5->predecessors('a')]}",    "a");
-
-    is("@{[sort $d0->all_predecessors('a')]}",    "");
-    is("@{[sort $d1->all_predecessors('a')]}",    "");
-    is("@{[sort $d2a->all_predecessors('a')]}",   "");
-    is("@{[sort $d2a->all_predecessors('b')]}",   "");
-    is("@{[sort $d2b->all_predecessors('a')]}",   "");
-    is("@{[sort $d2b->all_predecessors('b')]}",   "a");
-    is("@{[sort $d2c->all_predecessors('a')]}",   "a b");
-    is("@{[sort $d2c->all_predecessors('b')]}",   "a b");
-    is("@{[sort $d3->all_predecessors('a')]}",    "");
-    is("@{[sort $d3->all_predecessors('b')]}",    "a");
-    is("@{[sort $d3->all_predecessors('c')]}",    "a");
-    is("@{[sort $d3->all_predecessors('d')]}",    "a b");
-    is("@{[sort $d3->all_predecessors('e')]}",    "a b");
-    is("@{[sort $d3->all_predecessors('f')]}",    "a c");
-    is("@{[sort $d3->all_predecessors('g')]}",    "a c");
-    is("@{[sort $d4->all_predecessors('a')]}",    "a b");
-    is("@{[sort $d4->all_predecessors('b')]}",    "a b");
-    is("@{[sort $d5->all_predecessors('a')]}",    "a");
-
-    is("@{[sort $d0->all_neighbors('a')]}",    "");
-    is("@{[sort $d1->all_neighbors('a')]}",    "");
-    is("@{[sort $d2a->all_neighbors('a')]}",   "");
-    is("@{[sort $d2a->all_neighbors('b')]}",   "");
-    is("@{[sort $d2b->all_neighbors('a')]}",   "b");
-    is("@{[sort $d2b->all_neighbors('b')]}",   "a");
-    is("@{[sort $d2c->all_neighbors('a')]}",   "b");
-    is("@{[sort $d2c->all_neighbors('b')]}",   "a");
-    is("@{[sort $d3->all_neighbors('a')]}",    "b c d e f g");
-    is("@{[sort $d3->all_neighbors('b')]}",    "a c d e f g");
-    is("@{[sort $d3->all_neighbors('c')]}",    "a b d e f g");
-    is("@{[sort $d3->all_neighbors('d')]}",    "a b c e f g");
-    is("@{[sort $d3->all_neighbors('e')]}",    "a b c d f g");
-    is("@{[sort $d3->all_neighbors('f')]}",    "a b c d e g");
-    is("@{[sort $d3->all_neighbors('g')]}",    "a b c d e f");
-    is("@{[sort $d4->all_neighbors('a')]}",    "a b");
-    is("@{[sort $d4->all_neighbors('b')]}",    "a");
-    is("@{[sort $d5->all_neighbors('a')]}",    "a");
-
-    is("@{[sort $d0->all_reachable('a')]}",    "");
-    is("@{[sort $d1->all_reachable('a')]}",    "");
-    is("@{[sort $d2a->all_reachable('a')]}",   "");
-    is("@{[sort $d2a->all_reachable('b')]}",   "");
-    is("@{[sort $d2b->all_reachable('a')]}",   "b");
-    is("@{[sort $d2b->all_reachable('b')]}",   "");
-    is("@{[sort $d2c->all_reachable('a')]}",   "a b");
-    is("@{[sort $d2c->all_reachable('b')]}",   "a b");
-    is("@{[sort $d3->all_reachable('a')]}",    "b c d e f g");
-    is("@{[sort $d3->all_reachable('b')]}",    "d e");
-    is("@{[sort $d3->all_reachable('c')]}",    "f g");
-    is("@{[sort $d3->all_reachable('d')]}",    "");
-    is("@{[sort $d3->all_reachable('e')]}",    "");
-    is("@{[sort $d3->all_reachable('f')]}",    "");
-    is("@{[sort $d3->all_reachable('g')]}",    "");
-    is("@{[sort $d4->all_reachable('a')]}",    "a b");
-    is("@{[sort $d4->all_reachable('b')]}",    "a b");
-    is("@{[sort $d5->all_reachable('a')]}",    "a");
+    my $dg = make_graphs(\%V_E, 'Graph::Directed', 'd');
+    test_graphs($dg, {
+	successors => {
+	    d0 => [ ['a', ""] ],
+	    d1 => [ ['a', ""] ],
+	    d2a => [ ['a', ""], ['b', ""] ],
+	    d2b => [ ['a', "b"], ['b', ""] ],
+	    d2c => [ ['a', "b"], ['b', "a"] ],
+	    d3 => [ ['a', "b c"], ['b', "d e"], ['c', "f g"], ['d', ""], ['e', ""], ['f', ""], ['g', ""] ],
+	    d4 => [ ['a', "a b"], ['b', "a"] ],
+	    d5 => [ ['a', "a"] ],
+	},
+	all_successors => {
+	    d0 => [ ['a', ""] ],
+	    d1 => [ ['a', ""] ],
+	    d2a => [ ['a', ""], ['b', ""] ],
+	    d2b => [ ['a', "b"], ['b', ""] ],
+	    d2c => [ ['a', "a b"], ['b', "a b"] ],
+	    d3 => [ ['a', "b c d e f g"], ['b', "d e"], ['c', "f g"], ['d', ""], ['e', ""], ['f', ""], ['g', ""] ],
+	    d4 => [ ['a', "a b"], ['b', "a b"] ],
+	    d5 => [ ['a', "a"] ],
+	},
+	predecessors => {
+	    d0 => [ ['a', ""] ],
+	    d1 => [ ['a', ""] ],
+	    d2a => [ ['a', ""], ['b', ""] ],
+	    d2b => [ ['a', ""], ['b', "a"] ],
+	    d2c => [ ['a', "b"], ['b', "a"] ],
+	    d3 => [ ['a', ""], ['b', "a"], ['c', "a"], ['d', "b"], ['e', "b"], ['f', "c"], ['g', "c"] ],
+	    d4 => [ ['a', "a b"], ['b', "a"] ],
+	    d5 => [ ['a', "a"] ],
+	},
+	all_predecessors => {
+	    d0 => [ ['a', ""] ],
+	    d1 => [ ['a', ""] ],
+	    d2a => [ ['a', ""], ['b', ""] ],
+	    d2b => [ ['a', ""], ['b', "a"] ],
+	    d2c => [ ['a', "a b"], ['b', "a b"] ],
+	    d3 => [ ['a', ""], ['b', "a"], ['c', "a"], ['d', "a b"], ['e', "a b"], ['f', "a c"], ['g', "a c"] ],
+	    d4 => [ ['a', "a b"], ['b', "a b"] ],
+	    d5 => [ ['a', "a"] ],
+	},
+	all_neighbors => {
+	    d0 => [ ['a', ""] ],
+	    d1 => [ ['a', ""] ],
+	    d2a => [ ['a', ""], ['b', ""] ],
+	    d2b => [ ['a', "b"], ['b', "a"] ],
+	    d2c => [ ['a', "b"], ['b', "a"] ],
+	    d3 => [ ['a', "b c d e f g"], ['b', "a c d e f g"], ['c', "a b d e f g"], ['d', "a b c e f g"], ['e', "a b c d f g"], ['f', "a b c d e g"], ['g', "a b c d e f"] ],
+	    d4 => [ ['a', "a b"], ['b', "a"] ],
+	    d5 => [ ['a', "a"] ],
+	},
+	all_reachable => {
+	    d0 => [ ['a', ""] ],
+	    d1 => [ ['a', ""] ],
+	    d2a => [ ['a', ""], ['b', ""] ],
+	    d2b => [ ['a', "b"], ['b', ""] ],
+	    d2c => [ ['a', "a b"], ['b', "a b"] ],
+	    d3 => [ ['a', "b c d e f g"], ['b', "d e"], ['c', "f g"], ['d', ""], ['e', ""], ['f', ""], ['g', ""] ],
+	    d4 => [ ['a', "a b"], ['b', "a b"] ],
+	    d5 => [ ['a', "a"] ],
+	},
+    }, 'directed');
 }
 
 {
-    my $u0  = Graph::Undirected->new;
-    my $u1  = Graph::Undirected->new;
-    my $u2a = Graph::Undirected->new;
-    my $u2b = Graph::Undirected->new;
-    my $u2c = Graph::Undirected->new;
-    my $u3  = Graph::Undirected->new;
-    my $u4  = Graph::Undirected->new;
-    my $u5  = Graph::Undirected->new;
-
-    $u1->add_vertex('a');
-    $u2a->add_vertices('a', 'b');
-    $u2b->add_edge('a', 'b');
-    $u2c->add_edge('a', 'b');
-    $u2c->add_edge('b', 'a');
-    $u3->add_edge('a', 'b');
-    $u3->add_edge('a', 'c');
-    $u3->add_edge('b', 'd');
-    $u3->add_edge('b', 'e');
-    $u3->add_edge('c', 'f');
-    $u3->add_edge('c', 'g');
-    $u4->add_edge('a', 'b');
-    $u4->add_edge('b', 'a');
-    $u4->add_edge('a', 'a');
-    $u5->add_edge('a', 'a');
-
-    is("@{[sort $u0->successors('a')]}",    "");
-    is("@{[sort $u1->successors('a')]}",    "");
-    is("@{[sort $u2a->successors('a')]}",   "");
-    is("@{[sort $u2a->successors('b')]}",   "");
-    is("@{[sort $u2b->successors('a')]}",   "b");
-    is("@{[sort $u2b->successors('b')]}",   "a");
-    is("@{[sort $u2c->successors('a')]}",   "b");
-    is("@{[sort $u2c->successors('b')]}",   "a");
-    is("@{[sort $u3->successors('a')]}",    "b c");
-    is("@{[sort $u3->successors('b')]}",    "a d e");
-    is("@{[sort $u3->successors('c')]}",    "a f g");
-    is("@{[sort $u3->successors('d')]}",    "b");
-    is("@{[sort $u3->successors('e')]}",    "b");
-    is("@{[sort $u3->successors('f')]}",    "c");
-    is("@{[sort $u3->successors('g')]}",    "c");
-    is("@{[sort $u4->successors('a')]}",    "a b");
-    is("@{[sort $u4->successors('b')]}",    "a");
-    is("@{[sort $u5->successors('a')]}",    "a");
-
-    is("@{[sort $u0->predecessors('a')]}",    "");
-    is("@{[sort $u1->predecessors('a')]}",    "");
-    is("@{[sort $u2a->predecessors('a')]}",   "");
-    is("@{[sort $u2a->predecessors('b')]}",   "");
-    is("@{[sort $u2b->predecessors('a')]}",   "b");
-    is("@{[sort $u2b->predecessors('b')]}",   "a");
-    is("@{[sort $u2c->predecessors('a')]}",   "b");
-    is("@{[sort $u2c->predecessors('b')]}",   "a");
-    is("@{[sort $u3->predecessors('a')]}",    "b c");
-    is("@{[sort $u3->predecessors('b')]}",    "a d e");
-    is("@{[sort $u3->predecessors('c')]}",    "a f g");
-    is("@{[sort $u3->predecessors('d')]}",    "b");
-    is("@{[sort $u3->predecessors('e')]}",    "b");
-    is("@{[sort $u3->predecessors('f')]}",    "c");
-    is("@{[sort $u3->predecessors('g')]}",    "c");
-    is("@{[sort $u4->predecessors('a')]}",    "a b");
-    is("@{[sort $u4->predecessors('b')]}",    "a");
-    is("@{[sort $u5->predecessors('a')]}",    "a");
-
-    is("@{[sort $u0->all_neighbors('a')]}",    "");
-    is("@{[sort $u1->all_neighbors('a')]}",    "");
-    is("@{[sort $u2a->all_neighbors('a')]}",   "");
-    is("@{[sort $u2a->all_neighbors('b')]}",   "");
-    is("@{[sort $u2b->all_neighbors('a')]}",   "b");
-    is("@{[sort $u2b->all_neighbors('b')]}",   "a");
-    is("@{[sort $u2c->all_neighbors('a')]}",   "b");
-    is("@{[sort $u2c->all_neighbors('b')]}",   "a");
-    is("@{[sort $u3->all_neighbors('a')]}",    "b c d e f g");
-    is("@{[sort $u3->all_neighbors('b')]}",    "a c d e f g");
-    is("@{[sort $u3->all_neighbors('c')]}",    "a b d e f g");
-    is("@{[sort $u3->all_neighbors('d')]}",    "a b c e f g");
-    is("@{[sort $u3->all_neighbors('e')]}",    "a b c d f g");
-    is("@{[sort $u3->all_neighbors('f')]}",    "a b c d e g");
-    is("@{[sort $u3->all_neighbors('g')]}",    "a b c d e f");
-    is("@{[sort $u4->all_neighbors('a')]}",    "a b");
-    is("@{[sort $u4->all_neighbors('b')]}",    "a");
-    is("@{[sort $u5->all_neighbors('a')]}",    "a");
-
-    is("@{[sort $u0->all_reachable('a')]}",    "");
-    is("@{[sort $u1->all_reachable('a')]}",    "");
-    is("@{[sort $u2a->all_reachable('a')]}",   "");
-    is("@{[sort $u2a->all_reachable('b')]}",   "");
-    is("@{[sort $u2b->all_reachable('a')]}",   "b");
-    is("@{[sort $u2b->all_reachable('b')]}",   "a");
-    is("@{[sort $u2c->all_reachable('a')]}",   "b");
-    is("@{[sort $u2c->all_reachable('b')]}",   "a");
-    is("@{[sort $u3->all_reachable('a')]}",    "b c d e f g");
-    is("@{[sort $u3->all_reachable('b')]}",    "a c d e f g");
-    is("@{[sort $u3->all_reachable('c')]}",    "a b d e f g");
-    is("@{[sort $u3->all_reachable('d')]}",    "a b c e f g");
-    is("@{[sort $u3->all_reachable('e')]}",    "a b c d f g");
-    is("@{[sort $u3->all_reachable('f')]}",    "a b c d e g");
-    is("@{[sort $u3->all_reachable('g')]}",    "a b c d e f");
-    is("@{[sort $u4->all_reachable('a')]}",    "a b");
-    is("@{[sort $u4->all_reachable('b')]}",    "a");
-    is("@{[sort $u5->all_reachable('a')]}",    "a");
+    my $dg = make_graphs(\%V_E, 'Graph::Undirected', 'u');
+    test_graphs($dg, {
+	successors => {
+	    u0 => [ ['a', ""] ],
+	    u1 => [ ['a', ""] ],
+	    u2a => [ ['a', ""], ['b', ""] ],
+	    u2b => [ ['a', "b"], ['b', "a"] ],
+	    u2c => [ ['a', "b"], ['b', "a"] ],
+	    u3 => [ ['a', "b c"], ['b', "a d e"], ['c', "a f g"], ['d', "b"], ['e', "b"], ['f', "c"], ['g', "c"] ],
+	    u4 => [ ['a', "a b"], ['b', "a"] ],
+	    u5 => [ ['a', "a"] ],
+	},
+	predecessors => {
+	    u0 => [ ['a', ""] ],
+	    u1 => [ ['a', ""] ],
+	    u2a => [ ['a', ""], ['b', ""] ],
+	    u2b => [ ['a', "b"], ['b', "a"] ],
+	    u2c => [ ['a', "b"], ['b', "a"] ],
+	    u3 => [ ['a', "b c"], ['b', "a d e"], ['c', "a f g"], ['d', "b"], ['e', "b"], ['f', "c"], ['g', "c"] ],
+	    u4 => [ ['a', "a b"], ['b', "a"] ],
+	    u5 => [ ['a', "a"] ],
+	},
+	all_neighbors => {
+	    u0 => [ ['a', ""] ],
+	    u1 => [ ['a', ""] ],
+	    u2a => [ ['a', ""], ['b', ""] ],
+	    u2b => [ ['a', "b"], ['b', "a"] ],
+	    u2c => [ ['a', "b"], ['b', "a"] ],
+	    u3 => [ ['a', "b c d e f g"], ['b', "a c d e f g"], ['c', "a b d e f g"], ['d', "a b c e f g"], ['e', "a b c d f g"], ['f', "a b c d e g"], ['g', "a b c d e f"] ],
+	    u4 => [ ['a', "a b"], ['b', "a"] ],
+	    u5 => [ ['a', "a"] ],
+	},
+	all_reachable => {
+	    u0 => [ ['a', ""] ],
+	    u1 => [ ['a', ""] ],
+	    u2a => [ ['a', ""], ['b', ""] ],
+	    u2b => [ ['a', "b"], ['b', "a"] ],
+	    u2c => [ ['a', "b"], ['b', "a"] ],
+	    u3 => [ ['a', "b c d e f g"], ['b', "a c d e f g"], ['c', "a b d e f g"], ['d', "a b c e f g"], ['e', "a b c d f g"], ['f', "a b c d e g"], ['g', "a b c d e f"] ],
+	    u4 => [ ['a', "a b"], ['b', "a"] ],
+	    u5 => [ ['a', "a"] ],
+	},
+    }, 'undirected');
 }
 
 {
