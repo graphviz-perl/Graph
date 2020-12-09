@@ -566,12 +566,13 @@ sub _edge_cache {
     for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	next if !defined(my $ev = $Ei->[$ei]);
 	next unless @$ev;
+	my ($f, $t) = @$ev[0, -1];
 	if ($directed) {
-	    push @{ $S0->{ $ev->[ 0] } }, $ev;
-	    push @{ $P0->{ $ev->[-1] } }, $ev;
+	    push @{ $S0->{ $f } }, $ev;
+	    push @{ $P0->{ $t } }, $ev;
 	} else {
-	    push @{ $S0->{ $ev->[ 0] } }, $ev;
-	    push @{ $S0->{ $ev->[-1] } }, [ reverse @$ev ];
+	    push @{ $S0->{ $f } }, $ev;
+	    push @{ $S0->{ $t } }, [ reverse @$ev ] if $f != $t;
 	}
     }
 }
@@ -762,6 +763,7 @@ sub in_degree {
     return undef unless @_ > 1 && &has_vertex;
     my $in = 0;
     $in += $g->get_edge_count( @$_ ) for &edges_to;
+    $in++ if &is_undirected and &is_self_loop_vertex;
     return $in;
 }
 
@@ -770,6 +772,7 @@ sub out_degree {
     return undef unless @_ > 1 && &has_vertex;
     my $out = 0;
     $out += $g->get_edge_count( @$_ ) for &edges_from;
+    $out++ if &is_undirected and &is_self_loop_vertex;
     return $out;
 }
 
