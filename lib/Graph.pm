@@ -625,34 +625,34 @@ sub predecessors {
 }
 
 sub _all_cessors {
-    my $method = pop;
+    my ($method, $self_only_if_loop) = splice @_, -2, 2;
     my ($g, @v) = @_;
     my %init;
     @init{@v} = @v;
     my %self;
+    @self{ grep $g->has_edge($_, $_), @v } = () if $self_only_if_loop;
     my (%new, %seen);
     while (1) {
 	@v = $g->$method(@v);
 	@new{@v} = @v;
-	@self{grep exists $init{$_}, @v} = ();
 	delete @new{keys %seen};
 	last if !keys %new;  # Leave if no new found.
 	@v = @seen{keys %new} = values %new;
 	%new = ();
     }
-    delete @seen{ grep !(exists $self{$_} || $g->has_edge($_, $_)), keys %init };
+    delete @seen{ grep !exists $self{$_}, keys %init } if $self_only_if_loop;
     return values %seen;
 }
 
 sub all_successors {
     &expect_directed;
-    push @_, 'successors';
+    push @_, 'successors', 0;
     goto &_all_cessors;
 }
 
 sub all_predecessors {
     &expect_directed;
-    push @_, 'predecessors';
+    push @_, 'predecessors', 0;
     goto &_all_cessors;
 }
 
@@ -670,19 +670,8 @@ sub neighbours {
 *neighbors = \&neighbours;
 
 sub all_neighbours {
-    my $g = shift;
-    my @init = @_;
-    my @v = @init;
-    my (%new, %n);
-    while (1) {
-      @v = $g->neighbours(@v);
-      @new{@v} = @v;
-      delete @new{keys %n};
-      last if !keys %new;  # Leave if no new found.
-      @v = @n{keys %new} = values %new;
-    }
-    delete @n{ grep !$g->has_edge($_, $_), @init };
-    return values %n;
+    push @_, 'neighbours', 1;
+    goto &_all_cessors;
 }
 
 *all_neighbors = \&all_neighbours;
