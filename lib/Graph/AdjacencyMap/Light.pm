@@ -182,8 +182,8 @@ sub _successors {
 	my %s; @s{ @s } = ();
 	@s = keys %s;
     }
-    my $V = $g->[ _V ];
     return @s if !wantarray;
+    my $V = $g->[ _V ];
     @s = map $V->[ _i ][ $_ ], @s;
     return @s if !($V->[ _f ] & _MULTI);
     map @$_, @s;
@@ -211,8 +211,8 @@ sub _predecessors {
 	my %p; @p{ @p } = ();
 	@p = keys %p;
     }
-    my $V = $g->[ _V ];
     return @p if !wantarray;
+    my $V = $g->[ _V ];
     @p = map $V->[ _i ][ $_ ], @p;
     return @p if !($V->[ _f ] & _MULTI);
     map @$_, @p;

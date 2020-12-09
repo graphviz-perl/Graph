@@ -607,27 +607,31 @@ sub _edges_id_path {
 }
 
 sub edges_at {
-    my $g = $_[0];
     goto &_edges_at if !wantarray;
+    my $g = $_[0];
     map $g->_edges_id_path($_), &_edges_at;
 }
 
 sub edges_from {
+    goto &_edges_from if !wantarray;
     my $g = $_[0];
     map $g->_edges_id_path($_), &_edges_from;
 }
 
 sub edges_to {
     goto &edges_from if &is_undirected;
+    goto &_edges_to if !wantarray;
     my $g = $_[0];
     map $g->_edges_id_path($_), &_edges_to;
 }
 
 sub successors {
+    goto &_edges_from if !wantarray;
     $_[0]->[ _E ]->_successors(@_);
 }
 
 sub predecessors {
+    goto &_edges_to if !wantarray;
     $_[0]->[ _E ]->_predecessors(@_);
 }
 

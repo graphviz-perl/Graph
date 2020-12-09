@@ -290,7 +290,6 @@ sub __arg {
 
 sub _successors {
     my ($E, $g) = @_;
-    return $g->_edges_from( @_[2..$#_] ) if !wantarray;
     my $V = $g->[ _V ];
     my @v = map +(
 	map $V->_get_id_path($_), @$_[ 1 .. $#$_ ]
@@ -301,8 +300,7 @@ sub _successors {
 
 sub _predecessors {
     my ($E, $g) = @_;
-    goto &_successors if $g->is_undirected;
-    return $g->_edges_to( @_[2..$#_] ) if !wantarray;
+    goto &_successors if &_is_UNORD;
     my $V = $g->[ _V ];
     my @v = map +(
 	map $V->_get_id_path($_), @$_[ 0 .. $#$_-1 ]
