@@ -81,10 +81,9 @@ use Graph::Attribute array => _A, map => 'graph';
 
 sub stringify {
     my $u = &is_undirected;
-    my $g = shift;
     my $e = $u ? '=' : '-';
-    my @s = sort map join($e, $u ? sort { "$a" cmp "$b" } @$_ : @$_), $g->_edges05;
-    push @s, sort { "$a" cmp "$b" } $g->isolated_vertices;
+    my @s = sort map join($e, $u ? sort { "$a" cmp "$b" } @$_ : @$_), &_edges05;
+    push @s, sort { "$a" cmp "$b" } &isolated_vertices;
     join(",", @s);
 }
 
@@ -306,7 +305,7 @@ sub has_vertex {
 
 sub _vertices05 {
     my $g = $_[0];
-    my @v = $g->[ _V ]->paths( @_[1..$#_] );
+    my @v = $g->[ _V ]->paths;
     return scalar @v if !wantarray;
     map @$_, @v;
 }
@@ -405,8 +404,8 @@ sub has_edge {
 }
 
 sub _edges05 {
-    my $g = shift;
-    my @e = $g->[ _E ]->paths( @_ );
+    my $g = $_[0];
+    my @e = $g->[ _E ]->paths;
     return @e if !wantarray;
     $g->[ _V ]->get_paths_by_ids(\@e);
 }
@@ -415,7 +414,7 @@ sub _edges05 {
 
 sub edges {
     my $g = $_[0];
-    my @e = $g->_edges05;
+    my @e = &_edges05;
     return @e if !(&is_multiedged || &is_countedged);
     return map +(($_) x $g->get_edge_count(@$_)), @e if wantarray;
     my $E = 0;
@@ -874,8 +873,8 @@ sub predecessorful_vertices {
 }
 
 sub isolated_vertices {
-    my $g = shift;
-    grep $g->is_isolated_vertex($_), $g->_vertices05;
+    my $g = $_[0];
+    grep $g->is_isolated_vertex($_), &_vertices05;
 }
 
 sub interior_vertices {
@@ -1316,7 +1315,7 @@ sub rename_vertices {
     my ($g, $code) = @_;
     my %seen;
     $g->rename_vertex($_, $code->($_))
-	for grep !$seen{$_}++, map ref() ? $_->[0] : $_, $g->[ _V ]->paths(@_);
+	for grep !$seen{$_}++, map ref() ? $_->[0] : $_, $g->[ _V ]->paths;
     return $g;
 }
 
@@ -1374,10 +1373,11 @@ sub ingest {
 #
 
 sub copy {
-    my $g = shift;
-    my %opt = _get_options( \@_ );
+    my ($g, @args) = @_;
+    my %opt = _get_options( \@args );
+    no strict 'refs';
     my $c =
-	(ref $g)->new(map +($_ => $g->$_ ? 1 : 0),
+	(ref $g)->new(map +($_ => &{$_} ? 1 : 0),
 		      qw(directed
 			 refvertexed
 			 countvertexed
@@ -1387,8 +1387,8 @@ sub copy {
 			 multiedged
 			 omniedged
 		         __stringified));
-    $c->add_vertex($_) for $g->isolated_vertices;
-    $c->add_edge(@$_) for $g->_edges05;
+    $c->add_vertex($_) for &isolated_vertices;
+    $c->add_edge(@$_) for &_edges05;
     return $c;
 }
 
@@ -1438,10 +1438,9 @@ sub transpose_edge {
 }
 
 sub transpose_graph {
-    my $g = shift;
-    my $t = $g->copy;
-    return $t if !$t->directed;
-    $t->transpose_edge(@$_) for $t->_edges05;
+    my $t = &copy;
+    return $t if !&directed;
+    $t->transpose_edge(@$_) for &_edges05;
     return $t;
 }
 
@@ -1864,14 +1863,12 @@ sub random_graph {
 }
 
 sub random_vertex {
-    my $g = shift;
-    my @V = $g->_vertices05;
+    my @V = &_vertices05;
     @V[rand @V];
 }
 
 sub random_edge {
-    my $g = shift;
-    my @E = $g->_edges05;
+    my @E = &_edges05;
     @E[rand @E];
 }
 
@@ -1908,7 +1905,7 @@ sub _MST_edges {
     map $_->[1],
         sort { $comparator->($a->[0], $b->[0], $a->[1], $b->[1]) }
              map [ $g->get_edge_attribute(@$_, $attribute), $_ ],
-                 $g->_edges05;
+                 &_edges05;
 }
 
 sub MST_Kruskal {
@@ -2057,10 +2054,9 @@ sub topological_sort {
 *toposort = \&topological_sort;
 
 sub _undirected_copy_compute {
-  my $g = shift;
   my $c = Graph->new(directed => 0);
-  $c->add_vertex($_) for $g->isolated_vertices; # TODO: if iv ...
-  $c->add_edge(@$_) for $g->_edges05;
+  $c->add_vertex($_) for &isolated_vertices; # TODO: if iv ...
+  $c->add_edge(@$_) for &_edges05;
   return $c;
 }
 
@@ -2073,10 +2069,9 @@ sub undirected_copy {
 
 sub directed_copy {
     &expect_undirected;
-    my $g = shift;
     my $c = Graph::Directed->new;
-    $c->add_vertex($_) for $g->isolated_vertices; # TODO: if iv ...
-    for my $e ($g->_edges05) {
+    $c->add_vertex($_) for &isolated_vertices; # TODO: if iv ...
+    for my $e (&_edges05) {
 	my @e = @$e;
 	$c->add_edge(@e);
 	$c->add_edge(reverse @e);
@@ -3146,9 +3141,9 @@ sub average_path_length {
 
 sub is_multi_graph {
     return 0 unless &is_multiedged || &is_countedged;
-    my $g = shift;
+    my $g = $_[0];
     my $multiedges = 0;
-    for my $e ($g->_edges05) {
+    for my $e (&_edges05) {
 	my ($u, @v) = @$e;
 	return 0 if grep $u eq $_, @v;
 	$multiedges++ if $g->get_edge_count(@$e) > 1;
@@ -3158,15 +3153,15 @@ sub is_multi_graph {
 
 sub is_simple_graph {
     return 1 unless &is_multiedged || &is_countedged;
-    my $g = shift;
-    return 0 if grep $g->get_edge_count(@$_) > 1, $g->_edges05;
+    my $g = $_[0];
+    return 0 if grep $g->get_edge_count(@$_) > 1, &_edges05;
     return 1;
 }
 
 sub is_pseudo_graph {
     my $m = &is_countedged || &is_multiedged;
-    my $g = shift;
-    for my $e ($g->_edges05) {
+    my $g = $_[0];
+    for my $e (&_edges05) {
 	my ($u, @v) = @$e;
 	return 1 if grep $u eq $_, @v;
 	return 1 if $m && $g->get_edge_count($u, @v) > 1;
@@ -3198,10 +3193,10 @@ sub _factorial {
 
 sub could_be_isomorphic {
     my ($g0, $g1) = @_;
-    return 0 unless $g0->vertices == $g1->vertices;
-    return 0 unless $g0->_edges05  == $g1->_edges05;
+    return 0 unless &vertices == $g1->vertices;
+    return 0 unless &_edges05  == $g1->_edges05;
     my %d0;
-    $d0{ $g0->in_degree($_) }{ $g0->out_degree($_) }++ for $g0->vertices;
+    $d0{ $g0->in_degree($_) }{ $g0->out_degree($_) }++ for &vertices;
     my %d1;
     $d1{ $g1->in_degree($_) }{ $g1->out_degree($_) }++ for $g1->vertices;
     return 0 unless keys %d0 == keys %d1;
