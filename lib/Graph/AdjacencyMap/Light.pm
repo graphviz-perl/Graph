@@ -160,64 +160,6 @@ sub rename_path {
     return 1;
 }
 
-sub __successors {
-    my ($E, $g) = @_;
-    return wantarray ? () : 0 unless defined $E->[ _s ];
-    my $V = $g->[ _V ];
-    return wantarray ? () : 0 unless defined $V && defined $V->[ _s ];
-    # my $i = $V->_get_path_id( $_[0] );
-    my $i =
-	($V->[ _f ] & _LIGHT) ?
-	    $V->[ _s ]->{ $_[2] } :
-	    $V->_get_path_id( $_[2] );
-    return wantarray ? () : 0 unless defined $i && defined $E->[ _s ]->{ $i };
-    return keys %{ $E->[ _s ]->{ $i } };
-}
-
-sub _successors {
-    my ($E, $g) = @_;
-    my @s = &__successors;
-    if ($E->[ _f ] & _UNORD) {
-	push @s, &__predecessors;
-	my %s; @s{ @s } = ();
-	@s = keys %s;
-    }
-    return @s if !wantarray;
-    my $V = $g->[ _V ];
-    @s = map $V->[ _i ][ $_ ], @s;
-    return @s if !($V->[ _f ] & _MULTI);
-    map @$_, @s;
-}
-
-sub __predecessors {
-    my ($E, $g) = @_;
-    return wantarray ? () : 0 unless defined $E->[ _p ];
-    my $V = $g->[ _V ];
-    return wantarray ? () : 0 unless defined $V && defined $V->[ _s ];
-    # my $i = $V->_get_path_id( $_[0] );
-    my $i =
-	($V->[ _f ] & _LIGHT) ?
-	    $V->[ _s ]->{ $_[2] } :
-	    $V->_get_path_id( $_[2] );
-    return wantarray ? () : 0 unless defined $i && defined $E->[ _p ]->{ $i };
-    return keys %{ $E->[ _p ]->{ $i } };
-}
-
-sub _predecessors {
-    my ($E, $g) = @_;
-    my @p = &__predecessors;
-    if ($E->[ _f ] & _UNORD) {
-	push @p, &__successors;
-	my %p; @p{ @p } = ();
-	@p = keys %p;
-    }
-    return @p if !wantarray;
-    my $V = $g->[ _V ];
-    @p = map $V->[ _i ][ $_ ], @p;
-    return @p if !($V->[ _f ] & _MULTI);
-    map @$_, @p;
-}
-
 sub __attr {
     # Major magic takes place here: we rebless the appropriate 'light'
     # map into a more complex map and then redispatch the method.

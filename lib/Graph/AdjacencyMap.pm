@@ -288,25 +288,6 @@ sub __arg {
     @_ = ($_[0], $f & _UNORD ? sort @a : @a);
 }
 
-sub _successors {
-    my ($E, $g) = @_;
-    my $V = $g->[ _V ];
-    my @v = map [ @$_[ 1 .. $#$_ ] ], $g->_edges_from( @_[2..$#_] );
-    @v = map @$_, Graph::_edges_id_paths($V, \@v);
-    return @v if !($V->[ _f ] & _MULTI);
-    map @$_, @v;
-}
-
-sub _predecessors {
-    my ($E, $g) = @_;
-    goto &_successors if &_is_UNORD;
-    my $V = $g->[ _V ];
-    my @v = map [ @$_[ 0 .. $#$_-1 ] ], $g->_edges_to( @_[2..$#_] );
-    @v = map @$_, Graph::_edges_id_paths($V, \@v);
-    return @v if !($V->[ _f ] & _MULTI);
-    map @$_, @v;
-}
-
 1;
 __END__
 =pod

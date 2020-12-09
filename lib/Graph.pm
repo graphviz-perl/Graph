@@ -621,12 +621,15 @@ sub edges_to {
 
 sub successors {
     goto &_edges_from if !wantarray;
-    $_[0]->[ _E ]->_successors(@_);
+    my @v = map [ @$_[ 1 .. $#$_ ] ], &_edges_from;
+    map @$_, _edges_id_paths($_[0]->[ _V ], \@v);
 }
 
 sub predecessors {
     goto &_edges_to if !wantarray;
-    $_[0]->[ _E ]->_predecessors(@_);
+    goto &successors if &is_undirected;
+    my @v = map [ @$_[ 0 .. $#$_-1 ] ], &_edges_to;
+    map @$_, _edges_id_paths($_[0]->[ _V ], \@v);
 }
 
 sub _all_cessors {
