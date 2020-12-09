@@ -547,7 +547,7 @@ sub _edges_at {
 	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	    next if !defined(my $ev = $Ei->[$ei]);
 	    if (wantarray) {
-		push @e, [ $ei, $ev ] for grep $_ == $vi && !$ev{$ei}++, @$ev;
+		push @e, $ev for grep $_ == $vi && !$ev{$ei}++, @$ev;
 	    } else {
 		$en += grep $_ == $vi && !$ev{$ei}++, @$ev;
 	    }		    
@@ -566,13 +566,12 @@ sub _edge_cache {
     for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	next if !defined(my $ev = $Ei->[$ei]);
 	next unless @$ev;
-	my $e = [ $ei, $ev ];
 	if ($directed) {
-	    push @{ $S0->{ $ev->[ 0] } }, $e;
-	    push @{ $P0->{ $ev->[-1] } }, $e;
+	    push @{ $S0->{ $ev->[ 0] } }, $ev;
+	    push @{ $P0->{ $ev->[-1] } }, $ev;
 	} else {
-	    push @{ $S0->{ $ev->[ 0] } }, $e;
-	    push @{ $S0->{ $ev->[-1] } }, [ $ei, [ reverse @$ev ] ];
+	    push @{ $S0->{ $ev->[ 0] } }, $ev;
+	    push @{ $S0->{ $ev->[-1] } }, [ reverse @$ev ];
 	}
     }
 }
@@ -603,7 +602,7 @@ sub _edges_id_path {
     my $V  = $g->[ _V ];
     [ map { my @v = $V->_get_id_path($_);
 	    @v == 1 ? $v[0] : [ @v ] }
-          @{ $_[0]->[1] } ];
+          @$_ ];
 }
 
 sub edges_at {
@@ -667,8 +666,8 @@ sub all_predecessors {
 sub neighbours {
     my $g = $_[0];
     my $V  = $g->[ _V ];
-    my @s = map { my @v = @{ $_->[ 1 ] }; shift @v; @v } &_edges_from;
-    my @p = map { my @v = @{ $_->[ 1 ] }; pop   @v; @v } &_edges_to if &is_directed;
+    my @s = map { my @v = @$_; shift @v; @v } &_edges_from;
+    my @p = map { my @v = @$_; pop   @v; @v } &_edges_to if &is_directed;
     my %n;
     @n{ @s } = @s;
     @n{ @p } = @p;
@@ -716,7 +715,7 @@ sub delete_vertex {
     return $g unless $V->has_path( $_[1] );
     # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
     my $E = $g->[ _E ];
-    $E->del_path( @{ $_->[ 1 ] } ) for &_edges_at;
+    $E->del_path( @$_ ) for &_edges_at;
     $V->del_path( $_[1] );
     $g->[ _G ]++;
     return $g;
