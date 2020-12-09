@@ -842,54 +842,21 @@ sub is_self_loop_vertex {
     return 0;
 }
 
-sub sink_vertices {
-    my $g = $_[0];
-    grep $g->is_sink_vertex($_), $g->_vertices05;
-}
-
-sub source_vertices {
-    my $g = shift;
-    grep $g->is_source_vertex($_), $g->_vertices05;
-}
-
-sub successorless_vertices {
-    my $g = shift;
-    grep $g->is_successorless_vertex($_), $g->_vertices05;
-}
-
-sub predecessorless_vertices {
-    my $g = shift;
-    grep $g->is_predecessorless_vertex($_), $g->_vertices05;
-}
-
-sub successorful_vertices {
-    my $g = shift;
-    grep $g->is_successorful_vertex($_), $g->_vertices05;
-}
-
-sub predecessorful_vertices {
-    my $g = shift;
-    grep $g->is_predecessorful_vertex($_), $g->_vertices05;
-}
-
-sub isolated_vertices {
-    my $g = $_[0];
-    grep $g->is_isolated_vertex($_), &_vertices05;
-}
-
-sub interior_vertices {
-    my $g = shift;
-    grep $g->is_interior_vertex($_), $g->_vertices05;
-}
-
-sub exterior_vertices {
-    my $g = shift;
-    grep $g->is_exterior_vertex($_), $g->_vertices05;
-}
-
-sub self_loop_vertices {
-    my $g = shift;
-    grep $g->is_self_loop_vertex($_), $g->_vertices05;
+for my $p (qw(
+    is_sink_vertex
+    is_source_vertex
+    is_successorless_vertex
+    is_predecessorless_vertex
+    is_successorful_vertex
+    is_predecessorful_vertex
+    is_isolated_vertex
+    is_interior_vertex
+    is_exterior_vertex
+    is_self_loop_vertex
+)) {
+    no strict 'refs';
+    (my $m = $p) =~ s/^is_(.*)ex$/${1}ices/;
+    *$m = sub { my $g = $_[0]; grep $g->$p($_), &_vertices05 };
 }
 
 ###
