@@ -342,6 +342,11 @@ Set the path by @ids.
 
 Set the path in the Map by the multi id.
 
+=head2 get_paths_by_ids
+
+Given an array-ref of array-refs of vertex IDs, returns a list of
+array-refs of vertex paths.
+
 =head2 rename_path($from, $to)
 
 Rename the path.

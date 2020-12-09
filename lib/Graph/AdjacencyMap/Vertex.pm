@@ -106,9 +106,13 @@ sub __attr {
     @_ = ($_[0], sort @_[1..$#_]);
 }
 
-sub _get_id_path {
-    my ($m, $i) = @_;
-    return defined $m->[ _i ] ? $m->[ _i ][ $i ] : undef;
+sub get_paths_by_ids {
+    my ($m, $list) = @_;
+    my $i = $m->[ _i ];
+    map [ map {
+	my @v = defined $i ? $i->[ $_ ] : undef;
+	@v == 1 ? $v[0] : \@v
+    } @$_ ], @$list;
 }
 
 sub del_path {

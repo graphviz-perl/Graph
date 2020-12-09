@@ -1,6 +1,7 @@
 - fix edges_at on self-edges in scalar context
 - fix refvertexed_stringified predicate
 - remove "hypervertices": a collection of n vertices is a hyperedge
+- AdjacencyMap.get_paths_by_ids
 
 0.9712 2020-12-05
 - bug-fix: set_edge_attribute_by_id add_edge_by_id if not exist
