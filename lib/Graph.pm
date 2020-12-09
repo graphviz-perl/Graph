@@ -2405,14 +2405,13 @@ sub is_strongly_connected {
 
 sub strongly_connected_graph {
     &expect_directed;
-    my $g = shift;
-    my %attr = @_;
+    my ($g, %attr) = @_;
     require Graph::Traversal::DFS;
 
     my $t = Graph::Traversal::DFS->new($g);
     my @d = reverse $t->dfs;
     my @c;
-    my $h = $g->transpose;
+    my $h = &transpose;
     my $u =
 	Graph::Traversal::DFS->new($h,
 				   next_root => sub {
@@ -2457,13 +2456,13 @@ sub strongly_connected_graph {
     }
 
     my $n = @c;
-    for my $v (grep !exists $c{$_}, $g->vertices) {
+    for my $v (grep !exists $c{$_}, &vertices) {
 	$c{$v} = $n;
 	$s[$n] = $v;
 	$n++;
     }
 
-    for my $e ($g->_edges05) {
+    for my $e (&_edges05) {
 	my ($u, $v) = @$e; # @TODO: hyperedges
 	unless ($c{$u} == $c{$v}) {
 	    my ($p, $q) = @s[ @c{ $u, $v } ];
@@ -2471,7 +2470,7 @@ sub strongly_connected_graph {
 	}
     }
 
-    if (my @i = $g->isolated_vertices) {
+    if (my @i = &isolated_vertices) {
 	$s->add_vertices(map $s[ $c{ $_ } ], @i);
     }
 
