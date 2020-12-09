@@ -690,14 +690,13 @@ sub all_neighbours {
     my $g = shift;
     my @init = @_;
     my @v = @init;
-    my %n;
-    my $o = 0;
+    my (%new, %n);
     while (1) {
-      my @s = $g->neighbours(@v);
-      @n{@s} = @s;
-      @v = values %n;
-      last if @v == $o;  # Leave if no growth.
-      $o = @v;
+      @v = $g->neighbours(@v);
+      @new{@v} = @v;
+      delete @new{keys %n};
+      last if !keys %new;  # Leave if no new found.
+      @v = @n{keys %new} = values %new;
     }
     delete @n{ grep !$g->has_edge($_, $_), @init };
     return values %n;
