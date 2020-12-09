@@ -2744,6 +2744,20 @@ C<qw(a b)>. Without too much explanation:
 
 =back
 
+For more information on directed hypergraphs, see
+L<Directed Hypergraphs and Applications|https://static.aminer.org/pdf/PDF/000/836/884/directed_hypergraphs_and_applications.pdf>.
+It defines hyperarcs (directed edges in a hypergraph) as ordered pairs
+of subsets of V, and hyperedges (undirected) as single subsets of
+V. Since sets are unordered and elements within them are unique, this
+implies that the only valuable use for hypergraphs is where in a given
+connection entity (edge or arc), each vertex only appears at most once.
+This means turning off the C<uniq> property on a graph is especially
+unsupported. Additionally, how the C<hyper> property of edges works may
+change. The underpinning notion is that each edge will be considered
+an entry in an incidence matrix (dimensions |V| x |E|), with values of
+either (0, 1=participating) for undirected (hyperedges), or (-1=tail,
+0, 1=head) for directed (hyperarcs) against each vertex.
+
 =head2 DIAGNOSTICS
 
 =over 4
