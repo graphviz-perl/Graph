@@ -693,9 +693,7 @@ sub all_neighbours {
     my %n;
     my $o = 0;
     while (1) {
-      my @p = $g->_all_cessors(@v, 'predecessors');
-      my @s = $g->_all_cessors(@v, 'successors');
-      @n{@p} = @p;
+      my @s = $g->neighbours(@v);
       @n{@s} = @s;
       @v = values %n;
       last if @v == $o;  # Leave if no growth.
