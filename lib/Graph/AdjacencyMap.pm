@@ -91,12 +91,6 @@ sub has_paths {
     return defined $m->[ _i ] && @{ $m->[ _i ] };
 }
 
-sub _del_id {
-    my ($m, $i) = @_;
-    my @p = $m->_get_id_path( $i );
-    $m->del_path( @p ) if @p;
-}
-
 sub _new_node {
     my ($m, $n, $id) = @_;
     my $f = $m->[ _f ];

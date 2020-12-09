@@ -368,8 +368,9 @@ sub _vertex_ids {
     my $g = $_[0];
     my $V = $g->[ _V ];
     if (($V->[ _f ] & _LIGHT)) {
-	return if grep !exists $V->[ _s ]->{ $_ }, @_[1..$#_];
-	return map $V->[ _s ]->{ $_ }, @_[1..$#_];
+	my $s = $V->[ _s ];
+	return if grep !exists $s->{ $_ }, @_[1..$#_];
+	return map $s->{ $_ }, @_[1..$#_];
     }
     my @e;
     for my $v ( @_[1..$#_] ) {
@@ -702,10 +703,7 @@ sub delete_edge {
     my $g = $_[0];
     &expect_non_unionfind;
     my @i = &_vertex_ids;
-    return $g unless @i;
-    my $i = $g->[ _E ]->_get_path_id( @i );
-    return $g unless defined $i;
-    $g->[ _E ]->_del_id( $i );
+    return $g unless @i and $g->[ _E ]->del_path( @i );
     $g->[ _G ]++;
     return $g;
 }
@@ -718,7 +716,7 @@ sub delete_vertex {
     return $g unless $V->has_path( $_[1] );
     # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
     my $E = $g->[ _E ];
-    $E->_del_id( $_->[ 0 ] ) for &_edges_at;
+    $E->del_path( @{ $_->[ 1 ] } ) for &_edges_at;
     $V->del_path( $_[1] );
     $g->[ _G ]++;
     return $g;
