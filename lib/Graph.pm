@@ -626,22 +626,21 @@ sub predecessors {
 
 sub _all_cessors {
     my $method = pop;
-    my ($g, @init) = @_;
-    my %todo;
-    @todo{@init} = @init;
-    my %seen;
-    my %init = %todo;
+    my ($g, @v) = @_;
+    my %init;
+    @init{@v} = @v;
     my %self;
-    while (keys %todo) {
-      for my $t (values %todo) {
-        $seen{$t} = delete $todo{$t};
-        for my $v ($g->$method($t)) {
-	  $self{$v} = undef if exists $init{$v};
-	  $todo{$v} = $v unless exists $seen{$v};
-        }
-      }
+    my (%new, %seen);
+    while (1) {
+	@v = $g->$method(@v);
+	@new{@v} = @v;
+	@self{grep exists $init{$_}, @v} = ();
+	delete @new{keys %seen};
+	last if !keys %new;  # Leave if no new found.
+	@v = @seen{keys %new} = values %new;
+	%new = ();
     }
-    delete @seen{ grep !(exists $self{$_} || $g->has_edge($_, $_)), @init };
+    delete @seen{ grep !(exists $self{$_} || $g->has_edge($_, $_)), keys %init };
     return values %seen;
 }
 
