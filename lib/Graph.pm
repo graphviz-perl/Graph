@@ -2309,15 +2309,13 @@ sub _strongly_connected_components {
 
 sub strongly_connected_components {
     &expect_directed;
-    my $g = shift;
-    $g->_strongly_connected_components(@_);
+    goto &_strongly_connected_components;
 }
 
 sub strongly_connected_component_by_vertex {
     &expect_directed;
-    my $g = shift;
-    my $v = shift;
-    my @scc = $g->_strongly_connected_components( next_alphabetic => 1, @_ );
+    my ($v) = splice @_, 1, 1, next_alphabetic => 1;
+    my @scc = &_strongly_connected_components;
     for (my $i = 0; $i <= $#scc; $i++) {
 	for (my $j = 0; $j <= $#{ $scc[$i] }; $j++) {
 	    return $i if $scc[$i]->[$j] eq $v;
@@ -2328,19 +2326,19 @@ sub strongly_connected_component_by_vertex {
 
 sub strongly_connected_component_by_index {
     &expect_directed;
-    my $g = shift;
-    my $i = shift;
-    my $c = ( $g->_strongly_connected_components(@_) )[ $i ];
+    my ($i) = splice @_, 1, 1, next_alphabetic => 1;
+    my $c = ( &_strongly_connected_components )[ $i ];
     return defined $c ? @{ $c } : ();
 }
 
 sub same_strongly_connected_components {
     &expect_directed;
-    my $g = shift;
-    my @scc = $g->_strongly_connected_components( next_alphabetic => 1, @_ );
+    my ($g, @args) = @_;
+    splice @_, 1, 0, next_alphabetic => 1;
+    my @scc = &_strongly_connected_components;
     my @i;
-    while (@_) {
-	my $v = shift;
+    while (@args) {
+	my $v = shift @args;
 	for (my $i = 0; $i <= $#scc; $i++) {
 	    for (my $j = 0; $j <= $#{ $scc[$i] }; $j++) {
 		next if $scc[$i]->[$j] ne $v;
@@ -2568,66 +2566,58 @@ sub _biconnectivity_compute {
 
 sub biconnectivity {
     &expect_undirected;
-    my $g = shift;
-    my $bcc = _check_cache($g, 'biconnectivity',
-			   \&_biconnectivity_compute, @_);
+    my $bcc = _check_cache($_[0], 'biconnectivity',
+			   \&_biconnectivity_compute, @_[1..$#_]);
     return defined $bcc ? @$bcc : ( );
 }
 
 sub is_biconnected {
-    my $g = shift;
-    my ($ap) = ($g->biconnectivity(@_))[0];
-    return $g->edges >= 2 ? @$ap == 0 : undef ;
+    my ($ap) = (&biconnectivity)[0];
+    return &edges >= 2 ? @$ap == 0 : undef ;
 }
 
 sub is_edge_connected {
-    my $g = shift;
-    my ($br) = ($g->biconnectivity(@_))[2];
-    return $g->edges >= 2 ? @$br == 0 : undef;
+    my ($br) = (&biconnectivity)[2];
+    return &edges >= 2 ? @$br == 0 : undef;
 }
 
 sub is_edge_separable {
-    my $g = shift;
-    my ($br) = ($g->biconnectivity(@_))[2];
-    return $g->edges >= 2 ? @$br > 0 : undef;
+    my ($br) = (&biconnectivity)[2];
+    return &edges >= 2 ? @$br > 0 : undef;
 }
 
 sub articulation_points {
-    my $g = shift;
-    my ($ap) = ($g->biconnectivity(@_))[0];
+    my ($ap) = (&biconnectivity)[0];
     return @$ap;
 }
 
 *cut_vertices = \&articulation_points;
 
 sub biconnected_components {
-    my $g = shift;
-    my ($bc) = ($g->biconnectivity(@_))[1];
+    my ($bc) = (&biconnectivity)[1];
     return @$bc;
 }
 
 sub biconnected_component_by_index {
-    my $g = shift;
-    my $i = shift;
-    my ($bc) = ($g->biconnectivity(@_))[1];
+    my ($i) = splice @_, 1, 1;
+    my ($bc) = (&biconnectivity)[1];
     return $bc->[ $i ];
 }
 
 sub biconnected_component_by_vertex {
-    my $g = shift;
-    my $v = shift;
-    my ($v2bc) = ($g->biconnectivity(@_))[3];
+    my ($v) = splice @_, 1, 1;
+    my ($v2bc) = (&biconnectivity)[3];
+    splice @_, 1, 0, $v;
     return defined $v2bc->{ $v } ? keys %{ $v2bc->{ $v } } : ();
 }
 
 sub same_biconnected_components {
-    my $g = shift;
-    my $u = shift;
-    my @u = $g->biconnected_component_by_vertex($u, @_);
+    my ($g, $u, @args) = @_;
+    my @u = &biconnected_component_by_vertex;
     return 0 unless @u;
     my %ubc; @ubc{ @u } = ();
-    while (@_) {
-	my $v = shift;
+    while (@args) {
+	my $v = shift @args;
 	next unless my @v = $g->biconnected_component_by_vertex($v);
 	my %vbc; @vbc{ @v } = ();
 	my ($vi) = grep exists $vbc{ $_ }, keys %ubc;
@@ -2638,7 +2628,7 @@ sub same_biconnected_components {
 
 sub biconnected_graph {
     my ($g, %opt) = @_;
-    my ($bc, $v2bc) = ($g->biconnectivity, %opt)[1, 3];
+    my ($bc, $v2bc) = (&biconnectivity)[1, 3];
     my $bcg = Graph->new(directed => 0);
     my $sc_cb =
 	exists $opt{super_component} ?
@@ -2661,8 +2651,7 @@ sub biconnected_graph {
 }
 
 sub bridges {
-    my $g = shift;
-    my ($br) = ($g->biconnectivity(@_))[2];
+    my ($br) = (&biconnectivity)[2];
     return defined $br ? @$br : ();
 }
 
@@ -2798,9 +2787,9 @@ sub _SPT_Bellman_Ford_compute {
 }
 
 sub SPT_Bellman_Ford {
-    my $g = shift;
+    my $g = $_[0];
 
-    my ($opt, $unseenh, $unseena, $r, $next, $code, $attr) = $g->_root_opt(@_);
+    my ($opt, $unseenh, $unseena, $r, $next, $code, $attr) = &_root_opt;
 
     unless (defined $r) {
 	$r = $g->random_vertex();
@@ -2880,7 +2869,7 @@ sub _transitive_closure_matrix_compute {
 }
 
 sub transitive_closure_matrix {
-    my $g = shift;
+    my $g = $_[0];
     my $tcm = $g->get_graph_attribute('_tcm');
     if (defined $tcm) {
 	if (ref $tcm eq 'ARRAY') { # YECHHH!
@@ -2892,11 +2881,9 @@ sub transitive_closure_matrix {
 	}
     }
     unless (defined $tcm) {
-	my $apsp = $g->APSP_Floyd_Warshall(@_);
-	$tcm = $apsp->get_graph_attribute('_tcm');
+	$tcm = &APSP_Floyd_Warshall->get_graph_attribute('_tcm');
 	$g->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     }
-
     return $tcm;
 }
 
