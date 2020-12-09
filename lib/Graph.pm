@@ -829,13 +829,13 @@ sub is_isolated_vertex {
 
 sub is_interior_vertex {
     return 0 unless @_ > 1;
-    my $p = &predecessors;
     my $s = &successors;
-    if (&is_self_loop_vertex) {
-	$p--;
-	$s--;
-    }
-    $p > 0 && $s > 0;
+    $s-- if my $isl = &is_self_loop_vertex;
+    return 0 if $s == 0;
+    return $s > 0 if &is_undirected;
+    my $p = &predecessors;
+    $p-- if $isl;
+    $p > 0;
 }
 
 sub is_exterior_vertex {
