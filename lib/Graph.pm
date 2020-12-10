@@ -2048,6 +2048,7 @@ my %_cache_type =
      'SPT_Dijkstra'        => '_spt_di',
      'SPT_Bellman_Ford'    => '_spt_bf',
      'undirected'          => '_undirected',
+     'transitive_closure_matrix' => '_tcm',
     );
 
 sub _check_cache {
@@ -2055,10 +2056,10 @@ sub _check_cache {
     my $c = $_cache_type{$type};
     __carp_confess "Graph: unknown cache type '$type'" if !defined $c;
     my $a = $g->get_graph_attribute($c);
+    __carp_confess "$c attribute set to unexpected value $a"
+	if defined $a and ref $a ne 'ARRAY';
     unless (defined $a && $a->[ 0 ] == $g->[ _G ]) {
-	$a->[ 0 ] = $g->[ _G ];
-	$a->[ 1 ] = $code->( $g, @_ );
-	$g->set_graph_attribute($c, $a);
+	$g->set_graph_attribute($c, $a = [ $g->[ _G ], $code->( $g, @_ ) ]);
     }
     return $a->[ 1 ];
 }
@@ -2301,8 +2302,7 @@ sub _strongly_connected_components_compute {
 
 sub _strongly_connected_components {
     my $g = shift;
-    my $type = 'strong_connectivity';
-    my $scc = _check_cache($g, $type,
+    my $scc = _check_cache($g, 'strong_connectivity',
 			   \&_strongly_connected_components_compute, @_);
     return defined $scc ? @$scc : ( );
 }
@@ -2862,25 +2862,12 @@ sub APSP_Floyd_Warshall {
 *all_pairs_shortest_paths = \&APSP_Floyd_Warshall;
 
 sub _transitive_closure_matrix_compute {
+    &APSP_Floyd_Warshall->transitive_closure_matrix;
 }
 
 sub transitive_closure_matrix {
-    my $g = $_[0];
-    my $tcm = $g->get_graph_attribute('_tcm');
-    if (defined $tcm) {
-	__carp_confess "_tcm attribute set to unexpected value $tcm"
-	    if ref $tcm ne 'ARRAY';
-	if ($tcm->[ 0 ] == $g->[ _G ]) {
-	    $tcm = $tcm->[ 1 ];
-	} else {
-	    undef $tcm;
-	}
-    }
-    unless (defined $tcm) {
-	$tcm = &APSP_Floyd_Warshall->transitive_closure_matrix;
-	$g->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
-    }
-    return $tcm;
+    _check_cache($_[0], 'transitive_closure_matrix',
+	\&_transitive_closure_matrix_compute, @_[1..$#_]);
 }
 
 sub path_length {
