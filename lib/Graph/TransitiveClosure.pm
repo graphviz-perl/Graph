@@ -27,13 +27,8 @@ sub new {
 	multiedged => 0,
 	($opt{ reflexive } ? (vertices => [$g->vertices]) : ()),
     );
-    my $tcm = $g->get_graph_attribute('_tcm');
-    if (defined $tcm && $tcm->[ 0 ] == $g->[ _G ]) {
-	$tcm = $tcm->[ 1 ];
-    } else {
-	$tcm = Graph::TransitiveClosure::Matrix->new($g, %opt);
-	$g->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
-    }
+    my $tcm = $g->_check_cache('transitive_closure_matrix',
+	\&_transitive_closure_matrix_compute, %opt);
     my $tcm00 = $tcm->[0][0]; # 0=am, 0=bitmatrix
     my $tcm01 = $tcm->[0][1]; #     , 1=hash mapping v-name to the offset into dm data structures (in retval of $g->vertices)
     for my $u ($tcm->vertices) {
@@ -48,6 +43,10 @@ sub new {
     }
     $tcg->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     bless $tcg, $class;
+}
+
+sub _transitive_closure_matrix_compute {
+    Graph::TransitiveClosure::Matrix->new(@_);
 }
 
 sub is_transitive {
