@@ -14,6 +14,8 @@ sub _G () { Graph::_G() }
 
 sub new {
     my ($class, $g, %opt) = @_;
+    Graph::__carp_confess(__PACKAGE__."->new given non-Graph '$g'")
+	if !(ref $g and $g->isa('Graph'));
     %opt = (path_vertices => 1) unless %opt;
     my $attr = Graph::_defattr();
     if (exists $opt{ attribute_name }) {
