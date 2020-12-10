@@ -1841,10 +1841,11 @@ that makes the vertices the same.
     my $apsp = $g->APSP_Floyd_Warshall(...);
 
 Return the all-pairs shortest path object computed from the graph
-using Floyd-Warshall's algorithm.  The length of a path between two
-vertices is the sum of weight attribute of the edges along the
-shortest path between the two vertices.  If no weight attribute name
-is specified explicitly
+using the Floyd-Warshall algorithm, of class L<Graph::TransitiveClosure>.
+
+The length of a path between two vertices is the sum of weight attribute
+of the edges along the shortest path between the two vertices.  If no
+weight attribute name is specified explicitly
 
     $g->APSP_Floyd_Warshall(attribute_name => 'height');
 

@@ -46,7 +46,7 @@ sub new {
 				      # $tcm->[0]->get($u, $v)
 	}
     }
-    $tcg->set_graph_attribute('_tcm', $tcm);
+    $tcg->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     bless $tcg, $class;
 }
 
@@ -54,6 +54,10 @@ sub is_transitive {
     my $g = shift;
     $g->expect_no_args(@_);
     Graph::TransitiveClosure::Matrix::is_transitive($g);
+}
+
+sub transitive_closure_matrix {
+    $_[0]->get_graph_attribute('_tcm')->[1];
 }
 
 1;

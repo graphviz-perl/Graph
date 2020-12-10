@@ -309,7 +309,7 @@ is($g3->path_predecessor(qw(c c)), undef);
 
 # TransitiveClosure_Floyd_Warshall is just an alias for TransitiveClosure.
 
-my $t0tcfw = Graph->TransitiveClosure_Floyd_Warshall($g0->deep_copy);
+my $t0tcfw = $g0->deep_copy->TransitiveClosure_Floyd_Warshall;
 
 is($t0, $t0tcfw);
 

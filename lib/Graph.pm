@@ -2847,20 +2847,16 @@ sub SP_Bellman_Ford {
 
 sub TransitiveClosure_Floyd_Warshall {
     my $self = shift;
-    my $class = ref $self || $self;
-    $self = shift unless ref $self;
     require Graph::TransitiveClosure;
-    bless Graph::TransitiveClosure->new($self, @_), $class;
+    Graph::TransitiveClosure->new($self, @_);
 }
 
 *transitive_closure = \&TransitiveClosure_Floyd_Warshall;
 
 sub APSP_Floyd_Warshall {
     my $self = shift;
-    my $class = ref $self || $self;
-    $self = shift unless ref $self;
     require Graph::TransitiveClosure;
-    bless Graph::TransitiveClosure->new($self, path => 1, @_), $class;
+    Graph::TransitiveClosure->new($self, path => 1, @_);
 }
 
 *all_pairs_shortest_paths = \&APSP_Floyd_Warshall;
@@ -2872,16 +2868,16 @@ sub transitive_closure_matrix {
     my $g = $_[0];
     my $tcm = $g->get_graph_attribute('_tcm');
     if (defined $tcm) {
-	if (ref $tcm eq 'ARRAY') { # YECHHH!
-	    if ($tcm->[ 0 ] == $g->[ _G ]) {
-		$tcm = $tcm->[ 1 ];
-	    } else {
-		undef $tcm;
-	    }
+	__carp_confess "_tcm attribute set to unexpected value $tcm"
+	    if ref $tcm ne 'ARRAY';
+	if ($tcm->[ 0 ] == $g->[ _G ]) {
+	    $tcm = $tcm->[ 1 ];
+	} else {
+	    undef $tcm;
 	}
     }
     unless (defined $tcm) {
-	$tcm = &APSP_Floyd_Warshall->get_graph_attribute('_tcm');
+	$tcm = &APSP_Floyd_Warshall->transitive_closure_matrix;
 	$g->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     }
     return $tcm;
