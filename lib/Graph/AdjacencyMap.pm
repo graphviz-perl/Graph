@@ -131,8 +131,9 @@ sub __get_path_node {
     }
     my ($m) = @_;
     if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	return unless exists $m->[ _s ]->{ $_[1] };
-	$p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
+	my $s = $m->[ _s ];
+	return unless exists $s->{ $_[1] };
+	$p = [ $s, $s->{ $_[1] } ];
 	$k = [ $_[1], $_[2] ];
     } else {
 	return unless ($p, $k) = &{ $m->can('__has_path') };

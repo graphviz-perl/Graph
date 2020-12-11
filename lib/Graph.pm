@@ -446,7 +446,9 @@ sub has_edges {
 sub add_vertex_by_id {
     &expect_multivertexed;
     my $g = $_[0];
-    $g->[ _V ]->set_path_by_multi_id( @_[1..$#_] );
+    my $V = $g->[ _V ];
+    return $g if $V->has_path_by_multi_id( @_[1..$#_] );
+    $V->set_path_by_multi_id( @_[1..$#_] );
     $g->[ _G ]++;
     &_union_find_add_vertex if &has_union_find;
     return $g;
@@ -1220,8 +1222,8 @@ sub delete_edge_attribute_by_id {
 }
 
 sub add_vertices {
-    my $g = shift;
-    $g->add_vertex( $_ ) for @_;
+    my $g = $_[0];
+    $g->add_vertex( $_ ) for @_[1..$#_];
     return $g;
 }
 
