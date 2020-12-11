@@ -363,6 +363,13 @@ sub add_edge {
     return $g;
 }
 
+sub _vertex_ids_multi {
+    my $id = pop;
+    my @i = &_vertex_ids;
+    push @_, $id;
+    @i ? (@i, $id) : ();
+}
+
 sub _vertex_ids {
     my $g = $_[0];
     my $V = $g->[ _V ];
@@ -498,32 +505,27 @@ sub add_edge_get_id {
 sub has_edge_by_id {
     &expect_multiedged;
     my $g = $_[0];
-    my $id = pop;
-    my @i = &_vertex_ids;
-    push @_, $id;
+    my @i = &_vertex_ids_multi;
     return 0 if @i == 0 && @_ - 1;
-    $g->[ _E ]->has_path_by_multi_id( @i, $id );
+    $g->[ _E ]->has_path_by_multi_id( @i );
 }
 
 sub delete_edge_by_id {
     &expect_multiedged;
     &expect_non_unionfind;
     my $g = $_[0];
-    my $V = $g->[ _E ];
-    my $id = pop;
-    my @i = &_vertex_ids;
-    return unless $V->has_path_by_multi_id( @i, $id );
-    $V->del_path_by_multi_id( @i, $id );
+    my $E = $g->[ _E ];
+    return unless my @i = &_vertex_ids_multi;
+    return unless $E->has_path_by_multi_id( @i );
+    $E->del_path_by_multi_id( @i );
     $g->[ _G ]++;
     return $g;
 }
 
 sub get_multiedge_ids {
     &expect_multiedged;
-    my $g = $_[0];
-    my @i = &_vertex_ids;
-    return unless @i;
-    $g->[ _E ]->get_multi_ids( @i );
+    return unless my @i = &_vertex_ids;
+    $_[0]->[ _E ]->get_multi_ids( @i );
 }
 
 ###
@@ -1093,8 +1095,7 @@ sub set_edge_attribute_by_id {
     my $value = pop;
     my $attr  = pop;
     &add_edge_by_id unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_set_path_attr( &_vertex_ids, $id, $attr, $value );
+    $_[0]->[ _E ]->_set_path_attr( &_vertex_ids_multi, $attr, $value );
 }
 
 sub set_edge_attributes {
@@ -1108,8 +1109,7 @@ sub set_edge_attributes_by_id {
     &expect_multiedged;
     my $attr = pop;
     &add_edge_by_id unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_set_path_attrs( &_vertex_ids, $id, $attr );
+    $_[0]->[ _E ]->_set_path_attrs( &_vertex_ids_multi, $attr );
 }
 
 sub has_edge_attributes {
@@ -1121,8 +1121,7 @@ sub has_edge_attributes {
 sub has_edge_attributes_by_id {
     &expect_multiedged;
     return 0 unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_has_path_attrs( &_vertex_ids, $id );
+    $_[0]->[ _E ]->_has_path_attrs( &_vertex_ids_multi );
 }
 
 sub has_edge_attribute {
@@ -1136,8 +1135,7 @@ sub has_edge_attribute_by_id {
     &expect_multiedged;
     my $attr = pop;
     return 0 unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_has_path_attr( &_vertex_ids, $id, $attr );
+    $_[0]->[ _E ]->_has_path_attr( &_vertex_ids_multi, $attr );
 }
 
 sub get_edge_attributes {
@@ -1149,8 +1147,7 @@ sub get_edge_attributes {
 sub get_edge_attributes_by_id {
     &expect_multiedged;
     return unless &has_edge_by_id;
-    my $id = pop;
-    scalar $_[0]->[ _E ]->_get_path_attrs( &_vertex_ids, $id );
+    scalar $_[0]->[ _E ]->_get_path_attrs( &_vertex_ids_multi );
 }
 
 sub get_edge_attribute {
@@ -1166,8 +1163,7 @@ sub get_edge_attribute_by_id {
     &expect_multiedged;
     my $attr = pop;
     return unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_get_path_attr( &_vertex_ids, $id, $attr );
+    $_[0]->[ _E ]->_get_path_attr( &_vertex_ids_multi, $attr );
 }
 
 sub get_edge_attribute_names {
@@ -1179,8 +1175,7 @@ sub get_edge_attribute_names {
 sub get_edge_attribute_names_by_id {
     &expect_multiedged;
     return unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_get_path_attr_names( &_vertex_ids, $id );
+    $_[0]->[ _E ]->_get_path_attr_names( &_vertex_ids_multi );
 }
 
 sub get_edge_attribute_values {
@@ -1192,8 +1187,7 @@ sub get_edge_attribute_values {
 sub get_edge_attribute_values_by_id {
     &expect_multiedged;
     return unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_get_path_attr_values( &_vertex_ids, $id );
+    $_[0]->[ _E ]->_get_path_attr_values( &_vertex_ids_multi );
 }
 
 sub delete_edge_attributes {
@@ -1205,8 +1199,7 @@ sub delete_edge_attributes {
 sub delete_edge_attributes_by_id {
     &expect_multiedged;
     return unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_del_path_attrs( &_vertex_ids, $id );
+    $_[0]->[ _E ]->_del_path_attrs( &_vertex_ids_multi );
 }
 
 sub delete_edge_attribute {
@@ -1220,8 +1213,7 @@ sub delete_edge_attribute_by_id {
     &expect_multiedged;
     my $attr = pop;
     return unless &has_edge_by_id;
-    my $id = pop;
-    $_[0]->[ _E ]->_del_path_attr( &_vertex_ids, $id, $attr );
+    $_[0]->[ _E ]->_del_path_attr( &_vertex_ids_multi, $attr );
 }
 
 sub add_vertices {
