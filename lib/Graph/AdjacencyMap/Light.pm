@@ -27,7 +27,7 @@ sub _new {
 sub stringify {
     my $m = shift;
     my @rows;
-    my $a = $m->[ _a ];
+    my $a = $m->[ _arity ];
     if ($a == 2) {
 	my @p = sort keys %{ $m->[ _s ] };
 	my @s = sort keys %{ $m->[ _p ] };

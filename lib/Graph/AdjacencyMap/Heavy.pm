@@ -18,7 +18,7 @@ require overload; # for de-overloading
 sub stringify {
     my $m = shift;
     my @rows;
-    my $a = $m->[ _a ];
+    my $a = $m->[ _arity ];
     my $s = $m->[ _s ];
     my $f = $m->[ _f ];
     my $hyper = $f & _HYPER;
@@ -67,7 +67,7 @@ sub __set_path {
     my $f = $m->[ _f ];
     my $id = pop if $f & _MULTI;
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
-	scalar @_ - 1, $m->[ _a ]) if @_ - 1 != $m->[ _a ] && !($f & _HYPER);
+	scalar @_ - 1, $m->[ _arity ]) if @_ - 1 != $m->[ _arity ] && !($f & _HYPER);
     my $p;
     $p = ($f & _HYPER) ?
 	(( $m->[ _s ] ||= [ ] )->[ @_-1 ] ||= { }) :
@@ -121,7 +121,7 @@ sub __has_path {
     my ($m) = @_;
     my $f = $m->[ _f ];
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
-	@_ - 1, $m->[ _a ]) if @_ != $m->[ _a ] + 1 && !($f & _HYPER);
+	@_ - 1, $m->[ _arity ]) if @_ != $m->[ _arity ] + 1 && !($f & _HYPER);
     if (@_ > 2 && ($f & _UNORDUNIQ)) {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ > 2) { @_ = ($_[0], sort @_[1..$#_]) }
 	else { &Graph::AdjacencyMap::__arg }
@@ -166,7 +166,7 @@ sub has_path_by_multi_id {
 sub _get_path_node {
     my $m = $_[0];
     my $f = $m->[ _f ];
-    if ($m->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
 	@_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
 	return unless exists $m->[ _s ]->{ $_[1] };
 	my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
@@ -181,7 +181,7 @@ sub _get_path_id {
     my $m = $_[0];
     my $f = $m->[ _f ];
     my ($e, $n);
-    if ($m->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
 	@_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
 	return unless exists $m->[ _s ]->{ $_[1] };
 	my $p = $m->[ _s ]->{ $_[1] };
@@ -243,7 +243,7 @@ sub del_path {
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    return 1 if $m->[ _a ] > 1; # arity > 1, all integers, no names
+    return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
     my ($n, $f, $a, $i, $s, $p) = @$m;
     return 0 unless exists $s->{ $from };
     $i->[ $s->{ $from }[0] ][0] = $to;

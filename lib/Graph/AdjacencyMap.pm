@@ -33,7 +33,7 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
 %EXPORT_TAGS =
     (flags =>  [@FLAGS, keys %FLAG_COMBOS, qw(_GEN_ID)],
-     fields => [qw(_n _f _a _i _s _p _g _u _ni _nc _na _nm)]);
+     fields => [qw(_n _f _arity _i _s _p _g _u _ni _nc _na _nm)]);
 @EXPORT_OK = map @$_, values %EXPORT_TAGS;
 
 my $_GEN_ID = 0;
@@ -47,7 +47,7 @@ sub _nm () { 3 } # Node map.
 
 sub _n () { 0 } # Next id.
 sub _f () { 1 } # Flags.
-sub _a () { 2 } # Arity.
+sub _arity () { 2 } # Arity.
 sub _i () { 3 } # Index to path.
 sub _s () { 4 } # Successors / Path to Index.
 sub _p () { 5 } # Predecessors.
@@ -58,7 +58,7 @@ sub _V () { 2 }  # Graph::_V()
 sub stringify {
     my $m = shift;
     <<EOF;
-@{[ref $m]} arity=@{[$m->[ _a ]]} flags: @{[_stringify_fields($m->[ _f ])]}
+@{[ref $m]} arity=@{[$m->[ _arity ]]} flags: @{[_stringify_fields($m->[ _f ])]}
 EOF
 }
 
@@ -130,7 +130,7 @@ sub __get_path_node {
         else { &__arg }
     }
     my ($m) = @_;
-    if ($m->[ _a ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
 	return unless exists $m->[ _s ]->{ $_[1] };
 	$p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
 	$k = [ $_[1], $_[2] ];

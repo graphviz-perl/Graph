@@ -98,8 +98,8 @@ sub __attr {
     my ($m) = @_;
     return if @_ < 3;
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
-		  @_ - 1, $m->[ _a ])
-        if @_ - 1 != $m->[ _a ];
+		  @_ - 1, $m->[ _arity ])
+        if @_ - 1 != $m->[ _arity ];
     my $f = $m->[ _f ];
     return if !($f & _UNORDUNIQ);
     goto &Graph::AdjacencyMap::__arg if ($f & _UNORDUNIQ) != _UNORD;
