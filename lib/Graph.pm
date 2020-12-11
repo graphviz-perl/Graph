@@ -329,20 +329,9 @@ sub has_vertices {
     scalar $g->[ _V ]->has_paths( @_ );
 }
 
-sub _add_edge {
-    my $g = $_[0];
-    my $V = $g->[ _V ];
-    if (($V->[ _f ]) & _LIGHT) {
-	my $s = $V->[ _s ];
-	$g->add_vertex( $_ ) for grep !exists $s->{ $_ }, @_[1..$#_];
-	return map $s->{ $_ }, @_[1..$#_];
-    }
-    my @e;
-    for my $v ( @_[1..$#_] ) {
-	$g->add_vertex( $v ) unless $V->has_path( $v );
-	push @e, $V->_get_path_id( $v );
-    }
-    return @e;
+sub _vertex_ids_ensure {
+    push @_, 1;
+    goto &_vertex_ids_maybe_ensure;
 }
 
 sub _union_find_add_edge {
@@ -359,7 +348,7 @@ sub add_edge {
 	push @_, _GEN_ID;
 	goto &add_edge_by_id;
     }
-    my @e = &_add_edge;
+    my @e = &_vertex_ids_ensure;
     $g->[ _E ]->set_path( @e );
     $g->[ _G ]++;
     $g->_union_find_add_edge( @e ) if &has_union_find;
@@ -374,19 +363,25 @@ sub _vertex_ids_multi {
 }
 
 sub _vertex_ids {
+    push @_, 0;
+    goto &_vertex_ids_maybe_ensure;
+}
+
+sub _vertex_ids_maybe_ensure {
+    my $ensure = pop;
     my $g = $_[0];
     my $V = $g->[ _V ];
     if (($V->[ _f ] & _LIGHT)) {
 	my $s = $V->[ _s ];
-	return if grep !exists $s->{ $_ }, @_[1..$#_];
+	my @non_exist = grep !exists $s->{ $_ }, @_[1..$#_];
+	return if !$ensure and @non_exist;
+	$g->add_vertices(@non_exist) if @non_exist;
 	return map $s->{ $_ }, @_[1..$#_];
     }
-    my @e;
-    for my $v ( @_[1..$#_] ) {
-	return () unless $V->has_path( $v );
-	push @e, $V->_get_path_id( $v );
-    }
-    return @e;
+    my @non_exist = grep !$V->has_path( $_ ), @_[1..$#_];
+    return if !$ensure and @non_exist;
+    $g->add_vertices(@non_exist) if @non_exist;
+    map $V->_get_path_id( $_ ), @_[1..$#_];
 }
 
 sub has_edge {
@@ -491,7 +486,7 @@ sub add_edge_by_id {
     &expect_multiedged;
     my $g = $_[0];
     my $id = pop;
-    my @i = &_add_edge;
+    my @i = &_vertex_ids_ensure;
     push @_, $id;
     $g->[ _E ]->set_path_by_multi_id( @i, $id );
     $g->[ _G ]++;
@@ -502,7 +497,7 @@ sub add_edge_by_id {
 sub add_edge_get_id {
     &expect_multiedged;
     my $g = $_[0];
-    my @i = &_add_edge;
+    my @i = &_vertex_ids_ensure;
     my $id = $g->[ _E ]->set_path_by_multi_id( @i, _GEN_ID );
     $g->[ _G ]++;
     $g->_union_find_add_edge( @i ) if &has_union_find;
