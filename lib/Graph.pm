@@ -285,12 +285,14 @@ sub _union_find_add_vertex {
 sub add_vertex {
     __carp_confess "Graph::add_vertex: use add_vertices for more than one vertex" if @_ != 2;
     __carp_confess "Graph::add_vertex: undef vertex" if grep !defined, @_;
+    my $g = $_[0];
+    my $V = $g->[ _V ];
     if (&is_multivertexed) {
 	push @_, _GEN_ID;
 	goto &add_vertex_by_id;
     }
-    my $g = $_[0];
-    $g->[ _V ]->set_path( @_[1..$#_] );
+    return $g if !&is_countvertexed and $V->has_path( $_[1] );
+    $V->set_path( @_[1..$#_] );
     $g->[ _G ]++;
     &_union_find_add_vertex if &has_union_find;
     return $g;
