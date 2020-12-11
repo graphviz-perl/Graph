@@ -542,10 +542,8 @@ sub _edges_at {
     my @e;
     my $en = 0;
     my %ev;
-    for my $v ( @_[1..$#_] ) {
-	my $vi = $V->_get_path_id( $v );
-	next unless defined $vi;
-	my $Ei = $E->_ids;
+    my $Ei = $E->_ids;
+    for my $vi ( grep defined, map $V->_get_path_id( $_ ), @_[1..$#_] ) {
 	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	    next if !defined(my $ev = $Ei->[$ei]);
 	    if (wantarray) {
