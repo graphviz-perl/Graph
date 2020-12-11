@@ -331,8 +331,9 @@ sub _add_edge {
     my $g = $_[0];
     my $V = $g->[ _V ];
     if (($V->[ _f ]) & _LIGHT) {
-	$g->add_vertex( $_ ) for grep !exists $V->[ _s ]->{ $_ }, @_[1..$#_];
-	return map $V->[ _s ]->{ $_ }, @_[1..$#_];
+	my $s = $V->[ _s ];
+	$g->add_vertex( $_ ) for grep !exists $s->{ $_ }, @_[1..$#_];
+	return map $s->{ $_ }, @_[1..$#_];
     }
     my @e;
     for my $v ( @_[1..$#_] ) {
@@ -392,10 +393,11 @@ sub has_edge {
     my $V = $g->[ _V ];
     my @i;
     if (($V->[ _f ] & _LIGHT) && @_ == 3) {
+	my $s = $V->[ _s ];
 	return 0 unless
-	    exists $V->[ _s ]->{ $_[1] } &&
-	    exists $V->[ _s ]->{ $_[2] };
-	@i = @{ $V->[ _s ] }{ @_[ 1, 2 ] };
+	    exists $s->{ $_[1] } &&
+	    exists $s->{ $_[2] };
+	@i = @$s{ @_[ 1, 2 ] };
     } else {
 	@i = &_vertex_ids;
 	return 0 if @i == 0 && @_ - 1;
@@ -403,8 +405,9 @@ sub has_edge {
     my $f = $E->[ _f ];
     if (@i == 2 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
 	@i = sort @i if ($f & _UNORD);
-	return exists $E->[ _s ]->{ $i[0] } &&
-	       exists $E->[ _s ]->{ $i[0] }->{ $i[1] } ? 1 : 0;
+	my $s = $E->[ _s ];
+	return exists $s->{ $i[0] } &&
+	       exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
     } else {
 	return defined $E->_get_path_id( @i ) ? 1 : 0;
     }
