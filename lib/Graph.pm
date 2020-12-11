@@ -378,9 +378,9 @@ sub _vertex_ids_maybe_ensure {
 	$g->add_vertices(@non_exist) if @non_exist;
 	return map $s->{ $_ }, @_[1..$#_];
     }
-    my @non_exist = grep !$V->has_path( $_ ), @_[1..$#_];
+    my @non_exist = $V->paths_non_existing([ map [$_], @_[1..$#_] ]);
     return if !$ensure and @non_exist;
-    $g->add_vertices(@non_exist) if @non_exist;
+    $g->add_vertices(map @$_, @non_exist) if @non_exist;
     map $V->_get_path_id( $_ ), @_[1..$#_];
 }
 

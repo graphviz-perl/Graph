@@ -150,6 +150,11 @@ sub set_path_by_multi_id {
     return $m->__set_path_node( $p, $l, @_[1..$#_] );
 }
 
+sub paths_non_existing {
+    my ($m, $list) = @_;
+    grep !$m->has_path(@$_), @$list;
+}
+
 sub get_multi_ids {
     my $f = $_[0]->[ _f ];
     return () unless ($f & _MULTI);
@@ -346,7 +351,14 @@ Set the path in the Map by the multi id.
 =head2 get_paths_by_ids
 
 Given an array-ref of array-refs of vertex IDs, returns a list of
-array-refs of vertex paths.
+array-refs of paths.
+
+=head2 paths_non_existing
+
+    @non_existing = $m->paths_non_existing(\@paths);
+
+Given an array-ref of array-refs with paths, returns a list of
+non-existing paths.
 
 =head2 rename_path($from, $to)
 
