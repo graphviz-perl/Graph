@@ -9,14 +9,7 @@ my %undirected_map = map +($_ => $_), qw(
     same_connected_components
     connected_graph
 );
-my %directed_map = qw(
-    is_connected is_weakly_connected
-    connected_components weakly_connected_components
-    connected_component_by_vertex weakly_connected_component_by_vertex
-    connected_component_by_index weakly_connected_component_by_index
-    same_connected_components same_weakly_connected_components
-    connected_graph weakly_connected_graph
-);
+my %directed_map = map { (my $v=$_)=~s/connected/weakly_$&/;($_=>$v) } keys %undirected_map;
 
 use Graph::Undirected;
 use Graph::Directed;
