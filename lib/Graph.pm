@@ -927,291 +927,124 @@ sub find_a_cycle {
 ###
 # Attributes.
 
-# Vertex attributes.
+my @generic_methods = (
+    [ 'set_attribute', \&_set_attribute ],
+    [ 'set_attributes', \&_set_attributes ],
+    [ 'has_attributes', \&_has_attributes ],
+    [ 'has_attribute', \&_has_attribute ],
+    [ 'get_attributes', \&_get_attributes ],
+    [ 'get_attribute', \&_get_attribute ],
+    [ 'get_attribute_names', \&_get_attribute_names ],
+    [ 'get_attribute_values', \&_get_attribute_values ],
+    [ 'delete_attributes', \&_delete_attributes ],
+    [ 'delete_attribute', \&_delete_attribute ],
+);
+my %entity2offset = (vertex => _V, edge => _E);
+my %entity2args = (edge => '_vertex_ids');
+for my $entity (qw(vertex edge)) {
+    no strict 'refs';
+    my $expect_non = \&{ "expect_non_multi${entity}" };
+    my $expect_yes = \&{ "expect_multi${entity}" };
+    my $args_non = \&{ $entity2args{$entity} } if $entity2args{$entity};
+    my $args_yes = \&{ $entity2args{$entity}.'_multi' } if $entity2args{$entity};
+    my $offset = $entity2offset{$entity};
+    for my $t (@generic_methods) {
+	my ($raw, $func) = @$t;
+	my ($first, $rest) = ($raw =~ /^(\w+?)_(.+)/);
+	my $m = join '_', $first, $entity, $rest;
+	*$m = sub {
+	    &$expect_non; push @_, 0, $entity, $offset, $args_non; goto &$func;
+	};
+	*{$m.'_by_id'} = sub {
+	    &$expect_yes; push @_, 1, $entity, $offset, $args_yes; goto &$func;
+	};
+    }
+}
 
-sub set_vertex_attribute {
-    &expect_non_multivertexed;
-    my $g = $_[0];
+sub _set_attribute {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
     my $value = pop;
-    my $attr  = pop;
-    &add_vertex unless &has_vertex;
-    $g->[ _V ]->_set_path_attr( $_[1], $attr, $value );
-}
-
-sub set_vertex_attribute_by_id {
-    &expect_multivertexed;
-    my $value = pop;
-    my $attr  = pop;
-    &add_vertex_by_id unless &has_vertex_by_id;
-    $_[0]->[ _V ]->_set_path_attr( @_[1..$#_], $attr, $value );
-}
-
-sub set_vertex_attributes {
-    &expect_non_multivertexed;
     my $attr = pop;
-    &add_vertex unless &has_vertex;
-    my $g = shift;
-    $g->[ _V ]->_set_path_attrs( @_, $attr );
+    no strict 'refs';
+    &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_set_path_attr( @args, $attr, $value );
 }
 
-sub set_vertex_attributes_by_id {
-    &expect_multivertexed;
+sub _set_attributes {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
     my $attr = pop;
-    &add_vertex_by_id unless &has_vertex_by_id;
-    $_[0]->[ _V ]->_set_path_attrs( @_[1..$#_], $attr );
+    no strict 'refs';
+    &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_set_path_attrs( @args, $attr );
 }
 
-sub has_vertex_attributes {
-    &expect_non_multivertexed;
-    return 0 unless &has_vertex;
-    my $g = shift;
-    $g->[ _V ]->_has_path_attrs( @_ );
+sub _has_attributes {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    no strict 'refs';
+    return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_has_path_attrs( @args );
 }
 
-sub has_vertex_attributes_by_id {
-    &expect_multivertexed;
-    return 0 unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_has_path_attrs( @_ );
-}
-
-sub has_vertex_attribute {
-    &expect_non_multivertexed;
+sub _has_attribute {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
     my $attr = pop;
-    return 0 unless &has_vertex;
-    $_[0]->[ _V ]->_has_path_attr( @_[1..$#_], $attr );
+    no strict 'refs';
+    return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_has_path_attr( @args, $attr );
 }
 
-sub has_vertex_attribute_by_id {
-    &expect_multivertexed;
+sub _get_attributes {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    no strict 'refs';
+    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    scalar $_[0]->[ $offset ]->_get_path_attrs( @args );
+}
+
+sub _get_attribute {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    no strict 'refs';
     my $attr = pop;
-    return 0 unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_has_path_attr( @_, $attr );
+    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    scalar $_[0]->[ $offset ]->_get_path_attr( @args, $attr );
 }
 
-sub get_vertex_attributes {
-    &expect_non_multivertexed;
-    return undef unless &has_vertex;
-    my $g = shift;
-    scalar $g->[ _V ]->_get_path_attrs( @_ );
+sub _get_attribute_names {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    no strict 'refs';
+    return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_get_path_attr_names( @args );
 }
 
-sub get_vertex_attributes_by_id {
-    &expect_multivertexed;
-    return undef unless &has_vertex_by_id;
-    my $g = shift;
-    scalar $g->[ _V ]->_get_path_attrs( @_ );
+sub _get_attribute_values {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    no strict 'refs';
+    return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_get_path_attr_values( @args );
 }
 
-sub get_vertex_attribute {
-    &expect_non_multivertexed;
+sub _delete_attributes {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    no strict 'refs';
+    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_del_path_attrs( @args );
+}
+
+sub _delete_attribute {
+    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
     my $attr = pop;
-    return unless &has_vertex;
-    my $g = shift;
-    scalar $g->[ _V ]->_get_path_attr( @_, $attr );
-}
-
-sub get_vertex_attribute_by_id {
-    &expect_multivertexed;
-    my $attr = pop;
-    return unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_get_path_attr( @_, $attr );
-}
-
-sub get_vertex_attribute_names {
-    &expect_non_multivertexed;
-    return unless &has_vertex;
-    my $g = shift;
-    $g->[ _V ]->_get_path_attr_names( @_ );
-}
-
-sub get_vertex_attribute_names_by_id {
-    &expect_multivertexed;
-    return unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_get_path_attr_names( @_ );
-}
-
-sub get_vertex_attribute_values {
-    &expect_non_multivertexed;
-    return unless &has_vertex;
-    my $g = shift;
-    $g->[ _V ]->_get_path_attr_values( @_ );
-}
-
-sub get_vertex_attribute_values_by_id {
-    &expect_multivertexed;
-    return unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_get_path_attr_values( @_ );
-}
-
-sub delete_vertex_attributes {
-    &expect_non_multivertexed;
-    return undef unless &has_vertex;
-    my $g = shift;
-    $g->[ _V ]->_del_path_attrs( @_ );
-}
-
-sub delete_vertex_attributes_by_id {
-    &expect_multivertexed;
-    return undef unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_del_path_attrs( @_ );
-}
-
-sub delete_vertex_attribute {
-    &expect_non_multivertexed;
-    my $attr = pop;
-    return undef unless &has_vertex;
-    my $g = shift;
-    $g->[ _V ]->_del_path_attr( @_, $attr );
-}
-
-sub delete_vertex_attribute_by_id {
-    &expect_multivertexed;
-    my $attr = pop;
-    return undef unless &has_vertex_by_id;
-    my $g = shift;
-    $g->[ _V ]->_del_path_attr( @_, $attr );
-}
-
-# Edge attributes.
-
-sub set_edge_attribute {
-    &expect_non_multiedged;
-    my $value = pop;
-    my $attr  = pop;
-    &add_edge unless &has_edge;
-    $_[0]->[ _E ]->_set_path_attr( &_vertex_ids, $attr, $value );
-}
-
-sub set_edge_attribute_by_id {
-    &expect_multiedged;
-    my $value = pop;
-    my $attr  = pop;
-    &add_edge_by_id unless &has_edge_by_id;
-    $_[0]->[ _E ]->_set_path_attr( &_vertex_ids_multi, $attr, $value );
-}
-
-sub set_edge_attributes {
-    &expect_non_multiedged;
-    my $attr = pop;
-    &add_edge unless &has_edge;
-    $_[0]->[ _E ]->_set_path_attrs( &_vertex_ids, $attr );
-}
-
-sub set_edge_attributes_by_id {
-    &expect_multiedged;
-    my $attr = pop;
-    &add_edge_by_id unless &has_edge_by_id;
-    $_[0]->[ _E ]->_set_path_attrs( &_vertex_ids_multi, $attr );
-}
-
-sub has_edge_attributes {
-    &expect_non_multiedged;
-    return 0 unless &has_edge;
-    $_[0]->[ _E ]->_has_path_attrs( &_vertex_ids );
-}
-
-sub has_edge_attributes_by_id {
-    &expect_multiedged;
-    return 0 unless &has_edge_by_id;
-    $_[0]->[ _E ]->_has_path_attrs( &_vertex_ids_multi );
-}
-
-sub has_edge_attribute {
-    &expect_non_multiedged;
-    my $attr = pop;
-    return 0 unless &has_edge;
-    $_[0]->[ _E ]->_has_path_attr( &_vertex_ids, $attr );
-}
-
-sub has_edge_attribute_by_id {
-    &expect_multiedged;
-    my $attr = pop;
-    return 0 unless &has_edge_by_id;
-    $_[0]->[ _E ]->_has_path_attr( &_vertex_ids_multi, $attr );
-}
-
-sub get_edge_attributes {
-    &expect_non_multiedged;
-    return undef unless &has_edge;
-    scalar $_[0]->[ _E ]->_get_path_attrs( &_vertex_ids );
-}
-
-sub get_edge_attributes_by_id {
-    &expect_multiedged;
-    return unless &has_edge_by_id;
-    scalar $_[0]->[ _E ]->_get_path_attrs( &_vertex_ids_multi );
-}
-
-sub get_edge_attribute {
-    &expect_non_multiedged;
-    my $attr = pop;
-    return undef unless &has_edge;
-    my @i = &_vertex_ids;
-    return undef if @i == 0 && @_ - 1;
-    $_[0]->[ _E ]->_get_path_attr( @i, $attr );
-}
-
-sub get_edge_attribute_by_id {
-    &expect_multiedged;
-    my $attr = pop;
-    return unless &has_edge_by_id;
-    $_[0]->[ _E ]->_get_path_attr( &_vertex_ids_multi, $attr );
-}
-
-sub get_edge_attribute_names {
-    &expect_non_multiedged;
-    return unless &has_edge;
-    $_[0]->[ _E ]->_get_path_attr_names( &_vertex_ids );
-}
-
-sub get_edge_attribute_names_by_id {
-    &expect_multiedged;
-    return unless &has_edge_by_id;
-    $_[0]->[ _E ]->_get_path_attr_names( &_vertex_ids_multi );
-}
-
-sub get_edge_attribute_values {
-    &expect_non_multiedged;
-    return unless &has_edge;
-    $_[0]->[ _E ]->_get_path_attr_values( &_vertex_ids );
-}
-
-sub get_edge_attribute_values_by_id {
-    &expect_multiedged;
-    return unless &has_edge_by_id;
-    $_[0]->[ _E ]->_get_path_attr_values( &_vertex_ids_multi );
-}
-
-sub delete_edge_attributes {
-    &expect_non_multiedged;
-    return unless &has_edge;
-    $_[0]->[ _E ]->_del_path_attrs( &_vertex_ids );
-}
-
-sub delete_edge_attributes_by_id {
-    &expect_multiedged;
-    return unless &has_edge_by_id;
-    $_[0]->[ _E ]->_del_path_attrs( &_vertex_ids_multi );
-}
-
-sub delete_edge_attribute {
-    &expect_non_multiedged;
-    my $attr = pop;
-    return unless &has_edge;
-    $_[0]->[ _E ]->_del_path_attr( &_vertex_ids, $attr );
-}
-
-sub delete_edge_attribute_by_id {
-    &expect_multiedged;
-    my $attr = pop;
-    return unless &has_edge_by_id;
-    $_[0]->[ _E ]->_del_path_attr( &_vertex_ids_multi, $attr );
+    no strict 'refs';
+    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    $_[0]->[ $offset ]->_del_path_attr( @args, $attr );
 }
 
 sub add_vertices {
@@ -1672,18 +1505,22 @@ sub expect_hyperedged {
 sub expect_multivertexed {
     _expected('multivertexed') unless &is_multivertexed;
 }
+*expect_multivertex = \&expect_multivertexed;
 
 sub expect_non_multivertexed {
     _expected('non-multivertexed') if &is_multivertexed;
 }
+*expect_non_multivertex = \&expect_non_multivertexed;
 
 sub expect_non_multiedged {
     _expected('non-multiedged') if &is_multiedged;
 }
+*expect_non_multiedge = \&expect_non_multiedged;
 
 sub expect_multiedged {
     _expected('multiedged') unless &is_multiedged;
 }
+*expect_multiedge = \&expect_multiedged;
 
 sub expect_non_unionfind {
     _expected('non-unionfind') if &has_union_find;

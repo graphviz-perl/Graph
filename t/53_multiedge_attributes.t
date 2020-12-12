@@ -125,7 +125,7 @@ is( $g->get_edge_weight_by_id("a", "b", "hot"), undef);
 my $h = Graph->new(multiedged => 1);
 
 eval { $h->set_edge_attribute("foo", "bar", "color", "gold") };
-like($@, qr/set_edge_attribute: expected non-multiedged/);
+like($@, qr/expected non-multiedged/);
 
 $h->ingest($g);
 my $got = ($h->as_hashes)[1];

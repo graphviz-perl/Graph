@@ -2632,13 +2632,21 @@ graph call is not as expected.
 
 =item expect_hyperedged
 
+=item expect_multiedge
+
 =item expect_multiedged
+
+=item expect_multivertex
 
 =item expect_multivertexed
 
 =item expect_no_args
 
+=item expect_non_multiedge
+
 =item expect_non_multiedged
+
+=item expect_non_multivertex
 
 =item expect_non_multivertexed
 

@@ -115,7 +115,7 @@ is_deeply($got, [qw(a a a a b c)]) or diag explain $got;
 my $h = Graph->new(multivertexed => 1);
 
 eval { $h->set_vertex_attribute("foo", "color", "gold") };
-like($@, qr/set_vertex_attribute: expected non-multivertexed/);
+like($@, qr/expected non-multivertexed/);
 
 $h->ingest($g);
 $got = ($h->as_hashes)[0];
