@@ -399,7 +399,7 @@ sub has_edge {
 	@i = @$s{ @_[ 1, 2 ] };
     } else {
 	@i = &_vertex_ids;
-	return 0 if @i == 0 && @_ - 1;
+	return 0 if @i != @_ - 1;
     }
     if (@i == 2 && !($Ef & (_HYPER|_REF|_UNIQ))) { # Fast path.
 	@i = sort @i if ($Ef & _UNORD);
