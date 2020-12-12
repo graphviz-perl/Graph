@@ -558,6 +558,12 @@ Return true if the graph is transitive, false otherwise.
 
 Return the transitive closure graph of the graph.
 
+=item transitive_closure_matrix_clear_cache
+
+    $g->transitive_closure_matrix_clear_cache
+
+See L</"Clearing cached results">.
+
 =back
 
 You can query the reachability from $u to $v with

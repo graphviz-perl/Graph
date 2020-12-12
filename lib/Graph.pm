@@ -1994,7 +1994,7 @@ sub _undirected_copy_compute {
 
 sub undirected_copy {
     &expect_directed;
-    return _check_cache($_[0], 'undirected', \&_undirected_copy_compute);
+    return _check_cache($_[0], 'undirected_copy', \&_undirected_copy_compute);
 }
 
 *undirected_copy_graph = \&undirected_copy;
@@ -2019,64 +2019,32 @@ sub directed_copy {
 
 my %_cache_type =
     (
-     'connectivity'        => '_ccc',
-     'strong_connectivity' => '_scc',
-     'biconnectivity'      => '_bcc',
-     'SPT_Dijkstra'        => '_spt_di',
-     'SPT_Bellman_Ford'    => '_spt_bf',
-     'undirected'          => '_undirected',
-     'transitive_closure_matrix' => '_tcm',
+     'connectivity'        => ['_ccc'],
+     'strong_connectivity' => ['_scc'],
+     'biconnectivity'      => ['_bcc'],
+     'SPT_Dijkstra'        => ['_spt_di', 'SPT_Dijkstra_first_root'],
+     'SPT_Bellman_Ford'    => ['_spt_bf'],
+     'undirected_copy'     => ['_undirected'],
+     'transitive_closure_matrix' => ['_tcm'],
     );
 
+for my $t (keys %_cache_type) {
+    no strict 'refs';
+    my @attr = @{ $_cache_type{$t} };
+    *{$t."_clear_cache"} = sub { $_[0]->delete_graph_attribute($_) for @attr };
+}
+
 sub _check_cache {
-    my ($g, $type, $code) = splice @_, 0, 3;
+    my ($g, $type, $code, @args) = @_;
     my $c = $_cache_type{$type};
     __carp_confess "Graph: unknown cache type '$type'" if !defined $c;
-    my $a = $g->get_graph_attribute($c);
+    my $a = $g->get_graph_attribute($c->[0]);
     __carp_confess "$c attribute set to unexpected value $a"
 	if defined $a and ref $a ne 'ARRAY';
     unless (defined $a && $a->[ 0 ] == $g->[ _G ]) {
-	$g->set_graph_attribute($c, $a = [ $g->[ _G ], $code->( $g, @_ ) ]);
+	$g->set_graph_attribute($c->[0], $a = [ $g->[ _G ], $code->( $g, @args ) ]);
     }
     return $a->[ 1 ];
-}
-
-sub _clear_cache {
-    my ($g, $type) = @_;
-    my $c = $_cache_type{$type};
-    __carp_confess "Graph: unknown cache type '$type'" if !defined $c;
-    $g->delete_graph_attribute($c);
-}
-
-sub connectivity_clear_cache {
-    my $g = shift;
-    _clear_cache($g, 'connectivity');
-}
-
-sub strong_connectivity_clear_cache {
-    my $g = shift;
-    _clear_cache($g, 'strong_connectivity');
-}
-
-sub biconnectivity_clear_cache {
-    my $g = shift;
-    _clear_cache($g, 'biconnectivity');
-}
-
-sub SPT_Dijkstra_clear_cache {
-    my $g = shift;
-    _clear_cache($g, 'SPT_Dijkstra');
-    $g->delete_graph_attribute('SPT_Dijkstra_first_root');
-}
-
-sub SPT_Bellman_Ford_clear_cache {
-    my $g = shift;
-    _clear_cache($g, 'SPT_Bellman_Ford');
-}
-
-sub undirected_copy_clear_cache {
-    my $g = shift;
-    _clear_cache($g, 'undirected_copy');
 }
 
 ###
@@ -2247,7 +2215,7 @@ sub weakly_connected_graph {
 }
 
 sub _strongly_connected_components_compute {
-    my $g = shift;
+    my $g = $_[0];
     require Graph::Traversal::DFS;
     require List::Util;
     my $t = Graph::Traversal::DFS->new($g);
