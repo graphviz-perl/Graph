@@ -175,7 +175,6 @@ sub new {
 	 multiedged	=> _MULTI,
 	 hyperedged	=> _HYPER,
 	 omniedged	=> _UNORD,
-	 uniqedged	=> _UNIQ,
 	);
 
     _opt(\%opt, \$gflags,
@@ -256,7 +255,6 @@ sub countedged    { $_[0]->[ _E ]->_is_COUNT }
 sub multiedged    { $_[0]->[ _E ]->_is_MULTI }
 sub hyperedged    { $_[0]->[ _E ]->_is_HYPER }
 sub omniedged     { $_[0]->[ _E ]->_is_UNORD }
-sub uniqedged     { $_[0]->[ _E ]->_is_UNIQ  }
 
 *undirected   = \&omniedged;
 *omnidirected = \&omniedged;
@@ -275,7 +273,6 @@ sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 *is_multiedged    = \&multiedged;
 *is_hyperedged    = \&hyperedged;
 *is_omniedged     = \&omniedged;
-*is_uniqedged     = \&uniqedged;
 
 sub _union_find_add_vertex {
     my ($g, $v) = @_;
