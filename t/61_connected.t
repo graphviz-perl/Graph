@@ -10,17 +10,22 @@ my %undirected_map = map +($_ => $_), qw(
     connected_graph
 );
 my %directed_map = map { (my $v=$_)=~s/connected/weakly_$&/;($_=>$v) } keys %undirected_map;
+my %mapping = ('Graph::Undirected' => \%undirected_map, 'Graph::Directed', \%directed_map);
 
 use Graph::Undirected;
 use Graph::Directed;
 
-test_graph(Graph::Undirected->new, \%undirected_map);
-test_graph(Graph::Undirected->new(unionfind => 1), \%undirected_map);
-test_graph(Graph::Undirected->new(unionfind => 1, multiedged => 1), \%undirected_map);
-test_graph(Graph::Directed->new, \%directed_map);
+test_graph(@$_) for (
+    ['Graph::Undirected', {}],
+    ['Graph::Undirected', {unionfind => 1}],
+    ['Graph::Undirected', {unionfind => 1, multiedged => 1}],
+    ['Graph::Directed', {}],
+);
 
 sub test_graph {
-    my ($g0, $methmap) = @_;
+    my ($class, $args) = @_;
+    my $g0 = $class->new(%$args);
+    my $methmap = $mapping{$class};
     ok(!$g0->${ \$methmap->{is_connected} });
     is( $g0->${ \$methmap->{connected_components} }, 0);
     is( $g0->${ \$methmap->{connected_component_by_vertex} }('a'), undef);
