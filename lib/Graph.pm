@@ -1435,9 +1435,7 @@ sub _defattr {
 
 sub add_weighted_vertex {
     &expect_non_multivertexed;
-    my $w = pop;
-    &add_vertex;
-    push @_, $defattr, $w;
+    push @_, $defattr, pop;
     goto &set_vertex_attribute;
 }
 
@@ -1477,9 +1475,7 @@ sub delete_vertex_weight {
 
 sub add_weighted_vertex_by_id {
     &expect_multivertexed;
-    my $w = pop;
-    &add_vertex_by_id;
-    push @_, $defattr, $w;
+    push @_, $defattr, pop;
     goto &set_vertex_attribute_by_id;
 }
 
