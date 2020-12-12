@@ -360,6 +360,13 @@ array-refs of paths.
 Given an array-ref of array-refs with paths, returns a list of
 non-existing paths.
 
+=head2 get_ids_by_paths
+
+    @ids = $m->get_ids_by_paths(\@paths);
+
+Given an array-ref of array-refs with paths, returns a list of IDs of
+existing paths (non-existing ones will not be represented).
+
 =head2 rename_path($from, $to)
 
 Rename the path.

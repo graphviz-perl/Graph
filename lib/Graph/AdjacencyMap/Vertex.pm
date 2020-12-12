@@ -76,12 +76,12 @@ sub has_path_by_multi_id {
     return exists $n->[ _nm ]->{ $id };
 }
 
-sub _get_path_id {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    my ($e, $n) = &{ $_[0]->can('__get_path_node') };
-    return undef unless $e;
-    return ref $n ? $n->[ _ni ] : $n;
+sub get_ids_by_paths {
+    my ($m, $list) = @_;
+    map {
+	my ($e, $n) = $m->__get_path_node(@$_);
+	!$e ? () : ref $n ? $n->[ _ni ] : $n;
+    } @$list;
 }
 
 sub _get_path_count {

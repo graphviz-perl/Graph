@@ -44,7 +44,7 @@ sub stringify {
     } elsif ($a == 1) {
 	for my $v (@p) {
 	    my @r = $hyper ? '['.join(',', @$v).']' : $v->[0];
-	    my $text = $m->_get_path_id(@$v);
+	    my ($text) = $m->get_ids_by_paths([ $v ]);
 	    my $attrs = $multi
 		? (( $m->__get_path_node( @$v ) )[1] || [])->[-1]
 		: $m->_get_path_attrs(@$v);
@@ -177,21 +177,21 @@ sub _get_path_node {
     goto &{ $m->can('__get_path_node') };
 }
 
-sub _get_path_id {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
-    my ($e, $n);
-    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
-	return unless exists $m->[ _s ]->{ $_[1] };
-	my $p = $m->[ _s ]->{ $_[1] };
-	$e = exists $p->{ $_[2] };
-	$n = $p->{ $_[2] };
-    } else {
-	($e, $n) = &_get_path_node;
-    }
-    return undef unless $e;
-    return ref $n ? $n->[ _ni ] : $n;
+sub get_ids_by_paths {
+    my ($m, $list) = @_;
+    my ($n, $f, $a, $i, $s) = @$m;
+    my $unord = $a > 1 && ($f & _UNORD);
+    return map { # Fast path
+	my @p = @$_;
+	@p = sort @p if $unord;
+	my $this_s = $s;
+	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	defined $this_s ? $this_s : ();
+    } @$list if $a == 2 && !($f & (_HYPER|_REF|_UNIQ));
+    map {
+	my ($e, $n) = $m->_get_path_node(@$_);
+	!$e ? () : ref $n ? $n->[ _ni ] : $n;
+    } @$list;
 }
 
 sub _get_path_count {

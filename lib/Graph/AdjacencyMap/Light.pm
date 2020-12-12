@@ -96,19 +96,18 @@ sub has_path {
     exists $s->{ $e };
 }
 
-sub _get_path_id {
-    my $m = shift;
+sub get_ids_by_paths {
+    my ($m, $list) = @_;
     my ($n, $f, $a, $i, $s) = @$m;
-    return undef unless $a == @_;
-    my $e;
-    if ($a == 2) {
-	@_ = sort @_ if ($f & _UNORD);
-	$e = shift;
-	return undef unless exists $s->{ $e };
-        $s = $s->{ $e };
-    }
-    $e = shift;
-    $s->{ $e };
+    my $unord = $a > 1 && ($f & _UNORD);
+    map {
+	my @p = @$_;
+#	$a != @$_ - 1 ? undef :
+	@p = sort @p if $unord;
+	my $this_s = $s;
+	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	defined $this_s ? $this_s : ();
+    } @$list;
 }
 
 sub _get_path_count {

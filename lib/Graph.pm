@@ -279,7 +279,7 @@ sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 
 sub _union_find_add_vertex {
     my ($g, $v) = @_;
-    $g->[ _U ]->add( $g->[ _V ]->_get_path_id( $v ) );
+    $g->[ _U ]->add( $g->[ _V ]->get_ids_by_paths([ [$v] ]) );
 }
 
 sub add_vertex {
@@ -381,13 +381,15 @@ sub _vertex_ids_maybe_ensure {
     my @non_exist = $V->paths_non_existing([ map [$_], @_[1..$#_] ]);
     return if !$ensure and @non_exist;
     $g->add_vertices(map @$_, @non_exist) if @non_exist;
-    map $V->_get_path_id( $_ ), @_[1..$#_];
+    $V->get_ids_by_paths([ map [$_], @_[1..$#_] ]);
 }
 
 sub has_edge {
     my $g = $_[0];
     my $E = $g->[ _E ];
     my $V = $g->[ _V ];
+    my $Ef = $E->[ _f ];
+    return 0 if !($Ef & _HYPER) and @_ != 3;
     my @i;
     if (($V->[ _f ] & _LIGHT) && @_ == 3) {
 	my $s = $V->[ _s ];
@@ -399,14 +401,13 @@ sub has_edge {
 	@i = &_vertex_ids;
 	return 0 if @i == 0 && @_ - 1;
     }
-    my $f = $E->[ _f ];
-    if (@i == 2 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@i = sort @i if ($f & _UNORD);
+    if (@i == 2 && !($Ef & (_HYPER|_REF|_UNIQ))) { # Fast path.
+	@i = sort @i if ($Ef & _UNORD);
 	my $s = $E->[ _s ];
 	return exists $s->{ $i[0] } &&
 	       exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
     } else {
-	return defined $E->_get_path_id( @i ) ? 1 : 0;
+	return $E->get_ids_by_paths([ \@i ]);
     }
 }
 
@@ -542,7 +543,7 @@ sub _edges_at {
     my $en = 0;
     my %ev;
     my $Ei = $E->_ids;
-    for my $vi ( grep defined, map $V->_get_path_id( $_ ), @_[1..$#_] ) {
+    for my $vi ( $V->get_ids_by_paths([ map [$_], @_[1..$#_] ]) ) {
 	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	    next if !defined(my $ev = $Ei->[$ei]);
 	    if (wantarray) {
@@ -581,9 +582,9 @@ sub _edges {
     my ($g, @at) = @_;
     &_edge_cache;
     my $N0 = $g->[ $n ][0];
-    @at = values %{{ @at, reverse @at }};
+    @at = map [$_], values %{{ @at, reverse @at }};
     my $V = $g->[ _V ];
-    map @{ $N0->{ $_ } }, grep defined && exists $N0->{ $_ }, map $V->_get_path_id( $_ ), @at;
+    map @{ $N0->{ $_ } }, grep exists $N0->{ $_ }, $V->get_ids_by_paths(\@at);
 }
 
 sub _edges_from {
@@ -2062,14 +2063,16 @@ sub _connected_components_compute {
 	my %icce; # Isolated vertices.
 	my %icci;
 	my $icc = 0;
-	for my $v ( $g->unique_vertices ) {
-	    $cc = $UF->find( $V->_get_path_id( $v ) );
+	my @v = $g->unique_vertices;
+	my @ids = $V->get_ids_by_paths([ map [$_], @v ]);
+	for (my $i = 0; $i <= $#v; $i++) {
+	    $cc = $UF->find( $ids[$i] );
 	    if (defined $cc) {
-		$cce{ $v } = $cc;
-		push @{ $cci{ $cc } }, $v;
+		$cce{ $v[$i] } = $cc;
+		push @{ $cci{ $cc } }, $v[$i];
 	    } else {
-		$icce{ $v } = $icc;
-		push @{ $icci{ $icc } }, $v;
+		$icce{ $v[$i] } = $icc;
+		push @{ $icci{ $icc } }, $v[$i];
 		$icc++;
 	    }
 	}
@@ -2137,7 +2140,9 @@ sub same_connected_components {
     if (&has_union_find) {
 	my $UF = &_get_union_find;
 	my $V  = $g->[ _V ];
-	@components = map scalar $UF->find( $V->_get_path_id( $_ ) ), @args;
+	my @ids = $V->get_ids_by_paths([ map [$_], @args ]);
+	return 0 if @ids != @args;
+	@components = map $UF->find( $_ ), @ids;
     } else {
 	@components = @{ (&_connected_components)[1] }{ @args };
     }

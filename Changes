@@ -3,6 +3,7 @@
 - remove "hypervertices": a collection of n vertices is a hyperedge
 - AdjacencyMap.get_paths_by_ids
 - transitive_closure et al no longer re-bless objects to Graph
+- AdjacencyMap.get_ids_by_paths
 
 0.9712 2020-12-05
 - bug-fix: set_edge_attribute_by_id add_edge_by_id if not exist

@@ -17,11 +17,11 @@ my $m1 = Graph::AdjacencyMap::Heavy->_new(_REF, 1);
 my $m2 = Graph::AdjacencyMap::Heavy->_new(_REF, 2);
 
 is( $m1->set_path($t), 0 );
-my @m1 = $m1->get_paths_by_ids([ [ $m1->_get_path_id($t) ] ]);
+my @m1 = $m1->get_paths_by_ids([ map [$_], $m1->get_ids_by_paths([ [$t] ]) ]);
 is( $m1[0][0], $t );
 
 is( $m2->set_path($u, $v), 0 );
-my @m2 = $m2->get_paths_by_ids([ [ $m2->_get_path_id($u, $v) ] ]);
+my @m2 = $m2->get_paths_by_ids([ map [$_], $m2->get_ids_by_paths([ [$u, $v] ]) ]);
 is( $m2[0][0][0], $u );
 ok( $m2[0][0][1] == $v );		# is() doesn't work.
 ok( $m2[0][0][1] ** 2 == $v ** 2 );	# is() doesn't work.
