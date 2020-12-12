@@ -927,7 +927,7 @@ L</biconnected_components>.
 For a directed graph, return the vertices of the ith connected
 component, the indexing starting from zero.  The order of vertices
 within a component is undefined, while the order of the connected
-components is the as from strongly_connected_components().
+components is as from strongly_connected_components().
 
 For the inverse, see L</strongly_connected_component_by_vertex>.
 

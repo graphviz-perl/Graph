@@ -2249,38 +2249,33 @@ sub weakly_connected_graph {
 sub _strongly_connected_components_compute {
     my $g = shift;
     require Graph::Traversal::DFS;
+    require List::Util;
     my $t = Graph::Traversal::DFS->new($g);
     my @d = reverse $t->dfs;
     my @c;
-    my $h = $g->transpose_graph;
-    my $u =
-	Graph::Traversal::DFS->new($h,
-				   next_root => sub {
-				       my ($t, $u) = @_;
-				       my $root;
-				       while (defined($root = shift @d)) {
-					   last if exists $u->{ $root };
-				       }
-				       if (defined $root) {
-					   push @c, [];
-					   return $root;
-				       } else {
-					   return;
-				       }
-				   },
-				   pre => sub {
-				       my ($v, $t) = @_;
-				       push @{ $c[-1] }, $v;
-				   },
-				   @_);
+    my $u = Graph::Traversal::DFS->new(
+	$g->transpose_graph,
+	next_root => sub {
+	    my ($t, $u) = @_;
+	    return if !defined(my $root = List::Util::first(
+		sub { exists $u->{$_} }, @d
+	    ));
+	    push @c, [];
+	    return $root;
+	},
+	pre => sub {
+	    my ($v, $t) = @_;
+	    push @{ $c[-1] }, $v;
+	},
+	next_alphabetic => 1,
+    );
     $u->dfs;
     return \@c;
 }
 
 sub _strongly_connected_components {
-    my $g = shift;
-    my $scc = _check_cache($g, 'strong_connectivity',
-			   \&_strongly_connected_components_compute, @_);
+    my $scc = _check_cache($_[0], 'strong_connectivity',
+			   \&_strongly_connected_components_compute);
     return defined $scc ? @$scc : ( );
 }
 
@@ -2291,8 +2286,8 @@ sub strongly_connected_components {
 
 sub strongly_connected_component_by_vertex {
     &expect_directed;
-    my ($v) = splice @_, 1, 1, next_alphabetic => 1;
     my @scc = &_strongly_connected_components;
+    my $v = $_[1];
     for (my $i = 0; $i <= $#scc; $i++) {
 	for (my $j = 0; $j <= $#{ $scc[$i] }; $j++) {
 	    return $i if $scc[$i]->[$j] eq $v;
@@ -2303,7 +2298,7 @@ sub strongly_connected_component_by_vertex {
 
 sub strongly_connected_component_by_index {
     &expect_directed;
-    my ($i) = splice @_, 1, 1, next_alphabetic => 1;
+    my $i = $_[1];
     my $c = ( &_strongly_connected_components )[ $i ];
     return defined $c ? @{ $c } : ();
 }
@@ -2311,7 +2306,6 @@ sub strongly_connected_component_by_index {
 sub same_strongly_connected_components {
     &expect_directed;
     my ($g, @args) = @_;
-    splice @_, 1, 0, next_alphabetic => 1;
     my @scc = &_strongly_connected_components;
     my @i;
     while (@args) {
