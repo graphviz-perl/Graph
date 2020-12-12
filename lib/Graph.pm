@@ -2158,14 +2158,9 @@ sub connected_graph {
 	# TODO: super_component?
 	$cg->add_vertices($g->vertices);
     } else {
-	my $sc_cb =
-	    exists $opt{super_component} ?
-		$opt{super_component} : $super_component;
-	for my $cc ( $g->connected_components() ) {
-	    my $sc = $sc_cb->(@$cc);
-	    $cg->add_vertex($sc);
-	    $cg->set_vertex_attribute($sc, 'subvertices', [ @$cc ]);
-	}
+	my $sc_cb = $opt{super_component} || $super_component;
+	$cg->set_vertex_attribute(scalar $sc_cb->(@$_), 'subvertices', $_)
+	    for $g->connected_components;
     }
     return $cg;
 }
@@ -2340,10 +2335,9 @@ sub strongly_connected_graph {
 
     my %c;
     my @s;
-    for (my $i = 0; $i <  @c; $i++) {
+    for (my $i = 0; $i < @c; $i++) {
 	my $c = $c[$i];
-	$s->add_vertex( $s[$i] = $sc_cb->(@$c) );
-	$s->set_vertex_attribute($s[$i], 'subvertices', [ @$c ]);
+	$s->set_vertex_attribute($s[$i] = $sc_cb->(@$c), 'subvertices', $c);
 	@c{@$c} = ($i) x @$c;
     }
 
@@ -2536,13 +2530,9 @@ sub biconnected_graph {
     my ($g, %opt) = @_;
     my ($bc, $v2bc) = (&biconnectivity)[1, 3];
     my $bcg = Graph->new(directed => 0);
-    my $sc_cb =
-	exists $opt{super_component} ?
-	    $opt{super_component} : $super_component;
-    for my $c (@$bc) {
-	$bcg->add_vertex(my $s = $sc_cb->(@$c));
-	$bcg->set_vertex_attribute($s, 'subvertices', [ @$c ]);
-    }
+    my $sc_cb = $opt{super_component} || $super_component;
+    $bcg->set_vertex_attribute(scalar $sc_cb->(@$_), 'subvertices', $_)
+	for @$bc;
     my %k;
     for my $i (0..$#$bc) {
 	my @u = @{ $bc->[ $i ] };
@@ -2577,8 +2567,7 @@ sub _SPT_add {
 	    my $etc_s = $etc->{ $s } || 0;
 	    $etc->{ $s } = $etc_r + $t;
 	    # print "$r - $s : setting $s to $etc->{ $s } ($etc_r, $etc_s)\n";
-	    $h->set_vertex_attribute( $s, $attr, $etc->{ $s });
-	    $h->set_vertex_attribute( $s, 'p', $r );
+	    $h->set_vertex_attributes($s, { $attr=>$etc->{ $s }, 'p', $r });
 	    $HF->add( Graph::SPTHeapElem->new($r, $s, $etc->{ $s }) );
 	}
     }
@@ -2713,8 +2702,7 @@ sub SPT_Bellman_Ford {
 	    my $u = $p->{ $v };
 	    $h->set_edge_attribute( $u, $v, $attr,
 				    $g->get_edge_attribute($u, $v, $attr));
-	    $h->set_vertex_attribute( $v, $attr, $d->{ $v } );
-	    $h->set_vertex_attribute( $v, 'p', $u );
+	    $h->set_vertex_attributes( $v, { $attr, $d->{ $v }, p => $u } );
 	}
 	$spt_bf->{ $r } = [ $g->[ _G ], $h ];
 	$g->set_graph_attribute('_spt_bf', $spt_bf);
