@@ -2100,7 +2100,7 @@ sub _connected_components_compute {
 					   @_[1..$#_]);
 	$t->dfs;
     }
-    return [ \%cce, \%cci ];
+    return [ \%cci, \%cce ];
 }
 
 sub _connected_components {
@@ -2112,21 +2112,21 @@ sub _connected_components {
 sub connected_component_by_vertex {
     &expect_undirected;
     my ($g, $v) = @_;
-    my ($CCE, $CCI) = &_connected_components;
+    my ($CCI, $CCE) = &_connected_components;
     return $CCE->{ $v };
 }
 
 sub connected_component_by_index {
     &expect_undirected;
     my ($g, $i) = @_;
-    my ($CCE, $CCI) = &_connected_components;
+    my ($CCI) = &_connected_components;
     return unless my $value = (values %$CCI)[$i];
     return @$value;
 }
 
 sub connected_components {
     &expect_undirected;
-    my ($CCE, $CCI) = &_connected_components;
+    my ($CCI) = &_connected_components;
     return values %{ $CCI };
 }
 
@@ -2140,7 +2140,7 @@ sub same_connected_components {
 	$c = $UF->find( $V->_get_path_id ( $u ) );
 	@d = map scalar $UF->find( $V->_get_path_id( $_ ) ), @args;
     } else {
-	my ($CCE, $CCI) = &_connected_components;
+	my ($CCI, $CCE) = &_connected_components;
 	$c = $CCE->{ $u };
 	@d = map $CCE->{ $_ }, @args;
     }
@@ -2172,7 +2172,7 @@ sub connected_graph {
 
 sub is_connected {
     &expect_undirected;
-    my ($CCE, $CCI) = &_connected_components;
+    my ($CCI) = &_connected_components;
     return keys %{ $CCI } == 1;
 }
 
