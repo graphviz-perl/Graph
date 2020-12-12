@@ -10,7 +10,7 @@ if ($mm_ver =~ /_/) { # dev version
 }
 
 my %PREREQ_PM = (
-    'List::Util'	=> 0,
+    'List::Util'	=> '1.45',
     'Scalar::Util'	=> 0,
     'Heap'	        => '0.80',
 );

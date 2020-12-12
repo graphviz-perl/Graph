@@ -2132,20 +2132,18 @@ sub connected_components {
 
 sub same_connected_components {
     &expect_undirected;
-    my ($g, $u, @args) = @_;
-    my ($c, @d);
+    my ($g, @args) = @_;
+    my @components;
     if (&has_union_find) {
 	my $UF = &_get_union_find;
 	my $V  = $g->[ _V ];
-	$c = $UF->find( $V->_get_path_id ( $u ) );
-	@d = map scalar $UF->find( $V->_get_path_id( $_ ) ), @args;
+	@components = map scalar $UF->find( $V->_get_path_id( $_ ) ), @args;
     } else {
-	my ($CCI, $CCE) = &_connected_components;
-	$c = $CCE->{ $u };
-	@d = map $CCE->{ $_ }, @args;
+	@components = @{ (&_connected_components)[1] }{ @args };
     }
-    return 0 if grep !(defined($_) && $_ eq $c), @d;
-    return 1;
+    return 0 if grep !defined, @components;
+    require List::Util;
+    List::Util::uniq( @components ) == 1;
 }
 
 my $super_component = sub { join("+", sort @_) };
