@@ -27,7 +27,7 @@ sub new {
 	multiedged => 0,
 	($opt{ reflexive } ? (vertices => [$g->vertices]) : ()),
     );
-    my $tcm = $g->_check_cache('transitive_closure_matrix',
+    my $tcm = $g->_check_cache('transitive_closure_matrix', [],
 	\&_transitive_closure_matrix_compute, %opt);
     my $tcm00 = $tcm->[0][0]; # 0=am, 0=bitmatrix
     my $tcm01 = $tcm->[0][1]; #     , 1=hash mapping v-name to the offset into dm data structures (in retval of $g->vertices)

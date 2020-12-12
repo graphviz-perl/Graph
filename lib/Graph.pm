@@ -1988,7 +1988,7 @@ sub _undirected_copy_compute {
 
 sub undirected_copy {
     &expect_directed;
-    return _check_cache($_[0], 'undirected_copy', \&_undirected_copy_compute);
+    return _check_cache($_[0], 'undirected_copy', [], \&_undirected_copy_compute);
 }
 
 *undirected_copy_graph = \&undirected_copy;
@@ -2016,8 +2016,8 @@ my %_cache_type =
      'connectivity'        => ['_ccc'],
      'strong_connectivity' => ['_scc'],
      'biconnectivity'      => ['_bcc'],
-     'SPT_Dijkstra'        => ['_spt_di', 'SPT_Dijkstra_first_root'],
-     'SPT_Bellman_Ford'    => ['_spt_bf'],
+     'SPT_Dijkstra'        => ['_spt_di', 'SPT_Dijkstra_root'],
+     'SPT_Bellman_Ford'    => ['_spt_bf', 'SPT_Bellman_Ford_root'],
      'undirected_copy'     => ['_undirected'],
      'transitive_closure_matrix' => ['_tcm'],
     );
@@ -2029,14 +2029,25 @@ for my $t (keys %_cache_type) {
 }
 
 sub _check_cache {
-    my ($g, $type, $code, @args) = @_;
+    my ($g, $type, $extra_vals, $code, @args) = @_;
     my $c = $_cache_type{$type};
     __carp_confess "Graph: unknown cache type '$type'" if !defined $c;
-    my $a = $g->get_graph_attribute($c->[0]);
+    my ($main_key, @extra_keys) = @$c;
+    __carp_confess "Graph: wrong number of extra values (@extra_keys) vs (@$extra_vals)" if @extra_keys != @$extra_vals;
+    my $a = $g->get_graph_attribute($main_key);
     __carp_confess "$c attribute set to unexpected value $a"
 	if defined $a and ref $a ne 'ARRAY';
     unless (defined $a && $a->[ 0 ] == $g->[ _G ]) {
-	$g->set_graph_attribute($c->[0], $a = [ $g->[ _G ], $code->( $g, @args ) ]);
+	$g->set_graph_attribute($main_key, $a = [ $g->[ _G ], $code->( $g, @args ) ]);
+    }
+    my $i = -1;
+    my $extra_invalid = grep {
+	my $v = $a->[ 1 ]->get_graph_attribute($_);
+	$i++; # here so still incremented even if short-cut
+	!defined $v or $v ne $extra_vals->[$i];
+    } @extra_keys;
+    if ($extra_invalid) {
+	$g->set_graph_attribute($main_key, $a = [ $g->[ _G ], $code->( $g, @args ) ]);
     }
     return $a->[ 1 ];
 }
@@ -2100,7 +2111,7 @@ sub _connected_components_compute {
 }
 
 sub _connected_components {
-    my $ccc = _check_cache($_[0], 'connectivity',
+    my $ccc = _check_cache($_[0], 'connectivity', [],
 			   \&_connected_components_compute);
     return @{ $ccc };
 }
@@ -2233,7 +2244,7 @@ sub _strongly_connected_components_compute {
 }
 
 sub _strongly_connected_components {
-    my $scc = _check_cache($_[0], 'strong_connectivity',
+    my $scc = _check_cache($_[0], 'strong_connectivity', [],
 			   \&_strongly_connected_components_compute);
     return defined $scc ? @$scc : ( );
 }
@@ -2462,7 +2473,7 @@ sub _biconnectivity_compute {
 
 sub biconnectivity {
     &expect_undirected;
-    my $bcc = _check_cache($_[0], 'biconnectivity',
+    my $bcc = _check_cache($_[0], 'biconnectivity', [],
 			   \&_biconnectivity_compute, @_[1..$#_]);
     return defined $bcc ? @$bcc : ( );
 }
@@ -2570,31 +2581,19 @@ sub _SPT_add {
 }
 
 sub _SPT_Dijkstra_compute {
+    my ($g, %opt) = @_;
+    require Graph::SPTHeapElem;
+    my $sptg = $g->_heap_walk($g->new, \&_SPT_add, {}, %opt);
+    $sptg->set_graph_attribute('SPT_Dijkstra_root', $opt{first_root});
+    $sptg;
 }
 
 sub SPT_Dijkstra {
     my $g = shift;
     my %opt = @_ == 1 ? (first_root => $_[0]) : @_;
-    my $first_root = $opt{ first_root };
-    unless (defined $first_root) {
-	$opt{ first_root } = $first_root = $g->random_vertex();
-    }
-    my $spt_di = $g->get_graph_attribute('_spt_di');
-    unless (defined $spt_di &&
-            exists $spt_di->{ $first_root } &&
-            $spt_di->{ $first_root }->[ 0 ] == $g->[ _G ]) {
-	my %etc;
-	require Graph::SPTHeapElem;
-	my $sptg = $g->_heap_walk($g->new, \&_SPT_add, \%etc, %opt);
-	$spt_di->{ $first_root } = [ $g->[ _G ], $sptg ];
-	$g->set_graph_attribute('_spt_di', $spt_di);
-    }
-
-    my $spt = $spt_di->{ $first_root }->[ 1 ];
-
-    $spt->set_graph_attribute('SPT_Dijkstra_root', $first_root);
-
-    return $spt;
+    $opt{first_root} = $g->random_vertex() unless defined $opt{first_root};
+    _check_cache($g, 'SPT_Dijkstra', [$opt{first_root}],
+	\&_SPT_Dijkstra_compute, %opt);
 }
 
 *SSSP_Dijkstra = \&SPT_Dijkstra;
@@ -2675,40 +2674,28 @@ sub _SPT_Bellman_Ford {
 }
 
 sub _SPT_Bellman_Ford_compute {
+    my ($g, @args) = @_;
+    my ($p, $d) = $g->_SPT_Bellman_Ford(@args);
+    my $h = $g->new;
+    for my $v (keys %$p) {
+	my $u = $p->{ $v };
+	$h->set_edge_attribute( $u, $v, $args[6],
+				$g->get_edge_attribute($u, $v, $args[6]));
+	$h->set_vertex_attributes( $v, { $args[6], $d->{ $v }, p => $u } );
+    }
+    $h->set_graph_attribute('SPT_Bellman_Ford_root', $args[3]);
+    $h;
 }
 
 sub SPT_Bellman_Ford {
     my $g = $_[0];
-
-    my ($opt, $unseenh, $unseena, $r, $next, $code, $attr) = &_root_opt;
-
-    unless (defined $r) {
-	$r = $g->random_vertex();
-	return unless defined $r;
+    my @args = &_root_opt;
+    unless (defined $args[3]) {
+	$args[3] = $g->random_vertex();
+	return unless defined $args[3];
     }
-
-    my $spt_bf = $g->get_graph_attribute('_spt_bf');
-    unless (defined $spt_bf &&
-	    exists $spt_bf->{ $r } && $spt_bf->{ $r }->[ 0 ] == $g->[ _G ]) {
-	my ($p, $d) =
-	    $g->_SPT_Bellman_Ford($opt, $unseenh, $unseena,
-				  $r, $next, $code, $attr);
-	my $h = $g->new;
-	for my $v (keys %$p) {
-	    my $u = $p->{ $v };
-	    $h->set_edge_attribute( $u, $v, $attr,
-				    $g->get_edge_attribute($u, $v, $attr));
-	    $h->set_vertex_attributes( $v, { $attr, $d->{ $v }, p => $u } );
-	}
-	$spt_bf->{ $r } = [ $g->[ _G ], $h ];
-	$g->set_graph_attribute('_spt_bf', $spt_bf);
-    }
-
-    my $spt = $spt_bf->{ $r }->[ 1 ];
-
-    $spt->set_graph_attribute('SPT_Bellman_Ford_root', $r);
-
-    return $spt;
+    _check_cache($g, 'SPT_Bellman_Ford', [$args[3]],
+	\&_SPT_Bellman_Ford_compute, @args);
 }
 
 *SSSP_Bellman_Ford = \&SPT_Bellman_Ford;
@@ -2756,7 +2743,7 @@ sub _transitive_closure_matrix_compute {
 }
 
 sub transitive_closure_matrix {
-    _check_cache($_[0], 'transitive_closure_matrix',
+    _check_cache($_[0], 'transitive_closure_matrix', [],
 	\&_transitive_closure_matrix_compute, @_[1..$#_]);
 }
 

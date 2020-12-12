@@ -1732,7 +1732,7 @@ use C<next_root => sub { undef }>.  The rest of these options are
 booleans.  If none of them are true, a random unvisited vertex will be
 selected.
 
-The first start vertex is be available as the graph attribute
+The first start vertex is available as the graph attribute
 C<SPT_Dijkstra_root>).
 
 The result weights of vertices can be retrieved from the result graph by
@@ -1788,7 +1788,7 @@ is chosen.
 B<NOTE>: note that all the vertices might not be reachable from the
 selected (explicit or random) start vertex.
 
-The start vertex is be available as the graph attribute
+The start vertex is available as the graph attribute
 C<SPT_Bellman_Ford_root>).
 
 The result weights of vertices can be retrieved from the result graph by
