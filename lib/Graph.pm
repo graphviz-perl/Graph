@@ -2322,40 +2322,7 @@ sub same_strongly_connected_components {
 }
 
 sub is_strongly_connected {
-    &expect_directed;
-    my $g = shift;
-    require Graph::Traversal::DFS;
-    my $t = Graph::Traversal::DFS->new($g);
-    my @d = reverse $t->dfs;
-    my @c;
-    my $h = $g->transpose;
-    my $u =
-	Graph::Traversal::DFS->new($h,
-				   next_root => sub {
-				       my ($t, $u) = @_;
-				       my $root;
-				       while (defined($root = shift @d)) {
-					   last if exists $u->{ $root };
-				       }
-				       if (defined $root) {
-					   unless (@{ $t->{ roots } }) {
-					       push @c, [];
-					       return $root;
-					   } else {
-					       $t->terminate;
-					       return;
-					   }
-				       } else {
-					   return;
-				       }
-				   },
-				   pre => sub {
-				       my ($v, $t) = @_;
-				       push @{ $c[-1] }, $v;
-				   },
-				   @_);
-    $u->dfs;
-    return @{ $u->{ roots } } == 1 && keys %{ $u->{ unseen } } == 0;
+    &strongly_connected_components == 1;
 }
 
 *strongly_connected = \&is_strongly_connected;
