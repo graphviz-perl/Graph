@@ -129,20 +129,6 @@ sub rename_path {
     return 1;
 }
 
-sub del_path_by_multi_id {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    my $id = $_[-1];
-    my ($e, $n, $p, $k, $l) = &{ $_[0]->can('__get_path_node') };
-    return unless $e;
-    delete $n->[ _nm ]->{ $id };
-    unless (keys %{ $n->[ _nm ] }) {
-	delete $m->[ _i ][ $n->[ _ni ] ];
-	delete $p->[-1]{ $l };
-    }
-    return 1;
-}
-
 sub paths {
     my $m = shift;
     return map [ $_ ], grep defined, @{ $m->[ _i ] } if defined $m->[ _i ];
