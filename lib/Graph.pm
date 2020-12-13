@@ -1892,25 +1892,14 @@ sub _connected_components_compute {
     if (&has_union_find) {
 	my $UF = $g->_get_union_find();
 	my $V  = $g->[ _V ];
-	my %icce; # Isolated vertices.
-	my %icci;
-	my $icc = 0;
 	my @v = $g->unique_vertices;
 	my @ids = $V->get_ids_by_paths([ map [$_], @v ]);
 	for (my $i = 0; $i <= $#v; $i++) {
 	    $cc = $UF->find( $ids[$i] );
-	    if (defined $cc) {
-		$cce{ $v[$i] } = $cc;
-		push @{ $cci{ $cc } }, $v[$i];
-	    } else {
-		$icce{ $v[$i] } = $icc;
-		push @{ $icci{ $icc } }, $v[$i];
-		$icc++;
-	    }
-	}
-	if ($icc) {
-	    @cce{ keys %icce } = values %icce;
-	    @cci{ keys %icci } = values %icci;
+	    __carp_confess "connected_component union-find did not have vertex '$v[$i]', please report"
+		if !defined $cc;
+	    $cce{ $v[$i] } = $cc;
+	    push @{ $cci{ $cc } }, $v[$i];
 	}
     } else {
 	require Graph::Traversal::DFS;
