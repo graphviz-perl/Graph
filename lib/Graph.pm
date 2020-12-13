@@ -2310,42 +2310,35 @@ sub _biconnectivity_compute {
 
 sub biconnectivity {
     &expect_undirected;
-    my $bcc = _check_cache($_[0], 'biconnectivity', [],
-			   \&_biconnectivity_compute, @_[1..$#_]);
-    return defined $bcc ? @$bcc : ( );
+    @{ _check_cache($_[0], 'biconnectivity', [],
+			   \&_biconnectivity_compute, @_[1..$#_]) || [] };
 }
 
 sub is_biconnected {
-    my ($ap) = (&biconnectivity)[0];
-    return &edges >= 2 ? @$ap == 0 : undef ;
+    &edges >= 2 ? @{ (&biconnectivity)[0] } == 0 : undef ;
 }
 
 sub is_edge_connected {
-    my ($br) = (&biconnectivity)[2];
-    return &edges >= 2 ? @$br == 0 : undef;
+    &edges >= 2 ? @{ (&biconnectivity)[2] } == 0 : undef;
 }
 
 sub is_edge_separable {
-    my ($br) = (&biconnectivity)[2];
-    return &edges >= 2 ? @$br > 0 : undef;
+    &edges >= 2 ? @{ (&biconnectivity)[2] } > 0 : undef;
 }
 
 sub articulation_points {
-    my ($ap) = (&biconnectivity)[0];
-    return @$ap;
+    @{ (&biconnectivity)[0] };
 }
 
 *cut_vertices = \&articulation_points;
 
 sub biconnected_components {
-    my ($bc) = (&biconnectivity)[1];
-    return @$bc;
+    @{ (&biconnectivity)[1] };
 }
 
 sub biconnected_component_by_index {
     my ($i) = splice @_, 1, 1;
-    my ($bc) = (&biconnectivity)[1];
-    return $bc->[ $i ];
+    (&biconnectivity)[1]->[ $i ];
 }
 
 sub biconnected_component_by_vertex {
@@ -2391,8 +2384,7 @@ sub biconnected_graph {
 }
 
 sub bridges {
-    my ($br) = (&biconnectivity)[2];
-    return defined $br ? @$br : ();
+    @{ (&biconnectivity)[2] || [] };
 }
 
 ###
