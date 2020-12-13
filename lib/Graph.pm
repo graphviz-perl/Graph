@@ -384,28 +384,14 @@ sub _vertex_ids_maybe_ensure {
 sub has_edge {
     my $g = $_[0];
     my $E = $g->[ _E ];
-    my $V = $g->[ _V ];
     my $Ef = $E->[ _f ];
     return 0 if !($Ef & _HYPER) and @_ != 3;
-    my @i;
-    if (($V->[ _f ] & _LIGHT) && @_ == 3) {
-	my $s = $V->[ _s ];
-	return 0 unless
-	    exists $s->{ $_[1] } &&
-	    exists $s->{ $_[2] };
-	@i = @$s{ @_[ 1, 2 ] };
-    } else {
-	@i = &_vertex_ids;
-	return 0 if @i != @_ - 1;
-    }
-    if (@i == 2 && !($Ef & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@i = sort @i if ($Ef & _UNORD);
-	my $s = $E->[ _s ];
-	return exists $s->{ $i[0] } &&
-	       exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
-    } else {
-	return $E->get_ids_by_paths([ \@i ]);
-    }
+    return 0 if (my @i = &_vertex_ids) != @_ - 1;
+    return $E->get_ids_by_paths([ \@i ]) if !(@i == 2 && !($Ef & (_HYPER|_REF|_UNIQ))); # Slow path.
+    @i = sort @i if ($Ef & _UNORD);
+    my $s = $E->[ _s ];
+    return exists $s->{ $i[0] } &&
+	   exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
 }
 
 sub _edges05 {
