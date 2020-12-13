@@ -155,6 +155,14 @@ sub paths_non_existing {
     grep !$m->has_path(@$_), @$list;
 }
 
+sub has_path_by_multi_id {
+    my $m = $_[0];
+    my $id = pop;
+    my ($e, $n) = &{ $m->can('__get_path_node') };
+    return undef unless $e;
+    return exists $n->[ _nm ]->{ $id };
+}
+
 sub get_multi_ids {
     my $f = $_[0]->[ _f ];
     return () unless ($f & _MULTI);

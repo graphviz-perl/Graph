@@ -29,8 +29,8 @@ sub __strval {
 
 sub __set_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1)
-	if @_ != (2 + ($f & _MULTI));
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0))
+	if @_ - 1 != $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0);
     [ $_[0]->[ _s ] ||= { } ], [ __strval($_[1], $f) ];
 }
 
@@ -56,8 +56,8 @@ sub set_path {
 
 sub __has_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, (1 + ($f & _MULTI)))
-	if @_ - 1 != (1 + ($f & _MULTI));
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0))
+	if @_ - 1 != $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0);
     return unless defined(my $p = $_[0]->[ _s ]);
     return ([$p], [ __strval($_[1], $f) ]);
 }
@@ -66,14 +66,6 @@ sub has_path {
     my $m = $_[0];
     return unless my ($p, $k) = &__has_path;
     return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
-}
-
-sub has_path_by_multi_id {
-    my ($m) = @_;
-    my $id = pop;
-    my ($e, $n) = &{ $_[0]->can('__get_path_node') };
-    return undef unless $e;
-    return exists $n->[ _nm ]->{ $id };
 }
 
 sub get_ids_by_paths {

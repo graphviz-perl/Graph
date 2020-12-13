@@ -154,15 +154,6 @@ sub has_path {
     return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
 }
 
-sub has_path_by_multi_id {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
-    my $id = pop;
-    my ($e, $n) = &{ $m->can('__get_path_node') };
-    return undef unless $e;
-    return exists $n->[ _nm ]->{ $id };
-}
-
 sub _get_path_node {
     my $m = $_[0];
     my $f = $m->[ _f ];
