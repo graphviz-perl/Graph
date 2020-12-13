@@ -130,7 +130,7 @@ sub __get_path_node {
         else { &__arg }
     }
     my ($m) = @_;
-    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
+    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ|_MULTI))) { # Fast path.
 	my $s = $m->[ _s ];
 	return unless exists $s->{ $_[1] };
 	$p = [ $s, $s->{ $_[1] } ];

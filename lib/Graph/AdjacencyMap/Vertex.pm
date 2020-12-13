@@ -56,8 +56,8 @@ sub set_path {
 
 sub __has_path {
     my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0))
-	if @_ - 1 != $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0);
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ])
+	if @_ - 1 != $_[0]->[ _arity ];
     return unless defined(my $p = $_[0]->[ _s ]);
     return ([$p], [ __strval($_[1], $f) ]);
 }

@@ -1,12 +1,15 @@
 use strict; use warnings;
-use Test::More tests => 891;
+use Test::More tests => 896;
 
 use Graph;
 use Graph::AdjacencyMap::Light;
 use Graph::AdjacencyMap::Heavy;
+use Graph::AdjacencyMap::Vertex;
 
 sub _REF () { Graph::AdjacencyMap::Heavy::_REF }
 sub _UNIQ () { Graph::AdjacencyMap::Heavy::_UNIQ }
+sub _MULTI () { Graph::AdjacencyMap::Vertex::_MULTI }
+sub _UNORD () { Graph::AdjacencyMap::Vertex::_UNORD }
 
 use Math::Complex;
 
@@ -39,6 +42,12 @@ $m3 = Graph::AdjacencyMap::Heavy->_new(0, 2);
 is( $m3->set_path('a', 'b'), 0 );
 $got = [ $m3->get_paths_by_ids([ map [$_], $m3->get_ids_by_paths([ [qw(a b)] ]) ]) ];
 is_deeply $got, [ [ [qw(a b)] ] ] or diag explain $got;
+$m3 = Graph::AdjacencyMap::Vertex->_new(_MULTI|_UNORD, 2);
+ok( $m3->set_path_by_multi_id(qw(a b c)) );
+ok( $m3->has_path_by_multi_id(qw(a b c)) );
+ok( $m3->_set_path_attr(qw(a b c weight other)) );
+is( $m3->_get_path_attr(qw(a b c weight)), 'other' );
+ok( $m3->del_path_by_multi_id(qw(a b c)) );
 
 my $g = Graph->new(refvertexed => 1);
 
