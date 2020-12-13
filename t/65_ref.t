@@ -1,11 +1,12 @@
 use strict; use warnings;
-use Test::More tests => 887;
+use Test::More tests => 891;
 
 use Graph;
 use Graph::AdjacencyMap::Light;
 use Graph::AdjacencyMap::Heavy;
 
 sub _REF () { Graph::AdjacencyMap::Heavy::_REF }
+sub _UNIQ () { Graph::AdjacencyMap::Heavy::_UNIQ }
 
 use Math::Complex;
 
@@ -30,6 +31,14 @@ ok( $m2[0][0][1] ** 2 == $v ** 2 );	# is() doesn't work.
 my $m3 = Graph::AdjacencyMap::Light->_new(0, 1);
 my $got = [ $m3->paths_non_existing([ map [$_], 'a' ]) ];
 is_deeply $got, [ ['a'] ] or diag explain $got;
+$m3 = Graph::AdjacencyMap::Heavy->_new(_UNIQ, 2);
+is( $m3->set_path('a', 'b'), 0 );
+$got = [ $m3->get_paths_by_ids([ map [$_], $m3->get_ids_by_paths([ [qw(a b)] ]) ]) ];
+is_deeply $got, [ [ [qw(a b)] ] ] or diag explain $got;
+$m3 = Graph::AdjacencyMap::Heavy->_new(0, 2);
+is( $m3->set_path('a', 'b'), 0 );
+$got = [ $m3->get_paths_by_ids([ map [$_], $m3->get_ids_by_paths([ [qw(a b)] ]) ]) ];
+is_deeply $got, [ [ [qw(a b)] ] ] or diag explain $got;
 
 my $g = Graph->new(refvertexed => 1);
 
