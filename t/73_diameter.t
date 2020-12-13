@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 78;
+use Test::More tests => 84;
 
 use Graph;
 use Graph::Directed;
@@ -47,6 +47,12 @@ $g->add_edge(qw(v e));
 is($g->diameter, 4);
 is($g->longest_path,   4);
 is($g->shortest_path,  1);
+is($g->longest_path(qw(a h)), 3);
+is($g->shortest_path(qw(a h)), 3);
+is($g->longest_path('a', undef), 3);
+is($g->shortest_path('a', undef), 1);
+is($g->longest_path(undef, 'h'), 4);
+is($g->shortest_path(undef, 'h'), 1);
 is($g->radius,   2);
 
 {
