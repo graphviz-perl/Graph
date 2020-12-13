@@ -77,7 +77,7 @@ sub paths_non_existing {
 	@p = sort @p if $unord;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $_ : ();
+	!defined $this_s ? $_ : ();
     } @$list;
 }
 

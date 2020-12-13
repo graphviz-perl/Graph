@@ -1,7 +1,8 @@
 use strict; use warnings;
-use Test::More tests => 886;
+use Test::More tests => 887;
 
 use Graph;
+use Graph::AdjacencyMap::Light;
 use Graph::AdjacencyMap::Heavy;
 
 sub _REF () { Graph::AdjacencyMap::Heavy::_REF }
@@ -25,6 +26,10 @@ my @m2 = $m2->get_paths_by_ids([ map [$_], $m2->get_ids_by_paths([ [$u, $v] ]) ]
 is( $m2[0][0][0], $u );
 ok( $m2[0][0][1] == $v );		# is() doesn't work.
 ok( $m2[0][0][1] ** 2 == $v ** 2 );	# is() doesn't work.
+
+my $m3 = Graph::AdjacencyMap::Light->_new(0, 1);
+my $got = [ $m3->paths_non_existing([ map [$_], 'a' ]) ];
+is_deeply $got, [ ['a'] ] or diag explain $got;
 
 my $g = Graph->new(refvertexed => 1);
 
