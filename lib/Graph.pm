@@ -331,6 +331,13 @@ sub _vertex_ids_ensure {
     goto &_vertex_ids_maybe_ensure;
 }
 
+sub _vertex_ids_ensure_multi {
+    my $id = pop;
+    my @i = &_vertex_ids_ensure;
+    push @_, $id;
+    @i ? (@i, $id) : ();
+}
+
 sub _union_find_add_edge {
     my ($g, $u, $v) = @_;
     $g->[ _U ]->union($u, $v);
@@ -469,12 +476,10 @@ sub get_multivertex_ids {
 sub add_edge_by_id {
     &expect_multiedged;
     my $g = $_[0];
-    my $id = pop;
-    my @i = &_vertex_ids_ensure;
-    push @_, $id;
-    $g->[ _E ]->set_path_by_multi_id( @i, $id );
+    my @i = &_vertex_ids_ensure_multi;
+    $g->[ _E ]->set_path_by_multi_id( @i );
     $g->[ _G ]++;
-    $g->_union_find_add_edge( @i ) if &has_union_find;
+    $g->_union_find_add_edge( @i[0..$#i-1] ) if &has_union_find;
     return $g;
 }
 
