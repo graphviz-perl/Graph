@@ -126,32 +126,27 @@ sub __has_path {
 	if (($f & _UNORDUNIQ) == _UNORD && @_ > 2) { @_ = ($_[0], sort @_[1..$#_]) }
 	else { &Graph::AdjacencyMap::__arg }
     }
-    my $p = $m->[ _s ];
-    return unless defined $p;
-    $p = $p->[ @_ - 1 ] if ($f & _HYPER);
-    return unless defined $p;
+    return if !defined(my $p = $m->[ _s ]);
+    return if ($f & _HYPER) and !defined($p = $p->[ @_ - 1 ]);
     my @p = $p;
     my @k;
     my @a = @_[1..$#_];
+    @a = map ref() && overload::Method($_, '""') ? overload::StrVal($_) : $_, @a if $f & _REF;
     while (@a) {
 	my $k = shift @a;
-	my $q = ref $k && ($f & _REF) && overload::Method($k, '""') ? overload::StrVal($k) : $k;
 	if (@a) {
-	    $p = $p->{ $q };
-	    return unless defined $p;
+	    return unless defined($p = $p->{ $k });
 	    push @p, $p;
 	}
-	push @k, $q;
+	push @k, $k;
     }
     return (\@p, \@k);
 }
 
 sub has_path {
     my $m = $_[0];
-    my $f = $m->[ _f ];
-    my ($p, $k) = &__has_path;
-    return unless defined $p && defined $k;
-    return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
+    return unless my ($p, $k) = &__has_path;
+    return exists $p->[-1]->{ $k->[-1] };
 }
 
 sub _get_path_node {

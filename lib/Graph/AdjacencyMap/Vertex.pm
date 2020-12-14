@@ -65,7 +65,7 @@ sub __has_path {
 sub has_path {
     my $m = $_[0];
     return unless my ($p, $k) = &__has_path;
-    return exists $p->[-1]->{ defined $k->[-1] ? $k->[-1] : "" };
+    return exists $p->[-1]->{ $k->[-1] };
 }
 
 sub get_ids_by_paths {
