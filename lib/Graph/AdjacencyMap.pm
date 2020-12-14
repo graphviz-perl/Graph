@@ -219,6 +219,18 @@ sub _has_path_attrs {
     keys %$attrs ? 1 : 0;
 }
 
+sub __attr {
+    my ($m) = @_;
+    return if @_ < 3;
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
+		  @_ - 1, $m->[ _arity ])
+        if @_ - 1 != $m->[ _arity ];
+    my $f = $m->[ _f ];
+    return if !($f & _UNORDUNIQ);
+    goto &Graph::AdjacencyMap::__arg if ($f & _UNORDUNIQ) != _UNORD;
+    @_ = ($_[0], sort @_[1..$#_]);
+}
+
 sub _set_path_attrs {
     my $f = $_[0]->[ _f ];
     my $attrs = pop;

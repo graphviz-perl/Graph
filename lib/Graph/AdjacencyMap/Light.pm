@@ -202,7 +202,7 @@ sub __attr {
 	$g->[ _V ] = $m;
     }
     $_[0] = $m;
-    goto &{ ref($m) . "::__attr" }; # Redispatch.
+    goto &Graph::AdjacencyMap::__attr; # Redispatch.
 }
 
 sub _is_COUNT    () { 0 }
