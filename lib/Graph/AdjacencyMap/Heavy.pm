@@ -42,7 +42,7 @@ sub stringify {
 	}
     } elsif ($a == 1) {
 	for my $v (@p) {
-	    my @r = $hyper ? '['.join(',', @$v).']' : $v->[0];
+	    my @r = $v->[0];
 	    my ($text) = $m->get_ids_by_paths([ $v ]);
 	    my $attrs = $multi
 		? (( $m->__get_path_node( @$v ) )[0] || [])->[-1]
@@ -184,9 +184,7 @@ sub rename_path {
 }
 
 sub paths {
-    my $m = shift;
-    return grep defined, @{ $m->[ _i ] } if defined $m->[ _i ];
-    wantarray ? ( ) : 0;
+    grep defined, @{ $_[0]->[ _i ] || [] };
 }
 
 1;

@@ -84,9 +84,7 @@ sub rename_path {
 }
 
 sub paths {
-    my $m = shift;
-    return map [ $_ ], grep defined, @{ $m->[ _i ] } if defined $m->[ _i ];
-    wantarray ? ( ) : 0;
+    map [ $_ ], grep defined, @{ $_[0]->[ _i ] || [] };
 }
 
 1;

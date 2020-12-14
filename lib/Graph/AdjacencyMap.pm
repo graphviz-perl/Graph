@@ -87,8 +87,7 @@ sub _ids {
 }
 
 sub has_paths {
-    my $m = shift;
-    return defined $m->[ _i ] && @{ $m->[ _i ] };
+    @{ $_[0]->[ _i ] || [] };
 }
 
 sub _new_node {

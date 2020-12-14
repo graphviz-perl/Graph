@@ -11,7 +11,6 @@ use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
 
 use Scalar::Util qw(weaken);
-use List::Util qw(first);
 
 sub _V () { 2 } # Graph::_V
 sub _E () { 3 } # Graph::_E
@@ -102,7 +101,6 @@ sub get_ids_by_paths {
     my $unord = $a > 1 && ($f & _UNORD);
     map {
 	my @p = @$_;
-#	$a != @$_ - 1 ? undef :
 	@p = sort @p if $unord;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
@@ -127,11 +125,8 @@ sub _get_path_count {
 sub has_paths { keys %{ $_[0]->[ _s ] } }
 
 sub paths {
-    my $m = shift;
-    return if !defined(my $i = $m->[ _i ]);
-    my ($v) = first { defined } @$i;
-    return grep defined, @$i if ref $v;
-    return map [ $_ ], grep defined, @$i;
+    return grep defined, @{ $_[0]->[ _i ] } if $_[0]->[ _arity ] > 1;
+    map [ $_ ], grep defined, @{ $_[0]->[ _i ] };
 }
 
 sub get_paths_by_ids {
@@ -181,11 +176,10 @@ sub __attr {
     # The other map types will sort @_ for _UNORD purposes.
     my $m = $_[0];
     my ($n, $f, $a, $i, $s, $p, $g) = @$m;
-    my ($v) = first { defined } @$i;
     my @V = @{ $g->[ _V ] };
     my @E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
     # ZZZ: an example of failing tests is t/52_edge_attributes.t.
-    if (ref $v eq 'ARRAY') { # Edges, then.
+    if ($a > 1) { # Edges, then.
 	# print "Reedging.\n";
 	@E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
 	require Graph::AdjacencyMap::Heavy;
