@@ -157,15 +157,14 @@ sub has_path {
 sub _get_path_node {
     my $m = $_[0];
     my $f = $m->[ _f ];
-    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ))) { # Fast path.
-	@_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
-	return unless exists $m->[ _s ]->{ $_[1] };
-	my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
-	my $k = [ $_[1], $_[2] ];
-	my $l = $_[2];
-	return ( exists $p->[-1]->{ $l }, $p->[-1]->{ $l }, $p, $k, $l );
-    }
-    goto &{ $m->can('__get_path_node') };
+    goto &{ $m->can('__get_path_node') } # Slow path
+	if !($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ)));
+    @_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
+    return unless exists $m->[ _s ]->{ $_[1] };
+    my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
+    my $k = [ $_[1], $_[2] ];
+    my $l = $_[2];
+    return ( exists $p->[-1]->{ $l }, $p->[-1]->{ $l }, $p, $k, $l );
 }
 
 sub get_ids_by_paths {

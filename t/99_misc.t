@@ -46,9 +46,10 @@ for ({}, {countvertexed => 1}, {multivertexed => 1}) {
   my $gr = Graph::Directed->new(%$_);
   $gr->add_edge(@$_) for @E;
   $gr->rename_vertex('b', 'b1');
-  is $gr->subgraph_by_radius('a', 3), "a-b1,a-c,b1-d,b1-e,c-f,c-g";
+  my $label = ref($gr->[ 2 ]) . ' {' . join('=>', %$_) . '}';
+  is $gr->subgraph_by_radius('a', 3), "a-b1,a-c,b1-d,b1-e,c-f,c-g", $label;
   $gr->rename_vertices(sub { uc $_[0] });
-  is $gr->subgraph_by_radius('A', 3), "A-B1,A-C,B1-D,B1-E,C-F,C-G";
+  is $gr->subgraph_by_radius('A', 3), "A-B1,A-C,B1-D,B1-E,C-F,C-G", $label;
 }
 
 my $g1 = Graph::Undirected->new;
