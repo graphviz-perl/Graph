@@ -14,8 +14,6 @@ my @API = qw(get_attribute
 	     get_attribute_names
 	     get_attribute_values);
 
-sub _F () { 0 }
-
 sub import {
     my $package = shift;
     my %attr = @_;
