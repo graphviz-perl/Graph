@@ -1069,7 +1069,7 @@ sub rename_vertices {
     my ($g, $code) = @_;
     my %seen;
     $g->rename_vertex($_, $code->($_))
-	for grep !$seen{$_}++, map ref() ? $_->[0] : $_, $g->[ _V ]->paths;
+	for grep !$seen{$_}++, map @$_, $g->[ _V ]->paths;
     return $g;
 }
 

@@ -23,8 +23,7 @@ sub stringify {
     my $f = $m->[ _f ];
     my $hyper = $f & _HYPER;
     my $multi = $f & _MULTI;
-    my @p = map ref()?$_:[$_], $m->paths; # normalise to all array-refs
-    @p = map $_->[0], sort _s_sort map [$_,"@$_"], @p; # use the Schwartz
+    my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
     if ($a == 2) {
 	my (%p, %s);
 	for my $t (@p) {
