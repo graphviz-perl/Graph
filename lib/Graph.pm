@@ -75,7 +75,7 @@ sub Infinity () { $Inf }
 # - _UNIQ for unique coordinates: if set duplicates are removed,
 #   if not, duplicates are assumed to meaningful
 # - _UNORDUNIQ: just a union of _UNORD and UNIQ
-# Vertices are assumed to be _UNORDUNIQ; edges assume none of these flags.
+# Vertices and edges assume none of these flags.
 
 use Graph::Attribute array => _A, map => 'graph';
 
@@ -140,7 +140,7 @@ sub _opt_unknown {
 sub new {
     my ($class, @args) = @_;
     my $gflags = 0;
-    my $vflags = _UNORDUNIQ;
+    my $vflags = 0;
     my $eflags = 0;
     my %opt = _get_options( \@args );
 
@@ -209,7 +209,7 @@ sub new {
     $g->[ _G ] = 0;
     $g->[ _V ] = ($vflags & _MULTI) ?
 	_am_heavy($vflags, 1) :
-	    (($vflags & ~_UNORDUNIQ) ?
+	    ($vflags ?
 	     _am_vertex($vflags, 1) :
 	     _am_light($vflags, 1, $g));
     $g->[ _E ] = ($eflags & ~_UNORD) ?

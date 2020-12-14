@@ -39,7 +39,7 @@ is($g1, 'a-b,a-c,a-d,a-e,a-f,b-c,b-d,b-e,b-f,c-b,d-b,d-c,d-e,d-f,e-b,e-c,e-f,f-b
 
 is $g0->[ Graph::_V ]->stringify, <<'EOF';
 Graph: a=b,a=c,a=d,a=e,a=f,b=c,b=d,b=e,b=f,c=d,c=e,c=f,d=e,d=f,e=f
-Graph::AdjacencyMap::Light arity=1 flags: _UNORD|_UNIQ|_LIGHT
+Graph::AdjacencyMap::Light arity=1 flags: _LIGHT
    a    0
    b    1
    c    2
@@ -60,7 +60,7 @@ EOF
 
 is $g1->[ Graph::_V ]->stringify, <<'EOF';
 Graph: a-b,a-c,a-d,a-e,a-f,b-c,b-d,b-e,b-f,c-b,d-b,d-c,d-e,d-f,e-b,e-c,e-f,f-b,f-c
-Graph::AdjacencyMap::Light arity=1 flags: _UNORD|_UNIQ|_LIGHT
+Graph::AdjacencyMap::Light arity=1 flags: _LIGHT
    a    0
    b    1
    c    2
@@ -83,7 +83,7 @@ EOF
 $g1->set_edge_attribute(qw(a b weight 2)); # trigger re-edging in ::Light
 $g1->set_vertex_attribute(qw(a size 2)); # trigger re-vertexing in ::Light
 is $g1->[ Graph::_V ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Vertex arity=1 flags: _UNORD|_UNIQ
+Graph::AdjacencyMap::Vertex arity=1 flags: 
    a 0,{'size' => '2'}
    b    1
    c    2
@@ -108,7 +108,7 @@ $g2->set_edge_attribute_by_id(qw(a b x weight 2));
 $g2->set_vertex_attribute_by_id(qw(a z other 5));
 $g2->set_vertex_attribute_by_id(qw(a 0 other2 6));
 is $g2->[ Graph::_V ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Heavy arity=1 flags: _MULTI|_UNORD|_UNIQ
+Graph::AdjacencyMap::Heavy arity=1 flags: _MULTI
    a 0,{'0' => {'other2' => '6'},'z' => {'other' => '5'}}
    b 2,{'0' => {}}
    c 1,{'0' => {}}
