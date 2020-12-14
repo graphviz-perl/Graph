@@ -102,18 +102,6 @@ sub __set_path_node {
     }
 }
 
-sub set_path {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    return if @_ == 1 && !($f & _HYPER);
-    if (@_ > 2 && ($f & _UNORDUNIQ)) {
-	if (($f & _UNORDUNIQ) == _UNORD && @_ == 3) { @_ = ($_[0], sort @_[1..$#_]) }
-	else { &Graph::AdjacencyMap::__arg }
-    }
-    my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, defined $k->[-1] ? $k->[-1] : "", @_[1..$#_] );
-}
-
 sub __has_path {
     my ($m) = @_;
     my $f = $m->[ _f ];

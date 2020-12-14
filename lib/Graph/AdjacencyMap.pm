@@ -142,6 +142,18 @@ sub __get_path_node {
     exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, $k, $l ) : ();
 }
 
+sub set_path {
+    my ($m) = @_;
+    my $f = $m->[ _f ];
+    return if @_ == 1 && !($f & _HYPER);
+    if (@_ > 2 && ($f & _UNORDUNIQ)) {
+	if (($f & _UNORDUNIQ) == _UNORD && @_ == 3) { @_ = ($_[0], sort @_[1..$#_]) }
+	else { &Graph::AdjacencyMap::__arg }
+    }
+    my ($p, $k) = &{ $m->can('__set_path') };
+    $m->__set_path_node( $p, defined $k->[-1] ? $k->[-1] : "", @_[1..$#_] );
+}
+
 sub set_path_by_multi_id {
     my $m = $_[0];
     my ($p, $k) = &{ $m->can('__set_path') };

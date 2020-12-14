@@ -43,12 +43,6 @@ sub __set_path_node {
     $m->[ _i ][ $i ] = $_[3];
 }
 
-sub set_path {
-    my ($m) = @_;
-    my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
-}
-
 sub __has_path {
     my $f = $_[0]->[ _f ];
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ])
