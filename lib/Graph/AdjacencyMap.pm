@@ -145,9 +145,7 @@ sub __get_path_node {
 sub set_path_by_multi_id {
     my $m = $_[0];
     my ($p, $k) = &{ $m->can('__set_path') };
-    return unless defined $p && defined $k;
-    my $l = defined $k->[-1] ? $k->[-1] : "";
-    return $m->__set_path_node( $p, $l, @_[1..$#_] );
+    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
 }
 
 sub paths_non_existing {
@@ -200,8 +198,7 @@ sub _set_path_attrs {
     my ($m) = @_;
     push @_, $id if ($f & _MULTI);
     my ($p, $k) = &{ $m->can('__set_path') };
-    return unless defined $p && defined $k;
-    my $l = defined $k->[-1] ? $k->[-1] : "";
+    my $l = $k->[-1];
     $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
     if (($f & _MULTI)) {
 	$p->[-1]->{ $l }->[ _nm ]->{ $id } = $attrs;
@@ -227,8 +224,7 @@ sub _set_path_attr {
     my ($m) = @_;
     push @_, $id if ($f & _MULTI);
     my ($p, $k) = &{ $m->can('__set_path') };
-    return unless defined $p && defined $k;
-    my $l = defined $k->[-1] ? $k->[-1] : "";
+    my $l = $k->[-1];
     $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
     if (($f & _MULTI)) {
 	$p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr } = $val;

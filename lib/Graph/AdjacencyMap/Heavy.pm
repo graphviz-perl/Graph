@@ -81,7 +81,6 @@ sub __set_path {
 	my $q = ref $k && ($f & _REF) && overload::Method($k, '""') ? overload::StrVal($k) : $k;
 	if (@a) {
 	    $p = $p->{ $q } ||= {};
-	    return unless $p;
 	    push @p, $p;
 	}
 	push @k, $q;
@@ -90,13 +89,13 @@ sub __set_path {
 }
 
 sub __set_path_node {
-    my ($m, $p, $l) = splice @_, 0, 3;
+    my ($m, $p, $l, @args) = @_;
     my $f = $m->[ _f ] ;
-    my $id = pop if ($f & _MULTI);
+    my $id = pop @args if ($f & _MULTI);
     unless (exists $p->[-1]->{ $l }) {
 	my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
 	die "undefined index" if !defined $i;
-	$m->[ _i ]->[ $i ] = [ @_ ];
+	$m->[ _i ]->[ $i ] = \@args;
 	return defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
     } else {
 	return $m->_inc_node( \$p->[-1]->{ $l }, $id );
@@ -112,9 +111,7 @@ sub set_path {
 	else { &Graph::AdjacencyMap::__arg }
     }
     my ($p, $k) = &__set_path;
-    return unless defined $p && defined $k;
-    my $l = defined $k->[-1] ? $k->[-1] : "";
-    return $m->__set_path_node( $p, $l, @_[1..$#_] );
+    $m->__set_path_node( $p, defined $k->[-1] ? $k->[-1] : "", @_[1..$#_] );
 }
 
 sub __has_path {

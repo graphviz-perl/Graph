@@ -45,12 +45,8 @@ sub __set_path_node {
 
 sub set_path {
     my ($m) = @_;
-    my $f = $m->[ _f ];
     my ($p, $k) = &__set_path;
-    return unless defined $p && defined $k;
-    my $l = defined $k->[-1] ? $k->[-1] : "";
-    my $set = $m->__set_path_node( $p, $l, @_[1..$#_] );
-    return $set;
+    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
 }
 
 sub __has_path {
