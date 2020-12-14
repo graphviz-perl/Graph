@@ -40,7 +40,7 @@ sub __set_path_node {
     return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
     my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
     die "undefined index" if !defined $i;
-    $m->[ _i ][ $i ] = $_[3];
+    $m->[ _i ][ $i ] = [ $_[3] ];
 }
 
 sub __has_path {
@@ -69,13 +69,9 @@ sub _get_path_count {
 sub rename_path {
     my ($m, $from, $to) = @_;
     return unless my ($n, $p, $k, $l) = $m->__get_path_node( $from );
-    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = $to;
+    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = [ $to ];
     $p->[ -1 ]{ $to } = delete $p->[ -1 ]{ $l };
     return 1;
-}
-
-sub paths {
-    map [ $_ ], grep defined, @{ $_[0]->[ _i ] || [] };
 }
 
 1;

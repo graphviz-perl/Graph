@@ -222,7 +222,11 @@ sub get_multi_ids {
 sub get_paths_by_ids {
     my ($m, $list) = @_;
     my $i = $m->[ _i ];
-    map [ map [ $i->[ $_ ] ], @$_ ], @$list;
+    map [ map $i->[ $_ ], @$_ ], @$list;
+}
+
+sub paths {
+    grep defined, @{ $_[0]->[ _i ] || [] };
 }
 
 sub _has_path_attrs {

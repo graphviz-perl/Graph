@@ -163,12 +163,6 @@ sub _get_path_count {
 	($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
 }
 
-sub get_paths_by_ids {
-    my ($m, $list) = @_;
-    my $i = $m->[ _i ];
-    map [ map $i->[ $_ ], @$_ ], @$list;
-}
-
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
@@ -177,10 +171,6 @@ sub rename_path {
     $i->[ $s->{ $from }[0] ][0] = $to;
     $s->{ $to } = delete $s->{ $from };
     return 1;
-}
-
-sub paths {
-    grep defined, @{ $_[0]->[ _i ] || [] };
 }
 
 1;

@@ -22,31 +22,27 @@ sub new {
     my $connect_edges = delete $opt{connect_edges};
     $connect_edges = 1 unless defined $connect_edges;
     Graph::_opt_unknown(\%opt);
-    if ($connect_edges) {
-	# for (my $i = 0; $i <= $#V; $i++) {
-	#    my $u = $V[$i];
-	#    for (my $j = 0; $j <= $#V; $j++) {
-	#	vec($bm0->[$i], $j, 1) = 1 if $g->has_edge($u, $V[$j]);
-	#    }
-	# }
-	my $Vi = $g->[_V]->[_i];
-	my $Ei = $g->[_E]->[_i];
-	if ($g->is_undirected) {
-	    for my $e (grep defined, @{ $Ei }) {
-		my ($i0, $j0) = @$e;
-		my $i1 = $V{ $Vi->[ $i0 ] };
-		my $j1 = $V{ $Vi->[ $j0 ] };
-		vec($bm0->[$i1], $j1, 1) = 1;
-		vec($bm0->[$j1], $i1, 1) = 1;
-	    }
-	} else {
-	    for my $e (grep defined, @{ $Ei }) {
-		my ($i0, $j0) = @$e;
-		vec($bm0->[$V{ $Vi->[ $i0 ] }], $V{ $Vi->[ $j0 ] }, 1) = 1;
-	    }
+    return $bm if !$connect_edges;
+    # for (my $i = 0; $i <= $#V; $i++) {
+    #    my $u = $V[$i];
+    #    for (my $j = 0; $j <= $#V; $j++) {
+    #	vec($bm0->[$i], $j, 1) = 1 if $g->has_edge($u, $V[$j]);
+    #    }
+    # }
+    my $Ei = $g->[_E]->[_i];
+    if ($g->is_undirected) {
+	for my $e (grep defined, @{ $Ei }) {
+	    my ($i0, $j0) = @$e;
+	    vec($bm0->[$i0], $j0, 1) = 1;
+	    vec($bm0->[$j0], $i0, 1) = 1;
+	}
+    } else {
+	for my $e (grep defined, @{ $Ei }) {
+	    my ($i0, $j0) = @$e;
+	    vec($bm0->[$i0], $j0, 1) = 1;
 	}
     }
-    return $bm;
+    $bm;
 }
 
 sub stringify {

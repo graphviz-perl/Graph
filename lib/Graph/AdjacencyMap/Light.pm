@@ -62,7 +62,7 @@ sub set_path {
 	unless (exists $s->{ $e0 }) {
 	    $n = $m->[ _n ]++;
 	    $s->{ $e0 } = $n;
-	    $i->[ $n ] = $e0;
+	    $i->[ $n ] = [ $e0 ];
 	}
     }
 }
@@ -124,11 +124,6 @@ sub _get_path_count {
 
 sub has_paths { keys %{ $_[0]->[ _s ] } }
 
-sub paths {
-    return grep defined, @{ $_[0]->[ _i ] } if $_[0]->[ _arity ] > 1;
-    map [ $_ ], grep defined, @{ $_[0]->[ _i ] };
-}
-
 sub del_path {
     my $m = shift;
     my ($n, $f, $a, $i, $s, $p) = @$m;
@@ -156,7 +151,7 @@ sub rename_path {
     return 1 if $a > 1; # arity > 1, all integers, no names
     return 0 unless exists $s->{ $from };
     $s->{ $to } = delete $s->{ $from };
-    $i->[ $s->{ $to } ] = $to;
+    $i->[ $s->{ $to } ] = [ $to ];
     return 1;
 }
 
