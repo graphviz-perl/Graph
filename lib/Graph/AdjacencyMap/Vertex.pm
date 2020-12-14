@@ -22,9 +22,8 @@ require overload; # for de-overloading
 
 sub __strval {
   my ($k, $f) = @_;
-  ref $k && ($f & _REF) &&
-    (($f & _STR) ? !overload::Method($k, '""') : overload::Method($k, '""')) ?
-	overload::StrVal($k) : $k;
+  return $k unless ref $k && ($f & _REF);
+  (($f & _STR) xor overload::Method($k, '""')) ? overload::StrVal($k) : $k;
 }
 
 sub __set_path {
