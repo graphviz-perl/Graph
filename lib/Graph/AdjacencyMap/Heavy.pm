@@ -128,12 +128,6 @@ sub __has_path {
     return (\@p, \@k);
 }
 
-sub has_path {
-    my $m = $_[0];
-    return unless my ($p, $k) = &__has_path;
-    return exists $p->[-1]->{ $k->[-1] };
-}
-
 sub _get_path_node {
     my $m = $_[0];
     my $f = $m->[ _f ];

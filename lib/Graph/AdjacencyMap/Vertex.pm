@@ -51,12 +51,6 @@ sub __has_path {
     return ([$p], [ __strval($_[1], $f) ]);
 }
 
-sub has_path {
-    my $m = $_[0];
-    return unless my ($p, $k) = &__has_path;
-    return exists $p->[-1]->{ $k->[-1] };
-}
-
 sub get_ids_by_paths {
     my ($m, $list) = @_;
     my @n;

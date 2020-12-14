@@ -165,6 +165,12 @@ sub paths_non_existing {
     grep !$m->has_path(@$_), @$list;
 }
 
+sub has_path {
+    my $m = $_[0];
+    return unless my ($p, $k) = &{ $m->can('__has_path') };
+    return exists $p->[-1]->{ $k->[-1] };
+}
+
 sub has_path_by_multi_id {
     my $m = $_[0];
     my $id = pop;
