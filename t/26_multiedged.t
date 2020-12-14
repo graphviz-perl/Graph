@@ -146,6 +146,6 @@ like ( $@, qr/both countedged and multiedged/ );
     is($graph, "0=1");
     my @edges = $graph->edges;
     is(scalar @edges, 1);
-    is_deeply(@edges, [1, 0]);
+    is_deeply(@edges, [0, 1]) or diag explain \@edges;
     is($graph->edges, 1);
 }

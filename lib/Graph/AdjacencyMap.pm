@@ -123,11 +123,8 @@ sub _inc_node {
 
 sub __get_path_node {
     my ($p, $k);
+    &__arg;
     my $f = $_[0]->[ _f ];
-    if (@_ > 2 && ($f & _UNORDUNIQ)) {
-        if (($f & _UNORDUNIQ) == _UNORD && @_ > 2) { @_ = ($_[0], sort @_[1..$#_]) }
-        else { &__arg }
-    }
     my ($m) = @_;
     if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ|_MULTI))) { # Fast path.
 	my $s = $m->[ _s ];
@@ -145,10 +142,7 @@ sub set_path {
     my ($m) = @_;
     my $f = $m->[ _f ];
     return if @_ == 1 && !($f & _HYPER);
-    if (@_ > 2 && ($f & _UNORDUNIQ)) {
-	if (($f & _UNORDUNIQ) == _UNORD && @_ == 3) { @_ = ($_[0], sort @_[1..$#_]) }
-	else { &Graph::AdjacencyMap::__arg }
-    }
+    &__arg;
     my ($p, $k) = &{ $m->can('__set_path') };
     $m->__set_path_node( $p, defined $k->[-1] ? $k->[-1] : "", @_[1..$#_] );
 }
@@ -196,7 +190,6 @@ sub del_path {
 
 sub del_path_by_multi_id {
     my $m = $_[0];
-    my $f = $m->[ _f ];
     my $id = pop;
     return unless my ($n, $p, $k, $l) = &{ $m->can('__get_path_node') };
     delete $n->[ _nm ]->{ $id };
@@ -232,18 +225,6 @@ sub paths {
 sub _has_path_attrs {
     return undef unless defined(my $attrs = &_get_path_attrs);
     keys %$attrs ? 1 : 0;
-}
-
-sub __attr {
-    my ($m) = @_;
-    return if @_ < 3;
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
-		  @_ - 1, $m->[ _arity ])
-        if @_ - 1 != $m->[ _arity ];
-    my $f = $m->[ _f ];
-    return if !($f & _UNORDUNIQ);
-    goto &Graph::AdjacencyMap::__arg if ($f & _UNORDUNIQ) != _UNORD;
-    @_ = ($_[0], sort @_[1..$#_]);
 }
 
 sub _set_path_attrs {
@@ -362,12 +343,17 @@ sub __arg {
     my ($m) = @_;
     return if @_ < 3; # nothing to do if 1 or 0 passed args
     my $f = $m->[ _f ];
+    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
+		  @_ - 1, $m->[ _arity ])
+        if !($f & _HYPER) and @_ - 1 != $m->[ _arity ];
+    return if !($f & _UNORDUNIQ);
     my @a = @_[1..$#_];
     my %u;
     @a = grep !$u{$_}++, @a if $f & _UNIQ;
     # Alphabetic or numeric sort, does not matter as long as it unifies.
     @_ = ($_[0], $f & _UNORD ? sort @a : @a);
 }
+*__attr = \&__arg;
 
 1;
 __END__

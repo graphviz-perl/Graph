@@ -65,15 +65,14 @@ sub __set_path {
     my $m = $_[0];
     my $f = $m->[ _f ];
     my $id = pop if $f & _MULTI;
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
-	scalar @_ - 1, $m->[ _arity ]) if @_ - 1 != $m->[ _arity ] && !($f & _HYPER);
+    &Graph::AdjacencyMap::__arg;
     my $p;
     $p = ($f & _HYPER) ?
 	(( $m->[ _s ] ||= [ ] )->[ @_-1 ] ||= { }) :
 	(  $m->[ _s ]                     ||= { });
     my @p = $p;
     my @k;
-    my @a = ($f & _UNORD) ? sort @_[1..$#_] : @_[1..$#_];
+    my @a = @_[1..$#_];
     push @_, $id if $f & _MULTI;
     while (@a) {
 	my $k = shift @a;
@@ -104,12 +103,7 @@ sub __set_path_node {
 sub __has_path {
     my ($m) = @_;
     my $f = $m->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->SUPER::stringify,
-	@_ - 1, $m->[ _arity ]) if @_ != $m->[ _arity ] + 1 && !($f & _HYPER);
-    if (@_ > 2 && ($f & _UNORDUNIQ)) {
-	if (($f & _UNORDUNIQ) == _UNORD && @_ > 2) { @_ = ($_[0], sort @_[1..$#_]) }
-	else { &Graph::AdjacencyMap::__arg }
-    }
+    &Graph::AdjacencyMap::__arg;
     return if !defined(my $p = $m->[ _s ]);
     return if ($f & _HYPER) and !defined($p = $p->[ @_ - 1 ]);
     my @p = $p;
@@ -132,7 +126,7 @@ sub _get_path_node {
     my $f = $m->[ _f ];
     goto &{ $m->can('__get_path_node') } # Slow path
 	if !($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ)));
-    @_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
+    &Graph::AdjacencyMap::__arg;
     return unless exists $m->[ _s ]->{ $_[1] };
     my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
     my $l = $_[2];
