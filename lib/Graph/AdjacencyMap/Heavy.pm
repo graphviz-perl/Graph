@@ -46,7 +46,7 @@ sub stringify {
 	    my @r = $hyper ? '['.join(',', @$v).']' : $v->[0];
 	    my ($text) = $m->get_ids_by_paths([ $v ]);
 	    my $attrs = $multi
-		? (( $m->__get_path_node( @$v ) )[1] || [])->[-1]
+		? (( $m->__get_path_node( @$v ) )[0] || [])->[-1]
 		: $m->_get_path_attrs(@$v);
 	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
 	    push @r, $text;
@@ -162,9 +162,8 @@ sub _get_path_node {
     @_ = ($m, sort @_[1..$#_]) if $f & _UNORD;
     return unless exists $m->[ _s ]->{ $_[1] };
     my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
-    my $k = [ $_[1], $_[2] ];
     my $l = $_[2];
-    return ( exists $p->[-1]->{ $l }, $p->[-1]->{ $l }, $p, $k, $l );
+    exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, [ @_[1,2] ], $l ) : ();
 }
 
 sub get_ids_by_paths {
@@ -178,16 +177,13 @@ sub get_ids_by_paths {
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	defined $this_s ? $this_s : ();
     } @$list if $a == 2 && !($f & (_HYPER|_REF|_UNIQ));
-    map {
-	my ($e, $n) = $m->_get_path_node(@$_);
-	!$e ? () : ref $n ? $n->[ _ni ] : $n;
-    } @$list;
+    my @n;
+    map !(@n = $m->_get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
 }
 
 sub _get_path_count {
     my $m = $_[0];
-    my ($e, $n) = &_get_path_node;
-    return undef unless $e && defined $n;
+    return undef unless my ($n) = &_get_path_node;
     my $f = $m->[ _f ];
     return
 	($f & _COUNT) ? $n->[ _nc ] :
@@ -216,8 +212,7 @@ sub get_paths_by_ids {
 sub del_path {
     my $m = $_[0];
     my $f = $m->[ _f ];
-    my ($e, $n, $p, $k, $l) = &{ $m->can('__get_path_node') };
-    return unless $e;
+    return unless my ($n, $p, $k, $l) = &{ $m->can('__get_path_node') };
     my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
     if ($c == 0) {
 	delete $m->[ _i ]->[ ref $n ? $n->[ _ni ] : $n ];

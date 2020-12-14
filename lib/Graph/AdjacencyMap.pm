@@ -139,7 +139,7 @@ sub __get_path_node {
 	return unless ($p, $k) = &{ $m->can('__has_path') };
     }
     my $l = defined $k->[-1] ? $k->[-1] : "";
-    return ( exists $p->[-1]->{ $l }, $p->[-1]->{ $l }, $p, $k, $l );
+    exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, $k, $l ) : ();
 }
 
 sub set_path_by_multi_id {
@@ -158,8 +158,7 @@ sub paths_non_existing {
 sub has_path_by_multi_id {
     my $m = $_[0];
     my $id = pop;
-    my ($e, $n) = &{ $m->can('__get_path_node') };
-    return undef unless $e;
+    return undef unless my ($n) = &{ $m->can('__get_path_node') };
     return exists $n->[ _nm ]->{ $id };
 }
 
@@ -167,8 +166,7 @@ sub del_path_by_multi_id {
     my $m = $_[0];
     my $f = $m->[ _f ];
     my $id = pop;
-    my ($e, $n, $p, $k, $l) = &{ $m->can('__get_path_node') };
-    return unless $e;
+    return unless my ($n, $p, $k, $l) = &{ $m->can('__get_path_node') };
     delete $n->[ _nm ]->{ $id };
     unless (keys %{ $n->[ _nm ] }) {
 	delete $m->[ _i ]->[ $n->[ _ni ] ];
@@ -184,9 +182,9 @@ sub del_path_by_multi_id {
 
 sub get_multi_ids {
     my $f = $_[0]->[ _f ];
-    return () unless ($f & _MULTI);
-    my ($e, $n) = &__get_path_node;
-    return $e ? keys %{ $n->[ _nm ] } : ();
+    return unless ($f & _MULTI);
+    return unless my ($n) = &__get_path_node;
+    keys %{ $n->[ _nm ] };
 }
 
 sub _has_path_attrs {
@@ -253,8 +251,7 @@ sub _get_path_attrs {
 	my $l = defined $k->[-1] ? $k->[-1] : "";
 	$p->[-1]->{ $l }->[ _nm ]->{ $id };
     } else {
-	my ($e, $n) = &{ $m->can('__get_path_node') };
-	return unless $e;
+	return unless my ($n) = &{ $m->can('__get_path_node') };
 	return $n->[ _na ] if ref $n && $#$n == _na;
 	return;
     }
@@ -291,10 +288,9 @@ sub _del_path_attrs {
 		   (defined $p->[-1]->{ $l }->[ _na ] &&
 		    keys %{ $p->[-1]->{ $l }->[ _na ] });
     } else {
-	my ($e, $n) = &{ $m->can('__get_path_node') };
-	return undef unless $e;
+	return undef unless my ($n) = &{ $m->can('__get_path_node') };
 	return 0 if !ref $n;
-	$e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
+	my $e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
 	$#$n = _na - 1;
 	return $e;
     }

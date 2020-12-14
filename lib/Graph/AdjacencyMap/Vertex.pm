@@ -70,17 +70,14 @@ sub has_path {
 
 sub get_ids_by_paths {
     my ($m, $list) = @_;
-    map {
-	my ($e, $n) = $m->__get_path_node(@$_);
-	!$e ? () : ref $n ? $n->[ _ni ] : $n;
-    } @$list;
+    my @n;
+    map !(@n = $m->__get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
 }
 
 sub _get_path_count {
     my ($m) = @_;
     my $f = $m->[ _f ];
-    my ($e, $n) = &{ $_[0]->can('__get_path_node') };
-    return 0 unless $e && defined $n;
+    return 0 unless my ($n) = &{ $m->can('__get_path_node') };
     return
 	($f & _COUNT) ? $n->[ _nc ] :
 	($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
@@ -110,8 +107,7 @@ sub get_paths_by_ids {
 sub del_path {
     my ($m) = @_;
     my $f = $m->[ _f ];
-    my ($e, $n, $p, $k, $l) = &{ $_[0]->can('__get_path_node') };
-    return unless $e;
+    return unless my ($n, $p, $k, $l) = &{ $_[0]->can('__get_path_node') };
     my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
     if ($c == 0) {
 	delete $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ];
@@ -122,8 +118,7 @@ sub del_path {
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    my ($e, $n, $p, $k, $l) = $m->__get_path_node( $from );
-    return unless $e;
+    return unless my ($n, $p, $k, $l) = $m->__get_path_node( $from );
     $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = $to;
     $p->[ -1 ]{ $to } = delete $p->[ -1 ]{ $l };
     return 1;
