@@ -66,15 +66,6 @@ sub _get_path_count {
 	($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
 }
 
-sub get_paths_by_ids {
-    my ($m, $list) = @_;
-    my $i = $m->[ _i ];
-    map [ map {
-	my @v = defined $i ? $i->[ $_ ] : undef;
-	@v == 1 ? $v[0] : \@v
-    } @$_ ], @$list;
-}
-
 sub rename_path {
     my ($m, $from, $to) = @_;
     return unless my ($n, $p, $k, $l) = $m->__get_path_node( $from );

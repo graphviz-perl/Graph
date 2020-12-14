@@ -219,6 +219,12 @@ sub get_multi_ids {
     keys %{ $n->[ _nm ] };
 }
 
+sub get_paths_by_ids {
+    my ($m, $list) = @_;
+    my $i = $m->[ _i ];
+    map [ map [ $i->[ $_ ] ], @$_ ], @$list;
+}
+
 sub _has_path_attrs {
     return undef unless defined(my $attrs = &_get_path_attrs);
     keys %$attrs ? 1 : 0;

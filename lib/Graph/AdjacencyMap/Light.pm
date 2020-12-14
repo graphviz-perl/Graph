@@ -129,16 +129,6 @@ sub paths {
     map [ $_ ], grep defined, @{ $_[0]->[ _i ] };
 }
 
-sub get_paths_by_ids {
-    my ($m, $list) = @_;
-    my $i = $m->[ 3 ];
-    map [ map {
-	my $p = $i->[ $_ ];
-	my @v = defined $p ? ( ref $p eq 'ARRAY' ? @$p : $p ) : ( );
-	@v == 1 ? $v[0] : \@v
-    } @$_ ], @$list;
-}
-
 sub del_path {
     my $m = shift;
     my ($n, $f, $a, $i, $s, $p) = @$m;

@@ -166,11 +166,7 @@ sub _get_path_count {
 sub get_paths_by_ids {
     my ($m, $list) = @_;
     my $i = $m->[ _i ];
-    map [ map {
-	my $p = defined $_ ? $i->[ $_ ] : undef;
-	my @v = defined $p ? @$p : ( );
-	@v == 1 ? $v[0] : \@v
-    } @$_ ], @$list;
+    map [ map $i->[ $_ ], @$_ ], @$list;
 }
 
 sub rename_path {
