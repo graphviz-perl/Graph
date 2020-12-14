@@ -172,6 +172,23 @@ sub has_path_by_multi_id {
     return exists $n->[ _nm ]->{ $id };
 }
 
+sub del_path {
+    my $m = $_[0];
+    my $f = $m->[ _f ];
+    return unless my ($n, $p, $k, $l) = &{ $m->can('__get_path_node') };
+    my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
+    if ($c == 0) {
+	delete $m->[ _i ]->[ ref $n ? $n->[ _ni ] : $n ];
+	delete $p->[-1]->{ $l };
+	while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
+	    delete $p->[-1]->{ $k->[-1] };
+	    pop @$p;
+	    pop @$k;
+	}
+    }
+    return 1;
+}
+
 sub del_path_by_multi_id {
     my $m = $_[0];
     my $f = $m->[ _f ];

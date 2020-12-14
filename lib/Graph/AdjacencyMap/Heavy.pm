@@ -189,23 +189,6 @@ sub get_paths_by_ids {
     } @$_ ], @$list;
 }
 
-sub del_path {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
-    return unless my ($n, $p, $k, $l) = &{ $m->can('__get_path_node') };
-    my $c = ($f & _COUNT) ? --$n->[ _nc ] : 0;
-    if ($c == 0) {
-	delete $m->[ _i ]->[ ref $n ? $n->[ _ni ] : $n ];
-	delete $p->[-1]->{ $l };
-	while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
-	    delete $p->[-1]->{ $k->[-1] };
-	    pop @$p;
-	    pop @$k;
-	}
-    }
-    return 1;
-}
-
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
