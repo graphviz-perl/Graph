@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 896;
+use Test::More tests => 932;
 
 use Graph;
 use Graph::AdjacencyMap::Light;
@@ -10,6 +10,7 @@ sub _REF () { Graph::AdjacencyMap::Heavy::_REF }
 sub _UNIQ () { Graph::AdjacencyMap::Heavy::_UNIQ }
 sub _MULTI () { Graph::AdjacencyMap::Vertex::_MULTI }
 sub _UNORD () { Graph::AdjacencyMap::Vertex::_UNORD }
+sub _GEN_ID () { Graph::AdjacencyMap::_GEN_ID }
 
 use Math::Complex;
 
@@ -22,28 +23,74 @@ my $m1 = Graph::AdjacencyMap::Heavy->_new(_REF, 1);
 my $m2 = Graph::AdjacencyMap::Heavy->_new(_REF, 2);
 
 is( $m1->set_path($t), 0 );
-my @m1 = $m1->get_paths_by_ids([ map [$_], $m1->get_ids_by_paths([ [$t] ]) ]);
-is( $m1[0][0][0], $t );
+is_deeply [ $m1->paths ], [ [$t] ];
+is( $m1->_set_path_attr($t, 'say', 'hi'), 'hi' );
+is_deeply [ $m1->_get_path_attr_names($t) ], [ 'say' ];
+is_deeply [ $m1->_get_path_attr_values($t) ], [ 'hi' ];
+my $got = [ $m1->get_ids_by_paths([ [$t] ]) ];
+is_deeply $got, [ 0 ] or diag explain $got;
+my @m1 = $m1->get_paths_by_ids([ map [$_], @$got ]);
+is( $m1[0][0][0], $t ) or diag explain \@m1;
 
 is( $m2->set_path($u, $v), 0 );
+is_deeply [ $m2->paths ], [ [$u, $v] ];
+is( $m2->_set_path_attr($u, $v, 'say', 'hi'), 'hi' );
+is_deeply [ $m2->_get_path_attr_names($u, $v) ], [ 'say' ];
+is_deeply [ $m2->_get_path_attr_values($u, $v) ], [ 'hi' ];
 my @m2 = $m2->get_paths_by_ids([ map [$_], $m2->get_ids_by_paths([ [$u, $v] ]) ]);
 is( $m2[0][0][0], $u );
 ok( $m2[0][0][1] == $v );		# is() doesn't work.
 ok( $m2[0][0][1] ** 2 == $v ** 2 );	# is() doesn't work.
 
 my $m3 = Graph::AdjacencyMap::Light->_new(0, 1);
-my $got = [ $m3->paths_non_existing([ map [$_], 'a' ]) ];
+$got = [ $m3->paths_non_existing([ map [$_], 'a' ]) ];
 is_deeply $got, [ ['a'] ] or diag explain $got;
+$got = [ $m3->set_path('a') ];
+is_deeply $got, [['a']] or diag explain $got;
+is_deeply [ $m3->paths ], [ ['a'] ];
 $m3 = Graph::AdjacencyMap::Heavy->_new(_UNIQ, 2);
 is( $m3->set_path('a', 'b'), 0 );
+$got = [ $m3->paths ];
+is_deeply $got, [ ['a', 'b'] ] or diag explain $got;
+is( $m3->_set_path_attr('a', 'b', 'say', 'hi'), 'hi' );
+is_deeply [ $m3->_get_path_attr_names('a', 'b') ], [ 'say' ];
+is_deeply [ $m3->_get_path_attr_values('a', 'b') ], [ 'hi' ];
 $got = [ $m3->get_paths_by_ids([ map [$_], $m3->get_ids_by_paths([ [qw(a b)] ]) ]) ];
 is_deeply $got, [ [ [qw(a b)] ] ] or diag explain $got;
 $m3 = Graph::AdjacencyMap::Heavy->_new(0, 2);
 is( $m3->set_path('a', 'b'), 0 );
-$got = [ $m3->get_paths_by_ids([ map [$_], $m3->get_ids_by_paths([ [qw(a b)] ]) ]) ];
+is_deeply [ $m3->paths ], [ ['a', 'b'] ];
+is( $m3->_set_path_attr('a', 'b', 'say', 'hi'), 'hi' );
+is_deeply [ $m3->_get_path_attr_names('a', 'b') ], [ 'say' ];
+is_deeply [ $m3->_get_path_attr_values('a', 'b') ], [ 'hi' ];
+$got = [ $m3->get_ids_by_paths([ [qw(a b)] ]) ];
+is_deeply $got, [ 0 ] or diag explain $got;
+$got = [ $m3->get_paths_by_ids([ map [$_], 0 ]) ];
 is_deeply $got, [ [ [qw(a b)] ] ] or diag explain $got;
+$m3 = Graph::AdjacencyMap::Heavy->_new(_MULTI|_UNORD, 2);
+ok( $m3->set_path_by_multi_id(qw(a b c)) );
+$got = [ $m3->paths ];
+is_deeply $got, [ ['a', 'b'] ] or diag explain $got;
+ok( $m3->has_path_by_multi_id(qw(a b c)) );
+ok( $m3->_set_path_attr(qw(a b c weight other)) );
+is( $m3->_get_path_attr(qw(a b c weight)), 'other' );
+ok( $m3->del_path_by_multi_id(qw(a b c)) );
+$m3 = Graph::AdjacencyMap::Heavy->_new(_MULTI, 2);
+ok( $m3->set_path_by_multi_id(qw(a b c)) );
+is( $m3->set_path_by_multi_id(0, 2, _GEN_ID), 0 );
+ok( $m3->set_path_by_multi_id(0, 2, 'hello') );
+$got = [ sort $m3->get_multi_ids(0, 2) ];
+is_deeply $got, [ 0, 'hello' ] or diag explain $got;
+$got = [ $m3->paths ];
+is_deeply $got, [ ['a', 'b'], [0, 2] ] or diag explain $got;
+ok( $m3->has_path_by_multi_id(qw(a b c)) );
+ok( $m3->_set_path_attr(qw(a b c weight other)) );
+is( $m3->_get_path_attr(qw(a b c weight)), 'other' );
+ok( $m3->del_path_by_multi_id(qw(a b c)) );
 $m3 = Graph::AdjacencyMap::Vertex->_new(_MULTI|_UNORD, 2);
 ok( $m3->set_path_by_multi_id(qw(a b c)) );
+$got = [ $m3->paths ];
+is_deeply $got, [ ['a', 'b'] ] or diag explain $got;
 ok( $m3->has_path_by_multi_id(qw(a b c)) );
 ok( $m3->_set_path_attr(qw(a b c weight other)) );
 is( $m3->_get_path_attr(qw(a b c weight)), 'other' );

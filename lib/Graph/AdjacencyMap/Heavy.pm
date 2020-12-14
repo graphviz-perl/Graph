@@ -142,7 +142,7 @@ sub get_ids_by_paths {
 	@p = sort @p if $unord;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $this_s : ();
+	defined $this_s ? ref $this_s ? $this_s->[ _ni ] : $this_s : ();
     } @$list if $a == 2 && !($f & (_HYPER|_REF|_UNIQ));
     my @n;
     map !(@n = $m->_get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;

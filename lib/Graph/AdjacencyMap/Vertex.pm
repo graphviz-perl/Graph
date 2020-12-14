@@ -34,13 +34,14 @@ sub __set_path {
 }
 
 sub __set_path_node {
-    my ($m, $p, $l) = @_;
+    my ($m, $p, $l, @args) = @_;
     my $f = $m->[ _f ];
     my $id = $_[-1] if ($f & _MULTI);
+    my $arity = $m->[ _arity ];
     return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
     my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
     die "undefined index" if !defined $i;
-    $m->[ _i ][ $i ] = [ $_[3] ];
+    $m->[ _i ][ $i ] = [ @args[0..$arity-1] ];
 }
 
 sub __has_path {
