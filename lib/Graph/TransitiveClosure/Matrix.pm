@@ -39,6 +39,7 @@ sub _new {
 	$pm = Graph::Matrix->new($g);
 	@pi = @{ $pm->[0] };
 	for (my $iu = $#V; $iu >= 0; $iu--) {
+	    vec($ai[$iu], $iu, 1) = 1 if $want_reflexive;
 	    for (my $iv = $#V; $iv >= 0; $iv--) {
 		next unless
 		    # $am->get($u, $v)
@@ -66,10 +67,8 @@ sub _new {
 	for (my $iv = $#V; $iv >= 0; $iv--) {
 	    my $didiv = $di[$iv];
 	    my $aiaiv = $ai[$iv];
-	    if (
 		# $am->get($v, $u)
-		vec($aiaiv, $iu, 1)
-		|| ($want_reflexive && $iu == $iv)) {
+	    if (vec($aiaiv, $iu, 1)) {
 		my $aivivo = $aiaiv;
 		if ($want_transitive) {
 		    if ($want_reflexive) {
