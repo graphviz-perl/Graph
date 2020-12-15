@@ -22,6 +22,8 @@ sub _new {
     my $am = $m->adjacency_matrix;
     my $dm; # The distance matrix.
     my $pm; # The predecessor matrix.
+    # directly use (not via API) arrays of bit-vectors etc for speed.
+    # the API is so low-level it adds no clarity anyway
     my @di;
     my @ai = @{ $am->[0] };
     my @pi;
@@ -41,14 +43,8 @@ sub _new {
 	for (my $iu = $#V; $iu >= 0; $iu--) {
 	    vec($ai[$iu], $iu, 1) = 1 if $want_reflexive;
 	    for (my $iv = $#V; $iv >= 0; $iv--) {
-		next unless
-		    # $am->get($u, $v)
-		    vec($ai[$iu], $iv, 1)
-			;
-		if ($want_path_count or
-		    !defined $di[$iu][$iv] # $dm->get($u, $v)
-		) {
-		    # $dm->set($u, $v, $u eq $v ? 0 : 1)
+		next unless vec($ai[$iu], $iv, 1);
+		if ($want_path_count or !defined $di[$iu][$iv]) {
 		    $di[$iu][$iv] = $iu == $iv ? 0 : 1;
 		} elsif ($multi and ref($di[$iu][$iv]) eq 'HASH') {
 		    $di[$iu][$iv] = min values %{ $di[$iu][$iv] };
@@ -57,17 +53,12 @@ sub _new {
 	    }
 	}
     }
-    # XXX (see the bits below): sometimes, being nice and clean is the
-    # wrong thing to do.  In this case, using the public API for graph
-    # transitive matrices and bitmatrices makes things awfully slow.
-    # Instead, we go straight for the jugular of the data structures.
     for (my $iu = $#V; $iu >= 0; $iu--) {
 	my $didiu = $di[$iu];
 	my $aiaiu = $ai[$iu];
 	for (my $iv = $#V; $iv >= 0; $iv--) {
 	    my $didiv = $di[$iv];
 	    my $aiaiv = $ai[$iv];
-		# $am->get($v, $u)
 	    if (vec($aiaiv, $iu, 1)) {
 		my $aivivo = $aiaiv;
 		if ($want_transitive) {
@@ -78,41 +69,7 @@ sub _new {
 				if  vec($aiaiu, $iw, 1) &&
 				   !vec($aiaiv, $iw, 1);
 			}
-			# See XXX above.
-			# for my $w (@V) {
-			#    my $aiw = $ai{$w};
-			#    if (
-			#	# $am->get($u, $w)
-			#	vec($aiaiu, $aiw, 1)
-			#	|| ($u eq $w)) {
-			#	return 0
-			#	    if $u ne $w &&
-			#		# !$am->get($v, $w)
-			#		!vec($aiaiv, $aiw, 1)
-			#		    ;
-			#	# $am->set($v, $w)
-			#	vec($aiaiv, $aiw, 1) = 1
-			#	    ;
-			#     }
-			# }
 		    } else {
-			# See XXX above.
-			# for my $w (@V) {
-			#     my $aiw = $ai{$w};
-			#     if (
-			#	# $am->get($u, $w)
-			#	vec($aiaiu, $aiw, 1)
-			#       ) {
-			#	return 0
-			#	    if $u ne $w &&
-			#		# !$am->get($v, $w)
-			#		!vec($aiaiv, $aiw, 1)
-			#		    ;
-			# 	# $am->set($v, $w)
-			# 	vec($aiaiv, $aiw, 1) = 1
-			# 	    ;
-			#     }
-			# }
 			$aiaiv |= $aiaiu; # uncoverable statement
 		    }
 		} else {
@@ -124,22 +81,13 @@ sub _new {
 		    $aiaiu = $aiaiv if $iu == $iv;
 		}
 	    }
-						   # $am->get($v, $u)
 	    if ($want_path && !$want_transitive && vec($aiaiv, $iu, 1)) {
 		for (my $iw = $#V; $iw >= 0; $iw--) {
-		    next unless
-			# See XXX above.
-			# $am->get($u, $w)
-			vec($aiaiu, $iw, 1)
-			    ;
+		    next unless vec($aiaiu, $iw, 1);
 		    if ($want_path_count) {
 			$didiv->[$iw]++ if $iw != $iu and $iw != $iv and $iu != $iv;
 			next;
 		    }
-		    # See XXX above.
-		    # $d0  = $dm->get($v, $w);
-		    # $d1a = $dm->get($v, $u) || 1;
-		    # $d1b = $dm->get($u, $w) || 1;
 		    my $d0  = $didiv->[$iw];
 		    # no override sum-zero paths which can happen with negative weights
 		    my $d1a = $didiv->[$iu];
@@ -149,20 +97,14 @@ sub _new {
 		    my $d1 = $d1a + $d1b;
 		    if (!defined $d0 || ($d1 < $d0)) {
 			# print "d1 = $d1a ($v, $u) + $d1b ($u, $w) = $d1 ($v, $w) (".(defined$d0?$d0:"-").")\n";
-			# See XXX above.
-			# $dm->set($v, $w, $d1);
 			$didiv->[$iw] = $d1;
 			$pi[$iv]->[$iw] = $pi[$iv]->[$iu]
 			    if $want_path_vertices;
 		    }
 		}
-		# $dm->set($u, $v, 1)
 		$didiu->[$iv] = 1
 		    if $iu != $iv &&
-		       # $am->get($u, $v)
-		       vec($aiaiu, $iv, 1)
-			   &&
-		       # !defined $dm->get($u, $v);
+		       vec($aiaiu, $iv, 1) &&
 		       !defined $didiu->[$iv];
 	    }
 	}
