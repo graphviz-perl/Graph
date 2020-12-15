@@ -57,26 +57,25 @@ sub _new {
 	my $diu = $di[$iu];
 	my $aiu = $ai[$iu];
 	for (my $iv = $#V; $iv >= 0; $iv--) {
-	    my $div = $di[$iv];
 	    my $aiv = $ai[$iv];
-	    if (vec($aiv, $iu, 1)) {
-		my $aivo = $aiv;
-		if ($want_transitive) {
-		    for (my $iw = $#V; $iw >= 0; $iw--) {
-			return 0
-			    if  $iw != $iu &&
-				vec($aiu, $iw, 1) &&
-			       !vec($aiv, $iw, 1);
-		    }
-		} else {
-		    $aiv |= $aiu;
+	    next if !vec($aiv, $iu, 1);
+	    if ($want_transitive) {
+		for (my $iw = $#V; $iw >= 0; $iw--) {
+		    return 0
+			if  $iw != $iu &&
+			    vec($aiu, $iw, 1) &&
+			   !vec($aiv, $iw, 1);
 		}
-		if ($aiv ne $aivo) {
-		    $ai[$iv] = $aiv;
-		    $aiu = $aiv if $iu == $iv;
-		}
+		next;
 	    }
-	    next if !$want_path || $want_transitive || !vec($aiv, $iu, 1);
+	    my $aivo = $aiv;
+	    $aiv |= $aiu;
+	    if ($aiv ne $aivo) {
+		$ai[$iv] = $aiv;
+		$aiu = $aiv if $iu == $iv;
+	    }
+	    next if !$want_path;
+	    my $div = $di[$iv];
 	    for (my $iw = $#V; $iw >= 0; $iw--) {
 		next unless vec($aiu, $iw, 1);
 		if ($want_path_count) {
