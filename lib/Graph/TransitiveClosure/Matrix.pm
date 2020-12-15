@@ -68,10 +68,8 @@ sub _new {
 		}
 		next;
 	    }
-	    my $aivo = $aiv;
-	    $aiv |= $aiu;
-	    if ($aiv ne $aivo) {
-		$ai[$iv] = $aiv;
+	    if ($aiu & ~$aiv) { # aiu has bits that aiv doesn't
+		$aiv = $ai[$iv] |= $aiu;
 		$aiu = $aiv if $iu == $iv;
 	    }
 	    next if !$want_path;
