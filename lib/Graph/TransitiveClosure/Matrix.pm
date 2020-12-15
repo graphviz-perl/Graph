@@ -75,18 +75,15 @@ sub _new {
 	    }
 	    next if !$want_path;
 	    my $diu = $di[$iu];
+	    my $d1a = $diu->[$iv];
 	    for (my $iw = $#V; $iw >= 0; $iw--) {
 		next unless vec($aiv, $iw, 1);
 		if ($want_path_count) {
-		    $diu->[$iw]++ if $iv != $iu and $iu != $iw and $iw != $iv;
+		    $diu->[$iw]++ if $iu != $iv and $iv != $iw and $iw != $iu;
 		    next;
 		}
 		my $d0  = $diu->[$iw];
-		# no override sum-zero paths which can happen with negative weights
-		my $d1a = $diu->[$iv];
-		$d1a = 1 unless defined $d1a;
 		my $d1b = $div->[$iw];
-		$d1b = 1 unless defined $d1b;
 		my $d1 = $d1a + $d1b;
 		if (!defined $d0 || ($d1 < $d0)) {
 		    # print "d1 = $d1a ($u, $v) + $d1b ($v, $w) = $d1 ($u, $w) (".(defined$d0?$d0:"-").")\n";
@@ -95,10 +92,6 @@ sub _new {
 			if $want_path_vertices;
 		}
 	    }
-	    $div->[$iu] = 1
-		if $iv != $iu &&
-		   vec($aiv, $iu, 1) &&
-		   !defined $div->[$iu];
 	}
     }
     return 1 if $want_transitive;
