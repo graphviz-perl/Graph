@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 28;
+use Test::More tests => 29;
 
 use Graph;
 use Graph::BitMatrix;
@@ -50,6 +50,14 @@ is $m->stringify, <<'EOF';
    b    0    0    1    1
    c    0    0    0    0
    d    0    0    0    1
+EOF
+
+is scalar Graph::BitMatrix->new($g, transpose => 1)->stringify, <<'EOF';
+ to:    a    b    c    d
+   a    0    0    0    0
+   b    1    0    0    0
+   c    0    1    0    0
+   d    0    1    0    1
 EOF
 
 is( $m->get(qw(x x)), undef );
