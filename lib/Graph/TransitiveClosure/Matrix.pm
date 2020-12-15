@@ -62,19 +62,14 @@ sub _new {
 	    if (vec($aiv, $iu, 1)) {
 		my $aivo = $aiv;
 		if ($want_transitive) {
-		    if ($want_reflexive) {
-			for (my $iw = $#V; $iw >= 0; $iw--) {
-			    next if $iw == $iu;
-			    return 0
-				if  vec($aiu, $iw, 1) &&
-				   !vec($aiv, $iw, 1);
-			}
-		    } else {
-			$aiv |= $aiu; # uncoverable statement
+		    for (my $iw = $#V; $iw >= 0; $iw--) {
+			return 0
+			    if  $iw != $iu &&
+				vec($aiu, $iw, 1) &&
+			       !vec($aiv, $iw, 1);
 		    }
 		} else {
 		    $aiv |= $aiu;
-		    vec($aiv, $iu, 1) = 1 if $want_reflexive;
 		}
 		if ($aiv ne $aivo) {
 		    $ai[$iv] = $aiv;
