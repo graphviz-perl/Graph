@@ -20,6 +20,7 @@ sub _new {
     my @V = $g->vertices;
     my %v2i; @v2i{ @V } = 0..$#V; # paths are in array -> stable ordering
     my $am = $m->adjacency_matrix;
+    $am->[1] = \%v2i;
     my $dm; # The distance matrix.
     my $pm; # The predecessor matrix.
     # directly use (not via API) arrays of bit-vectors etc for speed.
@@ -39,6 +40,7 @@ sub _new {
 	    @di = @{ $dm->[0] };
 	}
 	$pm = Graph::Matrix->new($g);
+	$dm->[1] = $pm->[1] = \%v2i;
 	@pi = @{ $pm->[0] };
 	for (my $iu = $#V; $iu >= 0; $iu--) {
 	    vec($ai[$iu], $iu, 1) = 1 if $want_reflexive;
@@ -97,15 +99,8 @@ sub _new {
     return 1 if $want_transitive;
     my %V; @V{ @V } = @V;
     $am->[0] = \@ai;
-    $am->[1] = \%v2i;
-    if (defined $dm) {
-	$dm->[0] = \@di;
-	$dm->[1] = \%v2i;
-    }
-    if (defined $pm) {
-	$pm->[0] = \@pi;
-	$pm->[1] = \%v2i;
-    }
+    $dm->[0] = \@di if defined $dm;
+    $pm->[0] = \@pi if defined $pm;
     weaken(my $og = $g);
     bless [ $am, $dm, $pm, \%V, $og ], $class;
 }
