@@ -49,3 +49,5 @@
 ^\.github/
 ^MANIFEST\.SKIP$
 ^xt/
+^nytprof\.out
+^nytprof/
