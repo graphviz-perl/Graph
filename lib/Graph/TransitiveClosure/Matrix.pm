@@ -10,7 +10,7 @@ use List::Util qw(min);
 
 sub _A() { 0 } # adjacency
 sub _D() { 1 } # distance
-sub _P() { 2 } # predecessors
+sub _S() { 2 } # successors
 sub _V() { 3 } # vertices
 sub _G() { 4 } # the original graph (OG)
 
@@ -22,12 +22,12 @@ sub _new {
     my $am = $m->adjacency_matrix;
     $am->[1] = \%v2i;
     my $dm; # The distance matrix.
-    my $pm; # The predecessor matrix.
+    my $sm; # The successor matrix.
     # directly use (not via API) arrays of bit-vectors etc for speed.
     # the API is so low-level it adds no clarity anyway
     my @di;
     my @ai = @{ $am->[0] };
-    my @pi;
+    my @si;
     my $multi = $g->multiedged;
     unless ($want_transitive) {
 	$dm = $m->distance_matrix;
@@ -39,9 +39,9 @@ sub _new {
 	} else {
 	    @di = @{ $dm->[0] };
 	}
-	$pm = Graph::Matrix->new($g);
-	$dm->[1] = $pm->[1] = \%v2i;
-	@pi = @{ $pm->[0] };
+	$sm = Graph::Matrix->new($g);
+	$dm->[1] = $sm->[1] = \%v2i;
+	@si = @{ $sm->[0] };
 	for (my $iu = $#V; $iu >= 0; $iu--) {
 	    vec($ai[$iu], $iu, 1) = 1 if $want_reflexive;
 	    for (my $iv = $#V; $iv >= 0; $iv--) {
@@ -51,7 +51,7 @@ sub _new {
 		} elsif ($multi and ref($di[$iu][$iv]) eq 'HASH') {
 		    $di[$iu][$iv] = min values %{ $di[$iu][$iv] };
 		}
-		$pi[$iu]->[$iv] = $V[$iv] unless $iu == $iv;
+		$si[$iu]->[$iv] = $V[$iv] unless $iu == $iv;
 	    }
 	}
     }
@@ -90,7 +90,7 @@ sub _new {
 		if (!defined $d0 || ($d1 < $d0)) {
 		    # print "d1 = $d1a ($u, $v) + $d1b ($v, $w) = $d1 ($u, $w) (".(defined$d0?$d0:"-").")\n";
 		    $diu->[$iw] = $d1;
-		    $pi[$iu]->[$iw] = $pi[$iu]->[$iv]
+		    $si[$iu]->[$iw] = $si[$iu]->[$iv]
 			if $want_path_vertices;
 		}
 	    }
@@ -100,9 +100,9 @@ sub _new {
     my %V; @V{ @V } = @V;
     $am->[0] = \@ai;
     $dm->[0] = \@di if defined $dm;
-    $pm->[0] = \@pi if defined $pm;
+    $sm->[0] = \@si if defined $sm;
     weaken(my $og = $g);
-    bless [ $am, $dm, $pm, \%V, $og ], $class;
+    bless [ $am, $dm, $sm, \%V, $og ], $class;
 }
 
 sub new {
@@ -167,11 +167,11 @@ sub path_length {
     $tc->[ _D ]->get($u, $v);
 }
 
-sub path_predecessor {
+sub path_successor {
     my ($tc, $u, $v) = @_;
     return undef if $u eq $v;
     return undef unless $tc->has_vertices($u, $v);
-    $tc->[ _P ]->get($u, $v);
+    $tc->[ _S ]->get($u, $v);
 }
 
 sub path_vertices {
@@ -180,10 +180,10 @@ sub path_vertices {
     return wantarray ? () : 0 if $u eq $v;
     my @v = ( $u );
     while ($u ne $v) {
-	last unless defined($u = $tc->path_predecessor($u, $v));
+	last unless defined($u = $tc->path_successor($u, $v));
 	push @v, $u;
     }
-    $tc->[ _P ]->set($u, $v, [ @v ]) if @v;
+    $tc->[ _S ]->set($u, $v, [ @v ]) if @v;
     return @v;
 }
 
@@ -348,10 +348,10 @@ false if not.
 
 Return the list of vertices in the transitive closure matrix.
 
-=item path_predecessor
+=item path_successor($u, $v)
 
-Return the predecessor of vertex $v in the transitive closure path
-going back to vertex $u.
+Return the successor of vertex $u in the transitive closure path towards
+vertex $v.
 
 =item all_paths($u, $v)
 

@@ -2560,8 +2560,8 @@ sub path_length {
     shift->transitive_closure_matrix->path_length(@_);
 }
 
-sub path_predecessor {
-    shift->transitive_closure_matrix->path_predecessor(@_);
+sub path_successor {
+    shift->transitive_closure_matrix->path_successor(@_);
 }
 
 sub path_vertices {

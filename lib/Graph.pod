@@ -1876,11 +1876,11 @@ Return the length of the shortest path between the two vertices.
 
 Return the list of vertices along the shortest path.
 
-=item path_predecessor
+=item path_successor
 
-   my $u = $apsp->path_predecessor($v);
+   my $u = $apsp->path_successor($u, $v);
 
-Returns the predecessor of vertex $v in the all-pairs shortest paths.
+Returns the successor of vertex $u in the all-pairs shortest path to $v.
 
 =item all_paths
 

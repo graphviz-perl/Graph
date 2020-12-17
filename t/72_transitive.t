@@ -159,15 +159,15 @@ is("@{[$t3->path_vertices(qw(c a))]}", "");
 is("@{[$t3->path_vertices(qw(c b))]}", "");
 is("@{[$t3->path_vertices(qw(c c))]}", "");
 
-is($t3->path_predecessor(qw(a a)), undef);
-is($t3->path_predecessor(qw(a b)), "b");
-is($t3->path_predecessor(qw(a c)), "b");
-is($t3->path_predecessor(qw(b a)), undef);
-is($t3->path_predecessor(qw(b b)), undef);
-is($t3->path_predecessor(qw(b c)), "c");
-is($t3->path_predecessor(qw(c a)), undef);
-is($t3->path_predecessor(qw(c b)), undef);
-is($t3->path_predecessor(qw(c c)), undef);
+is($t3->path_successor(qw(a a)), undef);
+is($t3->path_successor(qw(a b)), "b");
+is($t3->path_successor(qw(a c)), "b");
+is($t3->path_successor(qw(b a)), undef);
+is($t3->path_successor(qw(b b)), undef);
+is($t3->path_successor(qw(b c)), "c");
+is($t3->path_successor(qw(c a)), undef);
+is($t3->path_successor(qw(c b)), undef);
+is($t3->path_successor(qw(c c)), undef);
 
 ok( $t3->is_transitive);
 
@@ -191,15 +191,15 @@ is("@{[$g3->path_vertices(qw(c a))]}", "");
 is("@{[$g3->path_vertices(qw(c b))]}", "");
 is("@{[$g3->path_vertices(qw(c c))]}", "");
 
-is($g3->path_predecessor(qw(a a)), undef);
-is($g3->path_predecessor(qw(a b)), "b");
-is($g3->path_predecessor(qw(a c)), "b");
-is($g3->path_predecessor(qw(b a)), undef);
-is($g3->path_predecessor(qw(b b)), undef);
-is($g3->path_predecessor(qw(b c)), "c");
-is($g3->path_predecessor(qw(c a)), undef);
-is($g3->path_predecessor(qw(c b)), undef);
-is($g3->path_predecessor(qw(c c)), undef);
+is($g3->path_successor(qw(a a)), undef);
+is($g3->path_successor(qw(a b)), "b");
+is($g3->path_successor(qw(a c)), "b");
+is($g3->path_successor(qw(b a)), undef);
+is($g3->path_successor(qw(b b)), undef);
+is($g3->path_successor(qw(b c)), "c");
+is($g3->path_successor(qw(c a)), undef);
+is($g3->path_successor(qw(c b)), undef);
+is($g3->path_successor(qw(c c)), undef);
 
 {
     # Found by Nathan Goodman.
@@ -337,15 +337,15 @@ is("@{[$t3apspfw->path_vertices(qw(c a))]}", "");
 is("@{[$t3apspfw->path_vertices(qw(c b))]}", "");
 is("@{[$t3apspfw->path_vertices(qw(c c))]}", "");
 
-is($t3apspfw->path_predecessor(qw(a a)), undef);
-is($t3apspfw->path_predecessor(qw(a b)), "b");
-is($t3apspfw->path_predecessor(qw(a c)), "b");
-is($t3apspfw->path_predecessor(qw(b a)), undef);
-is($t3apspfw->path_predecessor(qw(b b)), undef);
-is($t3apspfw->path_predecessor(qw(b c)), "c");
-is($t3apspfw->path_predecessor(qw(c a)), undef);
-is($t3apspfw->path_predecessor(qw(c b)), undef);
-is($t3apspfw->path_predecessor(qw(c c)), undef);
+is($t3apspfw->path_successor(qw(a a)), undef);
+is($t3apspfw->path_successor(qw(a b)), "b");
+is($t3apspfw->path_successor(qw(a c)), "b");
+is($t3apspfw->path_successor(qw(b a)), undef);
+is($t3apspfw->path_successor(qw(b b)), undef);
+is($t3apspfw->path_successor(qw(b c)), "c");
+is($t3apspfw->path_successor(qw(c a)), undef);
+is($t3apspfw->path_successor(qw(c b)), undef);
+is($t3apspfw->path_successor(qw(c c)), undef);
 
 {
     # From Andras Salamon

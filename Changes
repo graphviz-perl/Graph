@@ -6,6 +6,7 @@
 - AdjacencyMap.get_ids_by_paths
 - no more uniqedged configurability
 - BitMatrix transpose option
+- Transitive closure records path successor, not predecessor. Method name and docs updated.
 
 0.9712 2020-12-05
 - bug-fix: set_edge_attribute_by_id add_edge_by_id if not exist
