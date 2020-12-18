@@ -46,7 +46,7 @@ is $sgh_d->get_graph_attribute('SPT_Dijkstra_root'), "h";
 
 is( $sgh_d, "b-a,b-f,c-d,f-g,g-e,h-b,h-c" );
 
-my $sga_d = $g->SPT_Dijkstra(first_root => "a", next_root => undef);
+my $sga_d = $g->SPT_Dijkstra(start => "a");
 is $sga_d->get_graph_attribute('SPT_Dijkstra_root'), "a";
 
 is( $sga_d, '' );

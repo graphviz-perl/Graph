@@ -1701,7 +1701,7 @@ sub _root_opt {
     @unseen = _shuffle @unseen;
     my $r;
     if (exists $opt{ start }) {
-	$opt{ first_root } = $opt{ start };
+	$opt{ first_root } = delete $opt{ start };
 	$opt{ next_root  } = undef;
     }
     if (exists $opt{ first_root }) {
