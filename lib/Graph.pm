@@ -1727,12 +1727,9 @@ sub _root_opt {
 }
 
 sub _heap_walk {
-    my ($g, $h, $add, $etc) = splice @_, 0, 4; # Leave %opt in @_.
-
-    my ($opt, $unseenh, $unseena, $r, $next, $code, $attr) = $g->_root_opt(@_);
+    my ($g, $h, $add, $etc, $opt, $unseenh, $unseena, $r, $next, $code, $attr) = @_;
     require Heap::Fibonacci;
     my $HF = Heap::Fibonacci->new;
-
     while (defined $r) {
         # print "r = $r\n";
 	$add->($g, $h, $HF, $r, $attr, $unseenh, $etc);
@@ -1754,15 +1751,13 @@ sub _heap_walk {
 	$r = $code ? $next->( $g, $unseenh ) : shift @$unseena;
         last unless defined $r;
     }
-
     return $h;
 }
 
 sub MST_Prim {
     &expect_undirected;
-    my $g = shift;
     require Graph::MSTHeapElem;
-    $g->_heap_walk(Graph->new(directed => 0), \&_MST_add, undef, @_);
+    $_[0]->_heap_walk(Graph->new(directed => 0), \&_MST_add, undef, &_root_opt);
 }
 
 *MST_Dijkstra = \&MST_Prim;
@@ -2390,10 +2385,10 @@ sub _SPT_add {
 }
 
 sub _SPT_Dijkstra_compute {
-    my ($g, %opt) = @_;
     require Graph::SPTHeapElem;
-    my $sptg = $g->_heap_walk($g->new, \&_SPT_add, {}, %opt);
-    $sptg->set_graph_attribute('SPT_Dijkstra_root', $opt{first_root});
+    my @args = &_root_opt;
+    my $sptg = $_[0]->_heap_walk($_[0]->new, \&_SPT_add, {}, @args);
+    $sptg->set_graph_attribute('SPT_Dijkstra_root', $args[3]);
     $sptg;
 }
 
