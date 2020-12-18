@@ -1693,8 +1693,8 @@ sub _next_numeric    { shift; (sort { $a <=> $b } keys %{ $_[0] })[0] }
 sub _next_random     { shift; (values %{ $_[0] })[ rand keys %{ $_[0] } ] }
 
 sub _root_opt {
-    my $g = shift;
-    my %opt = @_ == 1 ? ( first_root => $_[0] ) : _get_options( \@_ );
+    my ($g, @args) = @_;
+    my %opt = @args == 1 ? ( first_root => $args[0] ) : _get_options( \@args );
     my %unseen;
     my @unseen = $g->_vertices05;
     @unseen{ @unseen } = @unseen;
@@ -2497,13 +2497,12 @@ sub _SPT_Bellman_Ford_compute {
 }
 
 sub SPT_Bellman_Ford {
-    my $g = $_[0];
     my @args = &_root_opt;
     unless (defined $args[3]) {
-	$args[3] = $g->random_vertex();
+	$args[3] = $_[0]->random_vertex();
 	return unless defined $args[3];
     }
-    _check_cache($g, 'SPT_Bellman_Ford', [$args[3]],
+    _check_cache($_[0], 'SPT_Bellman_Ford', [$args[3]],
 	\&_SPT_Bellman_Ford_compute, @args);
 }
 
