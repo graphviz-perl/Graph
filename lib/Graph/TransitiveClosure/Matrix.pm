@@ -120,8 +120,7 @@ sub new {
     my $want_reflexive = delete $opt{reflexive};
     $am_opt{is_transitive} = my $want_transitive = delete $opt{is_transitive}
 	if exists $opt{is_transitive};
-    die "Graph::TransitiveClosure::Matrix::new: Unknown options: @{[map { qq['$_' => $opt{$_}]} keys %opt]}"
-	if keys %opt;
+    Graph::_opt_unknown(\%opt);
     $want_reflexive = 1 unless defined $want_reflexive;
     my $want_path = $want_path_length || $want_path_vertices || $want_path_count;
     # $g->expect_dag if $want_path;

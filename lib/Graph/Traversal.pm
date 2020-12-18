@@ -128,10 +128,7 @@ sub configure {
 		     first_root
 		     has_a_cycle find_a_cycle
 		    ) };
-    if (keys %attr) {
-	my @attr = sort keys %attr;
-	Graph::__carp_confess(sprintf "Graph::Traversal: unknown attribute%s @{[map { qq['$_'] } @attr]}\n", @attr == 1 ? '' : 's');
-    }
+    Graph::_opt_unknown(\%attr);
 }
 
 sub new {

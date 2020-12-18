@@ -584,7 +584,7 @@ eval { Graph::Traversal::DFS->new(next_alphabetic => 1) };
 like($@, qr/Graph::Traversal: first argument is not a Graph/, "sane args");
 
 eval { Graph::Traversal::DFS->new($gd, next_alphazetic => 1) };
-like($@, qr/Graph::Traversal: unknown attribute 'next_alphazetic'/, "zetic");
+like($@, qr/Unknown option: 'next_alphazetic'/, "zetic");
 
 ok(!$td1->has_state('zot'), "has_state");
 
