@@ -2035,6 +2035,7 @@ sub _strongly_connected_components_compute {
     my $t = Graph::Traversal::DFS->new($g);
     my @d = reverse $t->dfs;
     my @c;
+    my %v2c;
     my $u = Graph::Traversal::DFS->new(
 	$g->transpose_graph,
 	next_root => sub {
@@ -2048,59 +2049,51 @@ sub _strongly_connected_components_compute {
 	pre => sub {
 	    my ($v, $t) = @_;
 	    push @{ $c[-1] }, $v;
+	    $v2c{$v} = $#c;
 	},
 	next_alphabetic => 1,
     );
     $u->dfs;
-    return \@c;
+    return [ \@c, \%v2c ];
+}
+
+sub _strongly_connected_components_v2c {
+    &_strongly_connected_components->[1];
+}
+
+sub _strongly_connected_components_arrays {
+    @{ &_strongly_connected_components->[0] };
 }
 
 sub _strongly_connected_components {
-    my $scc = _check_cache($_[0], 'strong_connectivity', [],
+    _check_cache($_[0], 'strong_connectivity', [],
 			   \&_strongly_connected_components_compute);
-    return defined $scc ? @$scc : ( );
 }
 
 sub strongly_connected_components {
     &expect_directed;
-    goto &_strongly_connected_components;
+    goto &_strongly_connected_components_arrays;
 }
 
 sub strongly_connected_component_by_vertex {
     &expect_directed;
-    my @scc = &_strongly_connected_components;
-    my $v = $_[1];
-    for (my $i = 0; $i <= $#scc; $i++) {
-	for (my $j = 0; $j <= $#{ $scc[$i] }; $j++) {
-	    return $i if $scc[$i]->[$j] eq $v;
-	}
-    }
-    return;
+    &_strongly_connected_components_v2c->{$_[1]};
 }
 
 sub strongly_connected_component_by_index {
     &expect_directed;
     my $i = $_[1];
-    my $c = ( &_strongly_connected_components )[ $i ];
-    return defined $c ? @{ $c } : ();
+    return if !defined(my $c = &_strongly_connected_components->[0][ $i ]);
+    @$c;
 }
 
 sub same_strongly_connected_components {
     &expect_directed;
     my ($g, @args) = @_;
-    my @scc = &_strongly_connected_components;
-    my @i;
-    while (@args) {
-	my $v = shift @args;
-	for (my $i = 0; $i <= $#scc; $i++) {
-	    for (my $j = 0; $j <= $#{ $scc[$i] }; $j++) {
-		next if $scc[$i]->[$j] ne $v;
-		push @i, $i;
-		return 0 if @i > 1 && $i[-1] ne $i[0];
-	    }
-	}
-    }
-    return 1;
+    my $v2c = &_strongly_connected_components_v2c;
+    my @involved = map $v2c->{$_}, @args;
+    return 0 if values %{{ @involved, reverse @involved }} > 1;
+    1;
 }
 
 sub is_strongly_connected {
