@@ -1881,45 +1881,42 @@ sub _check_cache {
 
 sub _connected_components_compute {
     my $g = $_[0];
-    my %cce;
-    my %cci;
-    my $cc = 0;
+    my %v2c;
+    my @c;
+    return [ [], {} ] unless my @v = $g->unique_vertices;
     if (&has_union_find) {
 	my $UF = $g->_get_union_find();
 	my $V  = $g->[ _V ];
-	my @v = $g->unique_vertices;
 	my @ids = $V->get_ids_by_paths([ map [$_], @v ]);
+	my ($counter, %cc2counter) = 0;
 	for (my $i = 0; $i <= $#v; $i++) {
-	    $cc = $UF->find( $ids[$i] );
+	    my $cc = $UF->find( $ids[$i] );
 	    __carp_confess "connected_component union-find did not have vertex '$v[$i]', please report"
 		if !defined $cc;
-	    $cce{ $v[$i] } = $cc;
-	    push @{ $cci{ $cc } }, $v[$i];
+	    $cc2counter{$cc} = $counter++ if !exists $cc2counter{$cc};
+	    my $ci = $cc2counter{$cc};
+	    $v2c{ $v[$i] } = $ci;
+	    push @{ $c[$ci] }, $v[$i];
 	}
     } else {
 	require Graph::Traversal::DFS;
-	my @u = $g->unique_vertices;
-	my %r; @r{ @u } = @u;
-	my $froot = sub {
-	    (each %r)[1];
-	};
-	my $nroot = sub {
-	    $cc++ if keys %r;
-	    (each %r)[1];
-	};
-	my $t = Graph::Traversal::DFS->new($g,
-					   first_root => $froot,
-					   next_root  => $nroot,
-					   pre => sub {
-					       my ($v, $t) = @_;
-					       $cce{ $v } = $cc;
-					       push @{ $cci{ $cc } }, $v;
-					       delete $r{ $v };
-					   },
-					   @_[1..$#_]);
+	my %r; @r{ @v } = @v;
+	@c = [];
+	my $t = Graph::Traversal::DFS->new(
+	    $g,
+	    first_root => sub { (each %r)[1] },
+	    next_root  => sub { push @c, [] if keys %r; (each %r)[1]; },
+	    pre => sub {
+		my ($v, $t) = @_;
+		$v2c{ $v } = $#c;
+		push @{ $c[-1] }, $v;
+		delete $r{ $v };
+	    },
+	    @_[1..$#_]
+	);
 	$t->dfs;
     }
-    return [ \%cci, \%cce ];
+    return [ \@c, \%v2c ];
 }
 
 sub _connected_components {
@@ -1930,23 +1927,18 @@ sub _connected_components {
 
 sub connected_component_by_vertex {
     &expect_undirected;
-    my ($g, $v) = @_;
-    my ($CCI, $CCE) = &_connected_components;
-    return $CCE->{ $v };
+    (&_connected_components)[1]->{ $_[1] };
 }
 
 sub connected_component_by_index {
     &expect_undirected;
-    my ($g, $i) = @_;
-    my ($CCI) = &_connected_components;
-    return unless my $value = (values %$CCI)[$i];
-    return @$value;
+    my $value = (&_connected_components)[0]->[$_[1]];
+    $value ? @{ $value || [] } : ();
 }
 
 sub connected_components {
     &expect_undirected;
-    my ($CCI) = &_connected_components;
-    return values %{ $CCI };
+    @{ (&_connected_components)[0] };
 }
 
 sub same_connected_components {
@@ -1967,7 +1959,7 @@ sub same_connected_components {
     List::Util::uniq( @components ) == 1;
 }
 
-my $super_component = sub { join("+", sort @_) };
+sub _super_component { join("+", sort @_) }
 
 sub connected_graph {
     &expect_undirected;
@@ -1977,7 +1969,7 @@ sub connected_graph {
 	# TODO: super_component?
 	$cg->add_vertices($g->vertices);
     } else {
-	my $sc_cb = $opt{super_component} || $super_component;
+	my $sc_cb = $opt{super_component} || \&_super_component;
 	$cg->set_vertex_attribute(scalar $sc_cb->(@$_), 'subvertices', $_)
 	    for $g->connected_components;
     }
@@ -1986,8 +1978,7 @@ sub connected_graph {
 
 sub is_connected {
     &expect_undirected;
-    my ($CCI) = &_connected_components;
-    return keys %{ $CCI } == 1;
+    return @{ (&_connected_components)[0] } == 1;
 }
 
 sub is_weakly_connected {
@@ -2105,7 +2096,7 @@ sub is_strongly_connected {
 sub strongly_connected_graph {
     &expect_directed;
     my ($g, %attr) = @_;
-    my $sc_cb = $super_component;
+    my $sc_cb = \&_super_component;
     _opt_get(\%attr, super_component => \$sc_cb);
     _opt_unknown(\%attr);
     my ($c, $v2c) = @{ &_strongly_connected_components };
@@ -2278,7 +2269,7 @@ sub biconnected_graph {
     my ($g, %opt) = @_;
     my ($bc, $v2bc) = (&biconnectivity)[1, 3];
     my $bcg = Graph->new(directed => 0);
-    my $sc_cb = $opt{super_component} || $super_component;
+    my $sc_cb = $opt{super_component} || \&_super_component;
     $bcg->set_vertex_attribute(scalar $sc_cb->(@$_), 'subvertices', $_)
 	for @$bc;
     my %k;
