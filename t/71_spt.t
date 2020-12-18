@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 127;
+use Test::More tests => 131;
 
 use Graph;
 use Graph::Directed;
@@ -37,28 +37,32 @@ is $sgb_d->get_graph_attribute('SPT_Dijkstra_root'), "b";
 is( $sgb_d, "b-a,b-f,c-d,f-c,f-g,g-e" );
 
 my $sgb_bf = $g->SPT_Bellman_Ford(first_root => "b");
-
 is $sgb_bf->get_graph_attribute('SPT_Bellman_Ford_root'), "b";
+
 is( $sgb_bf, "b-a,b-f,c-d,f-c,f-g,g-e" );
 
 my $sgh_d = $g->SPT_Dijkstra(first_root => sub { "h" });
-
 is $sgh_d->get_graph_attribute('SPT_Dijkstra_root'), "h";
+
 is( $sgh_d, "b-a,b-f,c-d,f-g,g-e,h-b,h-c" );
 
 my $sga_d = $g->SPT_Dijkstra(first_root => "a", next_root => undef);
+is $sga_d->get_graph_attribute('SPT_Dijkstra_root'), "a";
 
 is( $sga_d, '' );
 
 my $sub = $u->SPT_Dijkstra(first_root => "b");
+is $sub->get_graph_attribute('SPT_Dijkstra_root'), "b";
 
 is( $sub, "a=b,b=f,b=h,c=h,d=f,e=g,f=g" );
 
 my $suh = $u->SPT_Dijkstra(first_root => "h");
+is $suh->get_graph_attribute('SPT_Dijkstra_root'), "h";
 
 is( $suh, "a=b,b=f,b=h,c=d,c=h,e=g,f=g" );
 
 my $sua = $u->SPT_Dijkstra(first_root => "a");
+is $sua->get_graph_attribute('SPT_Dijkstra_root'), "a";
 
 print "# sua = $sua\n";
 
