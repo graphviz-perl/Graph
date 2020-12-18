@@ -2105,73 +2105,16 @@ sub is_strongly_connected {
 sub strongly_connected_graph {
     &expect_directed;
     my ($g, %attr) = @_;
-    require Graph::Traversal::DFS;
-
-    my $t = Graph::Traversal::DFS->new($g);
-    my @d = reverse $t->dfs;
-    my @c;
-    my $h = &transpose;
-    my $u =
-	Graph::Traversal::DFS->new($h,
-				   next_root => sub {
-				       my ($t, $u) = @_;
-				       my $root;
-				       while (defined($root = shift @d)) {
-					   last if exists $u->{ $root };
-				       }
-				       if (defined $root) {
-					   push @c, [];
-					   return $root;
-				       } else {
-					   return;
-				       }
-				   },
-				   pre => sub {
-				       my ($v, $t) = @_;
-				       push @{ $c[-1] }, $v;
-				   }
-				   );
-
-    $u->dfs;
-
-    my $sc_cb;
-
+    my $sc_cb = $super_component;
     _opt_get(\%attr, super_component => \$sc_cb);
     _opt_unknown(\%attr);
-
-    unless (defined $sc_cb) {
-	$sc_cb = $super_component;
-    }
-
+    my ($c, $v2c) = @{ &_strongly_connected_components };
     my $s = Graph->new;
-
-    my %c;
-    my @s;
-    for (my $i = 0; $i < @c; $i++) {
-	my $c = $c[$i];
-	$s->set_vertex_attribute($s[$i] = $sc_cb->(@$c), 'subvertices', $c);
-	@c{@$c} = ($i) x @$c;
-    }
-
-    my $n = @c;
-    for my $v (grep !exists $c{$_}, &vertices) {
-	$c{$v} = $n;
-	$s[$n] = $v;
-	$n++;
-    }
-
-    for my $e (&_edges05) {
-	my ($u, $v) = @$e; # @TODO: hyperedges
-	unless ($c{$u} == $c{$v}) {
-	    my ($p, $q) = @s[ @c{ $u, $v } ];
-	    $s->add_edge($p, $q) unless $s->has_edge($p, $q);
-	}
-    }
-
-    if (my @i = &isolated_vertices) {
-	$s->add_vertices(map $s[ $c{ $_ } ], @i);
-    }
-
+    my @s = map $sc_cb->(@$_), @$c;
+    $s->set_vertex_attribute($s[$_], 'subvertices', $c->[$_]) for 0..$#$c;
+    require List::Util;
+    $s->add_edge( @s[ @$v2c{ @$_ } ] )
+	for grep List::Util::uniq( @$v2c{ @$_ } ) > 1, &_edges05;
     return $s;
 }
 
