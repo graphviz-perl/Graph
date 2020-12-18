@@ -2493,10 +2493,6 @@ sub _SPT_Bellman_Ford_compute {
 
 sub SPT_Bellman_Ford {
     my @args = &_root_opt;
-    unless (defined $args[3]) {
-	$args[3] = $_[0]->random_vertex();
-	return unless defined $args[3];
-    }
     _check_cache($_[0], 'SPT_Bellman_Ford', [$args[3]],
 	\&_SPT_Bellman_Ford_compute, @args);
 }
