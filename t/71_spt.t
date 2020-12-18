@@ -41,7 +41,7 @@ my $sgb_bf = $g->SPT_Bellman_Ford(first_root => "b");
 is $sgb_bf->get_graph_attribute('SPT_Bellman_Ford_root'), "b";
 is( $sgb_bf, "b-a,b-f,c-d,f-c,f-g,g-e" );
 
-my $sgh_d = $g->SPT_Dijkstra(first_root => "h");
+my $sgh_d = $g->SPT_Dijkstra(first_root => sub { "h" });
 
 is $sgh_d->get_graph_attribute('SPT_Dijkstra_root'), "h";
 is( $sgh_d, "b-a,b-f,c-d,f-g,g-e,h-b,h-c" );
