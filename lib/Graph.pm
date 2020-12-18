@@ -2386,18 +2386,16 @@ sub _SPT_add {
 
 sub _SPT_Dijkstra_compute {
     require Graph::SPTHeapElem;
-    my @args = &_root_opt;
-    my $sptg = $_[0]->_heap_walk($_[0]->new, \&_SPT_add, {}, @args);
-    $sptg->set_graph_attribute('SPT_Dijkstra_root', $args[3]);
+    my $sptg = $_[0]->_heap_walk($_[0]->new, \&_SPT_add, {}, @_[1..$#_]);
+    $sptg->set_graph_attribute('SPT_Dijkstra_root', $_[4]);
     $sptg;
 }
 
 sub SPT_Dijkstra {
-    my $g = shift;
-    my %opt = @_ == 1 ? (first_root => $_[0]) : @_;
-    $opt{first_root} = $g->random_vertex() unless defined $opt{first_root};
-    _check_cache($g, 'SPT_Dijkstra', [$opt{first_root}],
-	\&_SPT_Dijkstra_compute, %opt);
+    my $g = $_[0];
+    my @args = &_root_opt;
+    _check_cache($g, 'SPT_Dijkstra', [$args[3]],
+	\&_SPT_Dijkstra_compute, @args);
 }
 
 *SSSP_Dijkstra = \&SPT_Dijkstra;
