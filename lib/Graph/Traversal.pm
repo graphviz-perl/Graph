@@ -53,52 +53,49 @@ sub find_a_cycle {
     $t->terminate;
 }
 
+my @KNOWN_CONFIG = qw(
+     tree_edge seen_edge
+     next_alphabetic next_numeric next_random
+     has_a_cycle find_a_cycle
+);
+my @EXTRACT_CONFIG = qw(
+    pre post pre_vertex post_vertex
+    pre_edge post_edge back_edge down_edge cross_edge non_tree_edge
+    first_root next_root next_successor
+);
+
 sub configure {
     my ($self, %attr) = @_;
-    $self->{ pre  } = $attr{ pre }  if exists $attr{ pre  };
-    $self->{ post } = $attr{ post } if exists $attr{ post };
-    $self->{ pre_vertex  } = $attr{ pre_vertex }  if exists $attr{ pre_vertex  };
-    $self->{ post_vertex } = $attr{ post_vertex } if exists $attr{ post_vertex };
-    $self->{ pre_edge  } = $attr{ pre_edge  } if exists $attr{ pre_edge  };
-    $self->{ post_edge } = $attr{ post_edge } if exists $attr{ post_edge };
+    if (exists $attr{ start }) {
+	$attr{ first_root } = delete $attr{ start };
+	$attr{ next_root  } = undef;
+    }
+    my @found_known = grep exists $attr{$_}, @EXTRACT_CONFIG;
+    @$self{@found_known} = delete @attr{@found_known};
     if ($self->graph->multiedged || $self->graph->countedged) {
 	$self->{ seen_edge } = $attr{ seen_edge } if exists $attr{ seen_edge };
     }
-    $self->{ non_tree_edge } = $attr{ non_tree_edge } if exists $attr{ non_tree_edge };
     $self->{ pre_edge  } = $attr{ tree_edge } if exists $attr{ tree_edge };
-    $self->{ back_edge } = $attr{ back_edge } if exists $attr{ back_edge };
-    $self->{ down_edge } = $attr{ down_edge } if exists $attr{ down_edge };
-    $self->{ cross_edge } = $attr{ cross_edge } if exists $attr{ cross_edge };
-    if (exists $attr{ start }) {
-	$attr{ first_root } = $attr{ start };
-	$attr{ next_root  } = undef;
-    }
     $self->{ next_root } =
-	exists $attr{ next_root } ?
-	    $attr{ next_root } :
-		$attr{ next_alphabetic } ?
-		    \&Graph::_next_alphabetic :
-			$attr{ next_numeric } ?
-			    \&Graph::_next_numeric :
-				\&Graph::_next_random;
+	$attr{ next_alphabetic } ?
+	    \&Graph::_next_alphabetic :
+		$attr{ next_numeric } ?
+		    \&Graph::_next_numeric :
+			\&Graph::_next_random if !exists $self->{ next_root };
     $self->{ first_root } =
-	exists $attr{ first_root } ?
-	    $attr{ first_root } :
-		exists $attr{ next_root } ?
-		    $attr{ next_root } :
-			$attr{ next_alphabetic } ?
-			    \&Graph::_next_alphabetic :
-				$attr{ next_numeric } ?
-				    \&Graph::_next_numeric :
-					\&Graph::_next_random;
-    $self->{ next_successor } =
-	exists $attr{ next_successor } ?
-	    $attr{ next_successor } :
+	exists $self->{ next_root } ?
+	    $self->{ next_root } :
 		$attr{ next_alphabetic } ?
 		    \&Graph::_next_alphabetic :
 			$attr{ next_numeric } ?
 			    \&Graph::_next_numeric :
-				\&Graph::_next_random;
+				\&Graph::_next_random if !exists $self->{ first_root };
+    $self->{ next_successor } =
+	$attr{ next_alphabetic } ?
+	    \&Graph::_next_alphabetic :
+		$attr{ next_numeric } ?
+		    \&Graph::_next_numeric :
+			\&Graph::_next_random if !exists $self->{ next_successor };
     if (exists $attr{ has_a_cycle }) {
 	my $has_a_cycle =
 	    ref $attr{ has_a_cycle } eq 'CODE' ?
@@ -119,15 +116,7 @@ sub configure {
     }
     $self->{ add } = \&add_order;
     $self->{ see } = $see;
-    delete @attr{ qw(
-		     pre post pre_edge post_edge
-		     tree_edge non_tree_edge
-		     back_edge down_edge cross_edge seen_edge
-		     start
-		     next_root next_alphabetic next_numeric next_random next_successor
-		     first_root
-		     has_a_cycle find_a_cycle
-		    ) };
+    delete @attr{@KNOWN_CONFIG};
     Graph::_opt_unknown(\%attr);
 }
 
