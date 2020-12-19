@@ -1,7 +1,7 @@
 use strict; use warnings;
 use Graph;
 
-use Test::More tests => 394;
+use Test::More tests => 395;
 
 my $N = 5;
 
@@ -373,6 +373,7 @@ my $g3c = $g3->biconnected_graph();
 is( $g3c, "a+b+e+f+s=c+d+g+h+s,a+b+e+f+s=e+i,c+d+g+h+s=h+l,e+i=i+j+k");
 
 ok( $g3->same_biconnected_components('a', 'b') );
+is( $g3->biconnected_component_by_vertex('a'), $g3->biconnected_component_by_vertex('b') );
 ok( $g3->same_biconnected_components('a', 'b', 'e') );
 ok(!$g3->same_biconnected_components('a', 'c') );
 ok(!$g3->same_biconnected_components('a', 'b', 'c') );

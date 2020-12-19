@@ -2156,8 +2156,9 @@ sub _biconnectivity_dfs {
 }
 
 sub _biconnectivity_compute {
+    require List::Util;
     my ($g) = @_;
-    my %state = (BC=>[], BR=>[], V2BC=>{}, BC2V=>{}, AP=>[], dfs=>0);
+    my %state = (BC=>[], dfs=>0);
     my @u = _shuffle $g->vertices;
     for my $u (@u) {
 	next if exists $state{num}->{$u};
@@ -2167,47 +2168,29 @@ sub _biconnectivity_compute {
     }
 
     # Mark the components each vertex belongs to.
-    my $bci = 0;
+    my ($bci, %v2bc, %bc2v) = 0;
     for my $bc (@{$state{BC}}) {
-      $state{V2BC}{$_}{$bci}++ for map @$_, @$bc;
+      $v2bc{$_}{$bci} = undef for map @$_, @$bc;
       $bci++;
     }
 
     # Any isolated vertices get each their own component.
-    $state{V2BC}{$_}{$bci++}++
-	for grep !exists $state{V2BC}{$_}, $g->vertices;
+    $v2bc{$_}{$bci++} = undef for grep !exists $v2bc{$_}, @u;
 
-    for my $v ($g->vertices) {
-      $state{BC2V}{$_}{$v}{$_}++ for keys %{$state{V2BC}{$v}};
+    for my $v (@u) {
+      $bc2v{$_}{$v}{$_}++ for keys %{$v2bc{$v}};
     }
 
     # Articulation points / cut vertices are the vertices
     # which belong to more than one component.
-    push @{$state{AP}}, grep keys %{$state{V2BC}{$_}} > 1, keys %{$state{V2BC}};
+    my @ap = grep keys %{$v2bc{$_}} > 1, keys %v2bc;
 
     # Bridges / cut edges are the components of two vertices.
-    for my $v (keys %{$state{BC2V}}) {
-      my @v = keys %{$state{BC2V}->{$v}};
-      if (@v == 2) {
-	push @{$state{BR}}, \@v;
-      }
-    }
+    my @br = grep @$_ == 2, map [keys %$_], values %bc2v;
 
     # Create the subgraph components.
-    my @sg;
-    for my $bc (@{$state{BC}}) {
-      my %v;
-      my $w = Graph->new(directed => 0);
-      for my $e (@$bc) {
-	my ($u, $v) = @$e;
-	$v{$u}++;
-	$v{$v}++;
-	$w->add_edge($u, $v);
-      }
-      push @sg, [ keys %v ];
-    }
-
-    return [ $state{AP}, \@sg, $state{BR}, $state{V2BC}, ];
+    my @sg = map [ List::Util::uniq( map @$_, @$_ ) ], @{$state{BC}};
+    return [ \@ap, \@sg, \@br, \%v2bc ];
 }
 
 sub biconnectivity {
@@ -2245,22 +2228,18 @@ sub biconnected_component_by_index {
 
 sub biconnected_component_by_vertex {
     my ($v) = splice @_, 1, 1;
-    my ($v2bc) = (&biconnectivity)[3];
+    my $v2bc = (&biconnectivity)[3];
     splice @_, 1, 0, $v;
     return defined $v2bc->{ $v } ? keys %{ $v2bc->{ $v } } : ();
 }
 
 sub same_biconnected_components {
     my ($g, $u, @args) = @_;
-    my @u = &biconnected_component_by_vertex;
-    return 0 unless @u;
-    my %ubc; @ubc{ @u } = ();
-    while (@args) {
-	my $v = shift @args;
-	next unless my @v = $g->biconnected_component_by_vertex($v);
-	my %vbc; @vbc{ @v } = ();
-	my ($vi) = grep exists $vbc{ $_ }, keys %ubc;
-	return 0 unless defined $vi;
+    my $v2bc = (&biconnectivity)[3];
+    return 0 unless my $ubc = $v2bc->{ $u };
+    for my $v (@args) {
+        return 0 unless my $vbc = $v2bc->{ $v };
+        return 0 unless grep exists $vbc->{ $_ }, keys %$ubc;
     }
     return 1;
 }
@@ -2270,8 +2249,8 @@ sub biconnected_graph {
     my ($bc, $v2bc) = (&biconnectivity)[1, 3];
     my $bcg = Graph->new(directed => 0);
     my $sc_cb = $opt{super_component} || \&_super_component;
-    $bcg->set_vertex_attribute(scalar $sc_cb->(@$_), 'subvertices', $_)
-	for @$bc;
+    my @s = map $sc_cb->(@$_), @$bc;
+    $bcg->set_vertex_attribute($s[$_], 'subvertices', $bc->[$_]) for 0..$#$bc;
     my %k;
     for my $i (0..$#$bc) {
 	my @u = @{ $bc->[ $i ] };
@@ -2279,7 +2258,7 @@ sub biconnected_graph {
 	    my %j; @j{ @{ $bc->[ $j ] } } = ();
 	    next if !grep exists $j{ $_ }, @u;
 	    next if $k{ $i }{ $j }++;
-	    $bcg->add_edge($sc_cb->(@{$bc->[$i]}), $sc_cb->(@{$bc->[$j]}));
+	    $bcg->add_edge(@s[$i, $j]);
 	}
     }
     return $bcg;
