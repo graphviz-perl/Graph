@@ -361,6 +361,14 @@ sub check_partition {
     is($hits{$node}, 1, "node $node");
   }
 }
+sub dump_graph {
+  my ($g) = @_;
+  # these reveal the order that vertices and edges were added, helping repro
+  my @v = map @$_, $g->[2]->paths;
+  my $v = join(',', @v);
+  my $e = join(',', map join('-', @v[@$_]), $g->[3]->paths);
+  [ $v, $e ];
+}
 sub check_reach {
   my($graph,$tc,@components)=@_;
   # for each (ordered) pair of nodes in each component, make sure 1st node can reach 2nd
@@ -371,7 +379,7 @@ sub check_reach {
 	my $nodej=$component->[$j];
 	ok($tc->is_reachable($nodei,$nodej),
 	   "nodes $nodei, $nodej in same component and reachable")
-	   or diag "for graph $graph ", explain \@components;
+	   or diag "for graph $graph ", explain \@components, dump_graph($graph);
       }
     }
   }

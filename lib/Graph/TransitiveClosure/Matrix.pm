@@ -67,8 +67,10 @@ sub _new {
 		}
 		next;
 	    }
-	    if ($aiv & ~$aiu) { # aiv has bits that aiu doesn't
-		$aiu = $ai[$iu] |= $aiv;
+	    my $aiuo = $aiu;
+	    $aiu |= $aiv;
+	    if ($aiu ne $aiuo) {
+		$ai[$iu] = $aiu;
 		$aiv = $aiu if $iv == $iu;
 	    }
 	    next if !$want_path;
@@ -84,7 +86,7 @@ sub _new {
 		my $d1b = $div->[$iw];
 		my $d1 = $d1a + $d1b;
 		if (!defined $d0 || ($d1 < $d0)) {
-		    # print "d1 = $d1a ($u, $v) + $d1b ($v, $w) = $d1 ($u, $w) (".(defined$d0?$d0:"-").")\n";
+		    # print "d1 = $d1a ($V[$iu], $V[$iv]) + $d1b ($V[$iv], $V[$iw]) = $d1 ($V[$iu], $V[$iw]) (".(defined$d0?$d0:"-").") (propagate=".($aiu ne $aiuo?1:0).")\n";
 		    $diu->[$iw] = $d1;
 		    $si[$iu]->[$iw] = $si[$iu]->[$iv]
 			if $want_path_vertices;
