@@ -2115,42 +2115,31 @@ sub strongly_connected_graph {
 
 sub _biconnectivity_out {
   my ($state, $u, $v) = @_;
-  if (exists $state->{stack}) {
-    my @BC;
-    while (@{$state->{stack}}) {
-      my $e = pop @{$state->{stack}};
-      push @BC, $e;
-      last if defined $u && $e->[0] eq $u && $e->[1] eq $v;
-    }
-    if (@BC) {
-      push @{$state->{BC}}, \@BC;
-    }
+  my @BC;
+  while (@{$state->{stack}}) {
+    push @BC, my $e = pop @{$state->{stack}};
+    last if $e->[0] eq $u && $e->[1] eq $v;
   }
+  push @{$state->{BC}}, \@BC if @BC;
 }
 
 sub _biconnectivity_dfs {
   my ($g, $u, $state) = @_;
-  $state->{num}->{$u} = $state->{dfs}++;
-  $state->{low}->{$u} = $state->{num}->{$u};
+  $state->{low}{$u} = $state->{num}{$u} = $state->{dfs}++;
   for my $v ($g->successors($u)) {
-    unless (exists $state->{num}->{$v}) {
+    if (!exists $state->{num}{$v}) {
       push @{$state->{stack}}, [$u, $v];
-      $state->{pred}->{$v} = $u;
-      $state->{succ}->{$u}->{$v}++;
+      $state->{pred}{$v} = $u;
+      $state->{succ}{$u}{$v}++;
       _biconnectivity_dfs($g, $v, $state);
-      if ($state->{low}->{$v} < $state->{low}->{$u}) {
-	$state->{low}->{$u} = $state->{low}->{$v};
-      }
-      if ($state->{low}->{$v} >= $state->{num}->{$u}) {
-	_biconnectivity_out($state, $u, $v);
-      }
-    } elsif (defined $state->{pred}->{$u} &&
-	     $state->{pred}->{$u} ne $v &&
-	     $state->{num}->{$v} < $state->{num}->{$u}) {
+      $state->{low}{$u} = List::Util::min(@{ $state->{low} }{$u, $v});
+      _biconnectivity_out($state, $u, $v)
+	if $state->{low}{$v} >= $state->{num}{$u};
+    } elsif (defined $state->{pred}{$u} &&
+	     $state->{pred}{$u} ne $v &&
+	     $state->{num}{$v} < $state->{num}{$u}) {
       push @{$state->{stack}}, [$u, $v];
-      if ($state->{num}->{$v} < $state->{low}->{$u}) {
-	$state->{low}->{$u} = $state->{num}->{$v};
-      }
+      $state->{low}{$u} = List::Util::min($state->{low}{$u}, $state->{num}{$v});
     }
   }
 }
@@ -2159,12 +2148,11 @@ sub _biconnectivity_compute {
     require List::Util;
     my ($g) = @_;
     my %state = (BC=>[], dfs=>0);
-    my @u = _shuffle $g->vertices;
+    my @u = $g->vertices;
     for my $u (@u) {
 	next if exists $state{num}->{$u};
 	_biconnectivity_dfs($g, $u, \%state);
-	_biconnectivity_out(\%state);
-	delete $state{stack};
+	push @{$state{BC}}, delete $state{stack} if @{ $state{stack} || [] };
     }
 
     # Mark the components each vertex belongs to.

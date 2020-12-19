@@ -370,7 +370,8 @@ sub check_reach {
       for (my $j=0; $j<@$component; $j++) {
 	my $nodej=$component->[$j];
 	ok($tc->is_reachable($nodei,$nodej),
-	   "nodes $nodei, $nodej in same component and reachable");
+	   "nodes $nodei, $nodej in same component and reachable")
+	   or diag "for graph $graph ", explain \@components;
       }
     }
   }
