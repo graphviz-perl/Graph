@@ -2168,29 +2168,31 @@ sub _biconnectivity_compute {
     }
 
     # Mark the components each vertex belongs to.
-    my ($bci, %v2bc, %bc2v) = 0;
+    my ($bci, %v2bc, %v2bc_vec, %bc2v) = 0;
+    my $Z = "\0" x ((@{$state{BC}} + 7) / 8);
+    @v2bc_vec{@u} = ($Z) x @u;
     for my $bc (@{$state{BC}}) {
-      $v2bc{$_}{$bci} = undef for map @$_, @$bc;
+      vec($v2bc_vec{$_}, $bci, 1) = $v2bc{$_}{$bci} = 1 for map @$_, @$bc;
       $bci++;
     }
 
     # Any isolated vertices get each their own component.
-    $v2bc{$_}{$bci++} = undef for grep !exists $v2bc{$_}, @u;
+    $v2bc{$_}{$bci} = vec($v2bc_vec{$_}, $bci++, 1) = 1 for grep !exists $v2bc{$_}, @u;
 
     for my $v (@u) {
-      $bc2v{$_}{$v}{$_}++ for keys %{$v2bc{$v}};
+      $bc2v{$_}{$v}{$_} = undef for keys %{$v2bc{$v}};
     }
 
     # Articulation points / cut vertices are the vertices
     # which belong to more than one component.
-    my @ap = grep keys %{$v2bc{$_}} > 1, keys %v2bc;
+    my @ap = grep keys %{$v2bc{$_}} > 1, @u;
 
     # Bridges / cut edges are the components of two vertices.
     my @br = grep @$_ == 2, map [keys %$_], values %bc2v;
 
     # Create the subgraph components.
     my @sg = map [ List::Util::uniq( map @$_, @$_ ) ], @{$state{BC}};
-    return [ \@ap, \@sg, \@br, \%v2bc ];
+    return [ \@ap, \@sg, \@br, \%v2bc, \%v2bc_vec, $Z ];
 }
 
 sub biconnectivity {
@@ -2234,14 +2236,9 @@ sub biconnected_component_by_vertex {
 }
 
 sub same_biconnected_components {
-    my ($g, $u, @args) = @_;
-    my $v2bc = (&biconnectivity)[3];
-    return 0 unless my $ubc = $v2bc->{ $u };
-    for my $v (@args) {
-        return 0 unless my $vbc = $v2bc->{ $v };
-        return 0 unless grep exists $vbc->{ $_ }, keys %$ubc;
-    }
-    return 1;
+    my ($v2bc, $Z) =  (&biconnectivity)[4,5];
+    return 0 if grep !defined, my @vecs = @$v2bc{ @_[1..$#_] };
+    !grep $Z eq ($vecs[0] & $_), @vecs[1..$#vecs];
 }
 
 sub biconnected_graph {
