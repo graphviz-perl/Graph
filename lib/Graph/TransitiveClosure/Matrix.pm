@@ -21,18 +21,14 @@ sub _new {
     my %v2i; @v2i{ @V } = 0..$#V; # paths are in array -> stable ordering
     my $am = $m->adjacency_matrix;
     $am->[1] = \%v2i;
-    my $dm; # The distance matrix.
-    my $sm; # The successor matrix.
+    my ($dm, @di); # The distance matrix.
+    my ($sm, @si); # The successor matrix.
     # directly use (not via API) arrays of bit-vectors etc for speed.
     # the API is so low-level it adds no clarity anyway
-    my @di;
     my @ai = @{ $am->[0] };
-    my @si;
     my $multi = $g->multiedged;
     unless ($want_transitive) {
-	$dm = $m->distance_matrix;
-	$dm = $m->[ Graph::AdjacencyMatrix::_DM ] = Graph::Matrix->new($g)
-	    if !defined $dm; # if no distance_matrix in AM, we make our own
+	$dm = $m->distance_matrix || Graph::Matrix->new($g); # if no distance_matrix in AM, we make our own
 	if ($want_path_count) {
 	    # force defined
 	    @di = map [ (0) x @V ], 0..$#V;
