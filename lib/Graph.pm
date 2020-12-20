@@ -268,8 +268,7 @@ sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 *is_hyperedged    = \&hyperedged;
 
 sub _union_find_add_vertex {
-    my ($g, $v) = @_;
-    $g->[ _U ]->add( $g->[ _V ]->get_ids_by_paths([ [$v] ]) );
+    $_[0]->[ _U ]->add( &_vertex_ids );
 }
 
 sub add_vertex {
@@ -518,14 +517,9 @@ sub get_multiedge_ids {
 #
 
 sub _edges_at {
-    my $g = $_[0];
-    my $V = $g->[ _V ];
-    my $E = $g->[ _E ];
-    my @e;
-    my $en = 0;
-    my %ev;
-    my $Ei = $E->_ids;
-    for my $vi ( $V->get_ids_by_paths([ map [$_], @_[1..$#_] ]) ) {
+    my ($en, @e, %ev) = 0;
+    my $Ei = $_[0]->[ _E ]->_ids;
+    for my $vi ( &_vertex_ids ) {
 	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	    next if !defined(my $ev = $Ei->[$ei]);
 	    if (wantarray) {
@@ -560,13 +554,10 @@ sub _edge_cache {
 }
 
 sub _edges {
-    my $n = pop;
-    my ($g, @at) = @_;
     &_edge_cache;
-    my $N0 = $g->[ $n ][0];
-    @at = map [$_], values %{{ @at, reverse @at }};
-    my $V = $g->[ _V ];
-    map @{ $N0->{ $_ } }, grep exists $N0->{ $_ }, $V->get_ids_by_paths(\@at);
+    my $n = pop;
+    my $N0 = $_[0]->[ $n ][0];
+    map @{ $N0->{ $_ } }, grep exists $N0->{ $_ }, &_vertex_ids;
 }
 
 sub _edges_from {
@@ -1953,8 +1944,7 @@ sub same_connected_components {
     my @components;
     if (&has_union_find) {
 	my $UF = &_get_union_find;
-	my $V  = $g->[ _V ];
-	my @ids = $V->get_ids_by_paths([ map [$_], @args ]);
+	my @ids = &_vertex_ids;
 	return 0 if @ids != @args;
 	@components = map $UF->find( $_ ), @ids;
     } else {
