@@ -78,7 +78,7 @@ A boolean option telling that an undirected graph should be created.
 One could also use the C<new()> constructor the Graph::Undirected class
 instead.
 
-Note that while often it is possible to think undirected graphs as
+Note that while often it is possible to think of undirected graphs as
 bidirectional graphs, or as directed graphs with edges going both ways,
 in this module directed graphs and undirected graphs are two different
 things that often behave differently.
@@ -441,7 +441,7 @@ false otherwise.
 
    $g->delete_path($a, $b, $c, ..., $x, $y, $z)
 
-Delete all the edges edges $a-$b, $b-$c, ..., $x-$y, $y-$z
+Delete all the edges $a-$b, $b-$c, ..., $x-$y, $y-$z
 (regardless of whether they exist or not).  Returns the graph.
 
 =item add_cycle
@@ -467,7 +467,7 @@ L</find_a_cycle>.
 
    $g->delete_cycle($a, $b, $c, ..., $x, $y, $z)
 
-Delete all the edges edges $a-$b, $b-$c, ..., $x-$y, $y-$z, and $z-$a
+Delete all the edges $a-$b, $b-$c, ..., $x-$y, $y-$z, and $z-$a
 (regardless of whether they exist or not).  Returns the graph.
 
 =item has_a_cycle
@@ -706,7 +706,7 @@ Return true if the graph has any edges, false otherwise.
 
     $g->is_connected
 
-For an undirected graph, return true is the graph is connected, false
+For an undirected graph, return true if the graph is connected, false
 otherwise.  Being connected means that from every vertex it is possible
 to reach every other vertex.
 
@@ -2002,10 +2002,10 @@ recomputing the potentially expensive operation, and this also gives
 additional determinism (once a correct result has been computed, the
 same result will always be given).
 
-However, sometimes the exact opposite is desireable, and the possible
+However, sometimes the exact opposite is desirable, and the possible
 alternative results are wanted (within the limits of the pseudorandomness:
 not all the possible solutions are guaranteed to be returned, usually only
-a subset is retuned).  To undo the caching, the following methods are
+a subset is returned).  To undo the caching, the following methods are
 available:
 
 =over 4
