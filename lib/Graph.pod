@@ -145,7 +145,7 @@ original.
 Also the following vertex/edge attributes are copied:
 
   refvertexed/countvertexed/multivertexed
-  hyperedged/countedged/multiedged/omniedged
+  hyperedged/countedged/multiedged
 
 B<NOTE>: You can get an even shallower copy of a graph by
 
@@ -2715,33 +2715,6 @@ To test for hyperness of a graph use the
 
     $g->is_hyperedged
     $g->hyperedged
-
-=back
-
-To go with the concept of undirected in normal (non-hyper) graphs,
-there is a similar concept of omnidirected I<(this is my own coinage,
-"all-directions")> for hypergraphs, and you can naturally test for it by
-
-=over 4
-
-=item is_omnidirected
-
-=item omnidirected
-
-=item is_omniedged
-
-=item omniedged
-
-   $g->is_omniedged
-
-   $g->omniedged
-
-   $g->is_omnidirected
-
-   $g->omnidirected
-
-Return true if the graph is omnidirected (edges have no direction),
-false if not.
 
 =back
 

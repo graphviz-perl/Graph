@@ -149,7 +149,7 @@ sub new {
 	no strict 'refs';
         for my $c (qw(undirected refvertexed
                       countvertexed multivertexed
-                      hyperedged countedged multiedged omniedged
+                      hyperedged countedged multiedged
 		      __stringified)) {
 	    $existing{$c}++ if $class->$c;
         }
@@ -157,10 +157,7 @@ sub new {
 	%opt = (%existing, %opt) if %existing; # allow overrides
     }
 
-    _opt_get(\%opt, undirected   => \$opt{omniedged});
-    _opt_get(\%opt, omnidirected => \$opt{omniedged});
-
-    $opt{omniedged} = !delete $opt{directed} if exists $opt{directed};
+    $opt{undirected} = !delete $opt{directed} if exists $opt{directed};
 
     _opt(\%opt, \$vflags,
 	 countvertexed	=> _COUNT,
@@ -174,7 +171,7 @@ sub new {
 	 countedged	=> _COUNT,
 	 multiedged	=> _MULTI,
 	 hyperedged	=> _HYPER,
-	 omniedged	=> _UNORD,
+	 undirected	=> _UNORD,
 	);
 
     _opt(\%opt, \$gflags,
@@ -254,10 +251,8 @@ sub __stringified { $_[0]->[ _V ]->_is_STR   }
 sub countedged    { $_[0]->[ _E ]->_is_COUNT }
 sub multiedged    { $_[0]->[ _E ]->_is_MULTI }
 sub hyperedged    { $_[0]->[ _E ]->_is_HYPER }
-sub omniedged     { $_[0]->[ _E ]->_is_UNORD }
+sub undirected    { $_[0]->[ _E ]->_is_UNORD }
 
-*undirected   = \&omniedged;
-*omnidirected = \&omniedged;
 sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 
 *is_directed      = \&directed;
@@ -265,14 +260,12 @@ sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 
 *is_countvertexed = \&countvertexed;
 *is_multivertexed = \&multivertexed;
-*is_omnidirected  = \&omnidirected;
 *is_refvertexed   = \&refvertexed;
 *is_refvertexed_stringified = \&refvertexed_stringified;
 
 *is_countedged    = \&countedged;
 *is_multiedged    = \&multiedged;
 *is_hyperedged    = \&hyperedged;
-*is_omniedged     = \&omniedged;
 
 sub _union_find_add_vertex {
     my ($g, $v) = @_;
@@ -1140,7 +1133,6 @@ sub copy {
 			 hyperedged
 			 countedged
 			 multiedged
-			 omniedged
 		         __stringified));
     $c->add_vertex($_) for &isolated_vertices;
     $c->add_edge(@$_) for &_edges05;

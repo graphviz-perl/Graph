@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 66;
+use Test::More tests => 51;
 
 use Graph;
 
@@ -8,9 +8,7 @@ test_prop(@$_) for (
     [refvertexed => 0, [], []],
     [countvertexed => 0, [], []],
     [multivertexed => 0, [], []],
-    [omnidirected => 0, [qw(undirected)], [qw(directed)]],
-    [omniedged => 0, [qw(undirected)], [qw(directed)]],
-    [undirected => 0, [qw(omnidirected)], [qw(directed)]],
+    [undirected => 0, [], [qw(directed)]],
     [directed => 1, [], [qw(undirected)]],
     [countedged => 0, [], []],
     [multiedged => 0, [], []],
