@@ -557,7 +557,7 @@ sub _edges {
     &_edge_cache;
     my $n = pop;
     my $N0 = $_[0]->[ $n ][0];
-    map @{ $N0->{ $_ } }, grep exists $N0->{ $_ }, &_vertex_ids;
+    map @{ $N0->{ $_ } || [] }, &_vertex_ids;
 }
 
 sub _edges_from {
