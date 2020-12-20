@@ -1069,7 +1069,8 @@ sub rename_vertices {
 
 sub as_hashes {
     my ($g) = @_;
-    my (%n, %e);
+    my (%n, %e, @e);
+    my ($is_hyper, $is_directed)= (&is_hyperedged, &is_directed);
     if (&is_multivertexed) {
         for my $v ($g->vertices) {
             $n{$v} = {
@@ -1082,16 +1083,28 @@ sub as_hashes {
     }
     if (&is_multiedged) {
         for my $e ($g->edges) {
-            $e{ $e->[0] }{ $e->[1] } = {
-                map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
-                    $g->get_multiedge_ids(@$e)
-            };
+            if ($is_hyper) {
+                my %h = (attributes => {
+                    map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
+                        $g->get_multiedge_ids(@$e)
+                });
+                if ($is_directed) {
+                } else {
+                    $h{vertices} = $e;
+                }
+                push @e, \%h;
+            } else {
+                $e{ $e->[0] }{ $e->[1] } = {
+                    map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
+                        $g->get_multiedge_ids(@$e)
+                };
+            }
         }
     } else {
         $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {}
             for $g->edges;
     }
-    ( \%n, \%e );
+    ( \%n, $is_hyper ? \@e : \%e );
 }
 
 sub ingest {

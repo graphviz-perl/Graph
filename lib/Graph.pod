@@ -1298,6 +1298,16 @@ as above.
 
 If C<multiedged> is true, similar will be true for the edges hash.
 
+For a hypergraph, the edges will instead be an array-ref of hashes with
+a key of C<attributes>, value a hash-ref (if C<multiedged>, two-level
+as above). Then with values of array-refs of vertex-names, for undirected:
+
+=over
+
+=item vertices
+
+=back
+
 =back
 
 =head2 Connected Graphs and Their Components

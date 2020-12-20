@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 65;
+use Test::More tests => 66;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -134,3 +134,19 @@ is_deeply $got, {
     d => { e => { hot => { weight => 46 } } },
     e => { f => { hot => { weight => 44 } } }
 } or diag explain $got;
+
+$g = Graph->new(hyperedged => 1, multiedged => 1, directed => 0);
+$g->set_edge_attributes_by_id('a', 'b', 'x', 'hot',
+		           { color => 'pearl', weight => 'heavy' });
+$g->add_weighted_edge_by_id('a', 'b', 'hot', 123);
+$g->add_weighted_path_by_id("c", 45, "d", 46, "e", "hot");
+$got = ($g->as_hashes)[1];
+is_deeply $got, [
+    {
+	vertices => ['a', 'b', 'x'],
+	attributes => { hot => { color => 'pearl', weight => 'heavy' } },
+    },
+    { vertices => ['a', 'b'], attributes => { hot => { weight => 123 } } },
+    { vertices => ['c', 'd'], attributes => { hot => { weight => 45 } } },
+    { vertices => ['d', 'e'], attributes => { hot => { weight => 46 } } },
+], 'hyperedge as_hashes' or diag explain $got;

@@ -1,4 +1,5 @@
 - remove "omni*" - hypergraphs are simply directed or undirected
+- as_hashes works with undirected hypergraphs
 
 0.9713 2020-12-19
 - fix edges_at on self-edges in scalar context
