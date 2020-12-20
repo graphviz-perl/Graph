@@ -1,69 +1,38 @@
 use strict; use warnings;
-use Test::More tests => 45;
+use Test::More tests => 66;
 
 use Graph;
 
-my $g0 = Graph->new;
+test_prop(@$_) for (
+    # 2nd is whether default is true, then aliases, then opposites
+    [refvertexed => 0, [], []],
+    [countvertexed => 0, [], []],
+    [multivertexed => 0, [], []],
+    [omnidirected => 0, [qw(undirected)], [qw(directed)]],
+    [omniedged => 0, [qw(undirected)], [qw(directed)]],
+    [undirected => 0, [qw(omnidirected)], [qw(directed)]],
+    [directed => 1, [], [qw(undirected)]],
+    [countedged => 0, [], []],
+    [multiedged => 0, [], []],
+    [hyperedged => 0, [], []],
+);
 
-my $g1a = Graph->new(refvertexed => 1);
-my $g1b = Graph->new(refvertexed => 0);
-
-ok( !$g0 ->refvertexed() );
-ok(  $g1a->refvertexed() );
-ok( !$g1b->refvertexed() );
-
-my $g2a = Graph->new(countvertexed => 1);
-my $g2b = Graph->new(countvertexed => 0);
-
-ok( !$g0 ->countvertexed() );
-ok(  $g2a->countvertexed() );
-ok( !$g2b->countvertexed() );
-
-my $g4a = Graph->new(omnidirected => 1);
-my $g4b = Graph->new(omnidirected => 0);
-
-ok( !$g0 ->omnidirected() );
-ok(  $g4a->omnidirected() );
-ok( !$g4b->omnidirected() );
-
-ok(  $g4a->undirected() );
-ok( !$g4b->undirected() );
-
-ok( !$g4a->directed() );
-ok(  $g4b->directed() );
-
-my $g5a = Graph->new(undirected => 1);
-my $g5b = Graph->new(undirected => 0);
-
-ok(  $g5a->omnidirected() );
-ok( !$g5b->omnidirected() );
-
-ok( !$g0 ->undirected() );
-ok(  $g5a->undirected() );
-ok( !$g5b->undirected() );
-
-ok( !$g5a->directed() );
-ok(  $g5b->directed() );
-
-my $g6a = Graph->new(directed => 1);
-my $g6b = Graph->new(directed => 0);
-
-ok( !$g6a->omnidirected() );
-ok(  $g6b->omnidirected() );
-
-ok( !$g6a->undirected() );
-ok(  $g6b->undirected() );
-
-ok(  $g0 ->directed() ); # The default is directed.
-ok(  $g6a->directed() );
-ok( !$g6b->directed() );
-
-my $g7a = Graph->new(countedged => 1);
-my $g7b = Graph->new(countedged => 0);
-
-ok( !$g0 ->countedged() );
-ok(  $g7a->countedged() );
-ok( !$g7b->countedged() );
+sub test_prop {
+    my ($prop, $true_by_default, $aliases, $opposites) = @_;
+    my $g = Graph->new;
+    my $got = $g->$prop;
+    $got = !$got if !$true_by_default;
+    ok $got, "$prop correct default value";
+    $g = Graph->new( $prop => 0 );
+    ok !$g->$prop, "$prop reflects given false value";
+    ok $g->$_, "$prop opposite=$_ right" for @$opposites;
+    $g = Graph->new( $prop => 1 );
+    ok $g->$prop, "$prop reflects given true value";
+    ok $g->$_, "$prop alias=$_ right" for @$aliases;
+    ok !$g->$_, "$prop opposite=$_ right" for @$opposites;
+    $g = $g->copy;
+    ok $g->$prop, "$prop survives copy";
+}
 
 {
     local $SIG{__DIE__} = sub { $@ = shift };

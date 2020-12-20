@@ -51,8 +51,6 @@ t/22_refvertexed.t
 t/24_mixvertexed.t
 t/25_countedged.t
 t/26_multiedged.t
-t/27_omnidirected.t
-t/28_hyperedged.t
 t/30_mixedged.t
 t/33_hyperedge.t
 t/39_edges_at.t

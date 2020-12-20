@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 95;
+use Test::More tests => 88;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -160,16 +160,3 @@ SKIP: {
     my $c = $g->_deep_copy_DataDumper;
     is($c->get_graph_attribute('color')->(3), 81);
 }
-
-for my $a (qw(refvertexed
-	      countvertexed
-	      multivertexed
-	      hyperedged
-	      countedged
-	      multiedged
-	      omniedged)) {
-    my $g = Graph->new($a => 1);
-    my $c = $g->copy;
-    ok($c->$a);
-}
-
