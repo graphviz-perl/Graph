@@ -373,19 +373,20 @@ sub _vertex_ids {
 
 sub _vertex_ids_maybe_ensure {
     my $ensure = pop;
-    my $g = $_[0];
+    my ($g, @args) = @_;
     my $V = $g->[ _V ];
     if (($V->[ _f ] & _LIGHT)) {
 	my $s = $V->[ _s ];
-	my @non_exist = grep !exists $s->{ $_ }, @_[1..$#_];
+	my @non_exist = grep !exists $s->{ $_ }, @args;
 	return if !$ensure and @non_exist;
 	$g->add_vertices(@non_exist) if @non_exist;
-	return map $s->{ $_ }, @_[1..$#_];
+	return map $s->{ $_ }, @args;
     }
-    my @non_exist = $V->paths_non_existing([ map [$_], @_[1..$#_] ]);
+    @args = map [$_], @args;
+    my @non_exist = $V->paths_non_existing(\@args);
     return if !$ensure and @non_exist;
     $g->add_vertices(map @$_, @non_exist) if @non_exist;
-    $V->get_ids_by_paths([ map [$_], @_[1..$#_] ]);
+    $V->get_ids_by_paths(\@args);
 }
 
 sub has_edge {
