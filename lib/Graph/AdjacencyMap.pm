@@ -57,10 +57,56 @@ sub _V () { 2 }  # Graph::_V()
 
 sub stringify {
     my $m = shift;
-    <<EOF;
-@{[ref $m]} arity=@{[$m->[ _arity ]]} flags: @{[_stringify_fields($m->[ _f ])]}
-EOF
+    my @rows;
+    my $a = $m->[ _arity ];
+    my $s = $m->[ _s ];
+    my $f = $m->[ _f ];
+    my $hyper = $f & _HYPER;
+    my $multi = $f & _MULTI;
+    my $light = $f & _LIGHT;
+    my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
+    if ($a == 2) {
+	my (%p, %s);
+	for my $t (@p) {
+	    my ($u, $v) = @$t;
+	    $p{$u} = $s{$v} = 1;
+	}
+	my @s = sort keys %s;
+	@rows = [ 'to:', @s ];
+	for my $u (sort keys %p) {
+	    my @r = $u;
+	    for my $v (@s) {
+		my $text = $m->has_path($u, $v) ? 1 : '';
+		my $attrs = $multi
+		    ? (( $m->__get_path_node( $u, $v ) )[0] || [])->[-1]
+		    : $m->_get_path_attrs( $u, $v )
+		    if $text and !$light;
+		$text = $m->_dumper($attrs) if defined $attrs;
+		push @r, $text;
+	    }
+	    push @rows, \@r;
+	}
+    } elsif ($a == 1) {
+	for my $v (@p) {
+	    my @r = $v->[0];
+	    my ($text) = $m->get_ids_by_paths([ $v ]);
+	    my $attrs = $multi
+		? (( $m->__get_path_node( @$v ) )[0] || [])->[-1]
+		: $m->_get_path_attrs(@$v) if !$light;
+	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
+	    push @r, $text;
+	    push @rows, \@r;
+	}
+    }
+    join '',
+	map "$_\n",
+	"@{[ref $m]} arity=@{[$m->[ _arity ]]} flags: @{[_stringify_fields($m->[ _f ])]}",
+	map join(' ', map sprintf('%4s', $_), @$_),
+	@rows;
 }
+
+# because in BLOCK mode, $a is 1 while $b is right - probable perl bug
+sub _s_sort { $a->[1] cmp $b->[1] }
 
 sub _stringify_fields {
     join '|', grep $_[0] & $FLAG2I{$_}, @FLAGS;
@@ -136,6 +182,18 @@ sub __get_path_node {
     }
     my $l = defined $k->[-1] ? $k->[-1] : "";
     exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, $k, $l ) : ();
+}
+
+sub __set_path_node {
+    my ($m, $p, $l, @args) = @_;
+    my $f = $m->[ _f ];
+    my $id = pop @args if $f & _MULTI;
+    my $arity = $m->[ _arity ];
+    return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
+    my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
+    die "undefined index" if !defined $i;
+    $m->[ _i ][ $i ] = \@args;
+    defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
 }
 
 sub __has_path {
@@ -241,6 +299,30 @@ sub get_paths_by_ids {
 
 sub paths {
     grep defined, @{ $_[0]->[ _i ] || [] };
+}
+
+sub get_ids_by_paths {
+    my ($m, $list) = @_;
+    my ($n, $f, $a, $i, $s) = @$m;
+    my $unord = $a > 1 && ($f & _UNORD);
+    return map { # Fast path
+	my @p = @$_;
+	@p = sort @p if $unord;
+	my $this_s = $s;
+	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	defined $this_s ? ref $this_s ? $this_s->[ _ni ] : $this_s : ();
+    } @$list if $a == 2 && !($f & (_HYPER|_REF|_UNIQ));
+    my @n;
+    map !(@n = $m->_get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
+}
+
+sub rename_path {
+    my ($m, $from, $to) = @_;
+    return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
+    return unless my ($n, $p, $k, $l) = $m->__get_path_node( $from );
+    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = [ $to ];
+    $p->[ -1 ]{ $to } = delete $p->[ -1 ]{ $l };
+    return 1;
 }
 
 sub _has_path_attrs {
@@ -352,7 +434,18 @@ sub _get_path_attr_values {
     values %$attrs;
 }
 
-*_get_path_node = *__get_path_node; # overridable to "fast path"
+sub _get_path_node {
+    my $m = $_[0];
+    my $f = $m->[ _f ];
+    goto &{ $m->can('__get_path_node') } # Slow path
+	if !($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ)));
+    &Graph::AdjacencyMap::__arg;
+    return unless exists $m->[ _s ]->{ $_[1] };
+    my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
+    my $l = $_[2];
+    exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, [ @_[1,2] ], $l ) : ();
+}
+
 sub _get_path_count {
     my $m = $_[0];
     return undef unless my ($n) = &{ $m->can('_get_path_node') };

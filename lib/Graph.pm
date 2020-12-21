@@ -204,11 +204,9 @@ sub new {
 
     $g->[ _F ] = $gflags;
     $g->[ _G ] = 0;
-    $g->[ _V ] = ($vflags & _MULTI) ?
+    $g->[ _V ] = $vflags ?
 	_am_heavy($vflags, 1) :
-	    ($vflags ?
-	     _am_vertex($vflags, 1) :
-	     _am_light($vflags, 1, $g));
+	     _am_light($vflags, 1, $g);
     $g->[ _E ] = ($eflags & ~_UNORD) ?
 	_am_heavy($eflags, 2) :
 	    _am_light($eflags, 2, $g);
@@ -227,19 +225,14 @@ sub new {
     return $g;
 }
 
-sub _am_vertex {
-    require Graph::AdjacencyMap::Vertex;
-    Graph::AdjacencyMap::Vertex->_new(@_);
-}
-
 sub _am_light {
     require Graph::AdjacencyMap::Light;
     Graph::AdjacencyMap::Light->_new(@_);
 }
 
 sub _am_heavy {
-    require Graph::AdjacencyMap::Heavy;
-    Graph::AdjacencyMap::Heavy->_new(@_);
+    require Graph::AdjacencyMap;
+    Graph::AdjacencyMap->_new(@_);
 }
 
 sub countvertexed { $_[0]->[ _V ]->_is_COUNT }

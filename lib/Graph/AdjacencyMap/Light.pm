@@ -25,21 +25,7 @@ sub _new {
 
 sub stringify {
     my $m = shift;
-    my @rows;
-    my $a = $m->[ _arity ];
-    if ($a == 2) {
-	my @p = sort keys %{ $m->[ _s ] };
-	my @s = sort keys %{ $m->[ _p ] };
-	@rows = [ 'to:', @s ];
-	push @rows, map { my $p=$_; [ $p, map $m->has_path($p, $_) ? 1 : '', @s ] } @p;
-    } elsif ($a == 1) {
-	my $s = $m->[ _s ];
-	push @rows, map [ $_, $s->{ $_ } ], sort map @$_, $m->paths;
-    }
-    'Graph: ' . $m->[ _g ] . "\n" . $m->SUPER::stringify . join '',
-	map "$_\n",
-	map join(' ', map sprintf('%4s', $_), @$_),
-	@rows;
+    'Graph: ' . $m->[ _g ] . "\n" . $m->SUPER::stringify;
 }
 
 sub set_path {
@@ -157,13 +143,11 @@ sub __attr {
     if ($a > 1) { # Edges, then.
 	# print "Reedging.\n";
 	@E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
-	require Graph::AdjacencyMap::Heavy;
-	$g->[ _E ] = $m = Graph::AdjacencyMap::Heavy->_new(($f & ~_LIGHT), 2);
+	$g->[ _E ] = $m = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 2);
 	$g->add_edges( @E );
     } else {
 	# print "Revertexing.\n";
-	require Graph::AdjacencyMap::Vertex;
-	$m = Graph::AdjacencyMap::Vertex->_new(($f & ~_LIGHT), 1);
+	$m = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 1);
 	$m->[ _n ] = $V[ _n ];
 	$m->[ _i ] = $V[ _i ];
 	$m->[ _s ] = $V[ _s ];

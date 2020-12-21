@@ -83,7 +83,7 @@ EOF
 $g1->set_edge_attribute(qw(a b weight 2)); # trigger re-edging in ::Light
 $g1->set_vertex_attribute(qw(a size 2)); # trigger re-vertexing in ::Light
 is $g1->[ Graph::_V ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Vertex arity=1 flags: 
+Graph::AdjacencyMap arity=1 flags: 
    a 0,{'size' => '2'}
    b    1
    c    2
@@ -92,7 +92,7 @@ Graph::AdjacencyMap::Vertex arity=1 flags:
    f    5
 EOF
 is $g1->[ Graph::_E ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Heavy arity=2 flags: 
+Graph::AdjacencyMap arity=2 flags: 
  to:    1    2    3    4    5
    0 {'weight' => '2'}    1    1    1    1
    1         1    1    1    1
@@ -108,13 +108,13 @@ $g2->set_edge_attribute_by_id(qw(a b x weight 2));
 $g2->set_vertex_attribute_by_id(qw(a z other 5));
 $g2->set_vertex_attribute_by_id(qw(a 0 other2 6));
 is $g2->[ Graph::_V ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Heavy arity=1 flags: _MULTI
+Graph::AdjacencyMap arity=1 flags: _MULTI
    a 0,{'0' => {'other2' => '6'},'z' => {'other' => '5'}}
    b 2,{'0' => {}}
    c 1,{'0' => {}}
 EOF
 is $g2->[ Graph::_E ]->stringify, <<'EOF';
-Graph::AdjacencyMap::Heavy arity=2 flags: _MULTI
+Graph::AdjacencyMap arity=2 flags: _MULTI
  to:    1    2
    0 {'0' => {}} {'x' => {'weight' => '2'}}
 EOF

@@ -3,9 +3,7 @@ DESIGN
 lib/Graph.pm
 lib/Graph.pod
 lib/Graph/AdjacencyMap.pm
-lib/Graph/AdjacencyMap/Heavy.pm
 lib/Graph/AdjacencyMap/Light.pm
-lib/Graph/AdjacencyMap/Vertex.pm
 lib/Graph/AdjacencyMatrix.pm
 lib/Graph/Attribute.pm
 lib/Graph/BitMatrix.pm

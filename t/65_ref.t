@@ -1,16 +1,9 @@
 use strict; use warnings;
-use Test::More tests => 993;
+use Test::More tests => 977;
 
 use Graph;
+use Graph::AdjacencyMap qw(:flags);
 use Graph::AdjacencyMap::Light;
-use Graph::AdjacencyMap::Heavy;
-use Graph::AdjacencyMap::Vertex;
-
-sub _REF () { Graph::AdjacencyMap::Heavy::_REF }
-sub _UNIQ () { Graph::AdjacencyMap::Heavy::_UNIQ }
-sub _MULTI () { Graph::AdjacencyMap::Vertex::_MULTI }
-sub _UNORD () { Graph::AdjacencyMap::Vertex::_UNORD }
-sub _GEN_ID () { Graph::AdjacencyMap::_GEN_ID }
 
 use Math::Complex;
 
@@ -20,13 +13,12 @@ my $v = cplx(3, 4);
 my $z = cplx(4, 5);
 my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap::Light', [0, 1, Graph->new], ['a'] ],
-    [ 'Graph::AdjacencyMap::Heavy', [_REF, 1], [$t] ],
-    [ 'Graph::AdjacencyMap::Heavy', [_REF, 2], [$u, $v] ],
-    [ 'Graph::AdjacencyMap::Heavy', [_UNIQ, 2], [qw(a b)] ],
-    [ 'Graph::AdjacencyMap::Heavy', [0, 2], [qw(a b)] ],
-    [ 'Graph::AdjacencyMap::Heavy', [_MULTI|_UNORD, 2], [qw(a b c)] ],
-    [ 'Graph::AdjacencyMap::Heavy', [_MULTI, 2], [qw(a b c)] ],
-    [ 'Graph::AdjacencyMap::Vertex', [_MULTI|_UNORD, 2], [qw(a b c)] ],
+    [ 'Graph::AdjacencyMap', [_REF, 1], [$t] ],
+    [ 'Graph::AdjacencyMap', [_REF, 2], [$u, $v] ],
+    [ 'Graph::AdjacencyMap', [_UNIQ, 2], [qw(a b)] ],
+    [ 'Graph::AdjacencyMap', [0, 2], [qw(a b)] ],
+    [ 'Graph::AdjacencyMap', [_MULTI|_UNORD, 2], [qw(a b c)] ],
+    [ 'Graph::AdjacencyMap', [_MULTI, 2], [qw(a b c)] ],
 );
 my @METHOD_MAP = (
     { has => 'has_path', del => 'del_path', set => 'set_path' },
