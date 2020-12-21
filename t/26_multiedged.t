@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 65;
+use Test::More tests => 68;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -91,13 +91,16 @@ like($@, qr/get_multiedge_ids: expected multiedged/);
 eval { $h->delete_edge_by_id("b", "c", "black") };
 like($@, qr/delete_edge_by_id: expected multiedged/);
 
-$h = Graph->new(multiedged => 1, hyperedged => 1);
+$h = Graph->new(multiedged => 1, hyperedged => 1, directed => 0);
 
 ok( $h->add_edge_by_id('u', 'v', 'w', 'genghis') );
 ok( $h->add_edge_by_id('u', 'khan') );
 
 ok( $h->has_edge('u' ,'v', 'w') );
 ok(!$h->has_edge('u' ,'v') );
+ok( $h->any_edge('u' ,'v') );
+ok( $h->any_edge('u' ,'w') );
+ok( $h->any_edge('v' ,'w') );
 ok( $h->has_edge('u') );
 ok(!$h->has_edge('v') );
 ok(!$h->has_edge() );

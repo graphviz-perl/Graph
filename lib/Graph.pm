@@ -392,6 +392,17 @@ sub has_edge {
 	   exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
 }
 
+sub any_edge {
+    my $g = $_[0];
+    my $E = $g->[ _E ];
+    my $Ef = $E->[ _f ];
+    return 0 if (my @i = &_vertex_ids) != @_ - 1;
+    &_edge_cache;
+    my $N0 = $g->[ _S ][0];
+    my $s = $N0->{ $i[0] };
+    grep $_ == $i[1], map @$_, @{ $s };
+}
+
 sub _edges05 {
     my $g = $_[0];
     my @e = $g->[ _E ]->paths;

@@ -1,6 +1,7 @@
 - remove "omni*" - hypergraphs are simply directed or undirected
 - as_hashes works with undirected hypergraphs
 - add_edge with != 2 vertices only for undirected hypergraph
+- any_edge
 
 0.9713 2020-12-19
 - fix edges_at on self-edges in scalar context

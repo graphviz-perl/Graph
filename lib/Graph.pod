@@ -17,6 +17,7 @@ Graph - graph data structures and algorithms
 
         $g->add_edge(...);
         $g->has_edge(...)
+        $g->any_edge(...)
         $g->delete_edge(...);
 
         $g->add_vertex(...);
@@ -307,6 +308,15 @@ Return true if the vertex exists in the graph, false otherwise.
     $g->has_edge($u, $v)
 
 Return true if the edge exists in the graph, false otherwise.
+
+=item any_edge
+
+    $g->any_edge($u, $v)
+
+Return true if any edge in the graph connects the first vertex to the second,
+false otherwise. Note this is a different question from C<has_edge>. It
+will give the same result as checking the first vertex's L</successors>
+to see if any match the second one, but in a more efficient way.
 
 =item delete_vertex
 
