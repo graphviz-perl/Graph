@@ -291,6 +291,11 @@ By default idempotent, but a graph can be created I<countedged>.
 
 An edge is also known as an I<arc>.
 
+For a hypergraph, the interface is different: if undirected, give a list
+of one or more vertices. If directed, give a list of two array-refs of
+vertices. As conceptually these are sets, the ordering of the contents
+is not important.
+
 =item has_vertex
 
     $g->has_vertex($v)
@@ -613,6 +618,10 @@ a list of array references, or as a list of vertices where the
 even (0th, 2nd, 4th, ...) items are start vertices and the odd
 (1st, 3rd, 5th, ...) are the corresponding end vertices.
 Returns the graph.
+
+For a hypergraph, each item in this list must be an array-ref of arguments
+suitable for C<add_edge> - so for undirected, of vertices;
+for directed, of two array-refs of vertices.
 
 =item rename_vertex
 

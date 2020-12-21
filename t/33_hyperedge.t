@@ -1,8 +1,8 @@
 use strict; use warnings;
-use Test::More tests => 15;
+use Test::More tests => 14;
 
 use Graph;
-my $g = Graph->new(hyperedged => 1);
+my $g = Graph->new(hyperedged => 1, directed => 0);
 
 $g->add_edge();
 $g->add_edge("a");
@@ -22,7 +22,6 @@ ok( $g->has_edge("d", "e", "f") );
 
 ok( ! $g->has_edge("b") );
 ok( ! $g->has_edge("c") );
-ok( ! $g->has_edge("c", "b") );
 ok( ! $g->has_edge("d", "e") );
 
 $g->add_edge("d", "e", "g");

@@ -6,7 +6,7 @@ use Graph;
 for my $m (0, 1) {
     for my $h (0, 1) {
 	my $g = Graph->new(countedged => $m,
-			   hyperedged => $h);
+			   hyperedged => $h, directed => 0);
 	note "c = $m, h = $h\n";
 	$g->add_edge("a", "b");
 	$g->add_edge("a", "b");

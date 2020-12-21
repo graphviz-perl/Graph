@@ -336,11 +336,9 @@ sub _union_find_add_edge {
 }
 
 sub add_edge {
-    &expect_hyperedged if @_ != 3;
+    &expect_hyperedged, &expect_undirected if @_ != 3;
     my $g = $_[0];
     if (&is_multiedged) {
-	__carp_confess "Graph::add_edge: use add_edges for more than one edge"
-	    unless @_ == 3 || &is_hyperedged;
 	push @_, _GEN_ID;
 	goto &add_edge_by_id;
     }
