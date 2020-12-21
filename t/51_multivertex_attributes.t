@@ -70,7 +70,7 @@ ok( !$g->has_vertex_attributes_by_id("a", "hot") );
 is(  $g->get_vertex_attribute_by_id("a", "hot", "taste"),  undef );
 
 ok( !$g->delete_vertex_attribute_by_id("a", "hot", "taste" ) );
-ok( !$g->delete_vertex_attributes_by_id("a", "hot") );
+ok( $g->delete_vertex_attributes_by_id("a", "hot") );
 
 $attr = $g->get_vertex_attributes_by_id("a", "hot");
 @name = $g->get_vertex_attribute_names_by_id("a", "hot");
@@ -80,20 +80,20 @@ is_deeply $attr, undef;
 is_deeply \@name, [];
 is_deeply \@val, [];
 
-is( $g->vertices, 0 ); # No "a" anymore.
+is( $g->vertices, 1 ); # Deleting attributes does not delete vertex
 
 $g->add_weighted_vertex_by_id("b", "cool", 42);
 
 ok( $g->has_vertex_by_id("b", "cool") );
 is( $g->get_vertex_weight_by_id("b", "cool"),  42 );
 
-is( $g->vertices, 1 );
+is( $g->vertices, 2 );
 
 $g->add_weighted_vertices_by_id("b", 43, "c", 44, "cool");
 is( $g->get_vertex_weight_by_id("b", "cool"),  43 );
 is( $g->get_vertex_weight_by_id("c", "cool" ),  44 );
 
-is( $g->vertices, 2 );
+is( $g->vertices, 3 );
 
 ok($g->set_vertex_attributes_by_id('a', 'hot',
 		             { 'color' => 'pearl', 'weight' => 'heavy' }));
@@ -110,7 +110,7 @@ is( $g->get_vertex_weight_by_id("a", "hot"), undef);
 
 ok( $g->set_vertex_attribute_by_id("a", 0, "zero", "absolute") );
 my $got = [ sort $g->vertices ];
-is_deeply($got, [qw(a a a a b c)]) or diag explain $got;
+is_deeply($got, [qw(a a b c)]) or diag explain $got;
 
 my $h = Graph->new(multivertexed => 1);
 

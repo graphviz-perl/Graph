@@ -95,7 +95,7 @@ sub get_ids_by_paths {
 }
 
 sub _get_path_count {
-    goto &has_path;
+    &has_path ? 1 : undef;
 }
 
 sub has_paths { keys %{ $_[0]->[ _s ] } }

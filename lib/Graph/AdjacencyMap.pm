@@ -3,6 +3,9 @@ package Graph::AdjacencyMap;
 use strict;
 use warnings;
 
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
+
 my (@FLAGS, %FLAG_COMBOS, %FLAG2I);
 BEGIN {
     @FLAGS = qw(_COUNT _MULTI _HYPER _UNORD _UNIQ _REF _UNIONFIND _LIGHT _STR);
@@ -464,11 +467,8 @@ sub _del_path_attrs {
 	return unless my ($p, $k) = &{ $m->can('__has_path') };
 	push @_, $id;
 	my $l = defined $k->[-1] ? $k->[-1] : "";
-	delete $p->[-1]->{ $l }->[ _nm ]->{ $id };
-	delete $p->[-1]->{ $l }
-	    unless keys %{ $p->[-1]->{ $l }->[ _nm ] } ||
-		   (defined $p->[-1]->{ $l }->[ _na ] &&
-		    keys %{ $p->[-1]->{ $l }->[ _na ] });
+	$p->[-1]->{ $l }->[ _nm ]->{ $id } = undef;
+	return 1;
     } else {
 	return undef unless my ($n) = &{ $m->can('__get_path_node') };
 	return 0 if !ref $n;

@@ -2,6 +2,7 @@
 - as_hashes works with undirected hypergraphs
 - add_edge with != 2 vertices only for undirected hypergraph
 - any_edge
+- delete_*_attributes_by_id (and deleting last attribute) now don't destroy that entity
 
 0.9713 2020-12-19
 - fix edges_at on self-edges in scalar context
