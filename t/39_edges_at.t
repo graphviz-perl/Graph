@@ -10,7 +10,7 @@ $g->add_edge("a", "b", "c");
 
 sub deref {
     my $r = shift;
-    ref $r ? "[" . join(" ", map { deref($_) } @$r) . "]" : $_;
+    ref $r ? "[" . join(" ", sort map { deref($_) } @$r) . "]" : $_;
 }
 
 sub at {

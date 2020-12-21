@@ -515,19 +515,9 @@ sub get_multiedge_ids {
 #
 
 sub _edges_at {
-    my ($en, @e, %ev) = 0;
-    my $Ei = $_[0]->[ _E ]->_ids;
-    for my $vi ( &_vertex_ids ) {
-	for (my $ei = $#$Ei; $ei >= 0; $ei--) {
-	    next if !defined(my $ev = $Ei->[$ei]);
-	    if (wantarray) {
-		push @e, $ev for grep $_ == $vi && !$ev{$ei}++, @$ev;
-	    } else {
-		$en += grep $_ == $vi && !$ev{$ei}++, @$ev;
-	    }		    
-	}
-    }
-    return wantarray ? @e : $en;
+    goto &_edges_from if &is_undirected;
+    my %ev;
+    grep !$ev{$_}++, &_edges_from, &_edges_to;
 }
 
 sub _edge_cache {
