@@ -306,6 +306,16 @@ sub _get_path_attr_values {
     values %$attrs;
 }
 
+*_get_path_node = *__get_path_node; # overridable to "fast path"
+sub _get_path_count {
+    my $m = $_[0];
+    return undef unless my ($n) = &{ $m->can('_get_path_node') };
+    my $f = $m->[ _f ];
+    return
+        ($f & _COUNT) ? $n->[ _nc ] :
+        ($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
+}
+
 sub _del_path_attrs {
     my $f = $_[0]->[ _f ];
     my $id = pop if ($f & _MULTI);

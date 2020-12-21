@@ -31,7 +31,7 @@ sub stringify {
 	my @p = sort keys %{ $m->[ _s ] };
 	my @s = sort keys %{ $m->[ _p ] };
 	@rows = [ 'to:', @s ];
-	push @rows, map { my $p=$_; [ $p, map $m->has_path($p, $_), @s ] } @p;
+	push @rows, map { my $p=$_; [ $p, map $m->has_path($p, $_) ? 1 : '', @s ] } @p;
     } elsif ($a == 1) {
 	my $s = $m->[ _s ];
 	push @rows, map [ $_, $s->{ $_ } ], sort map @$_, $m->paths;
@@ -82,18 +82,17 @@ sub paths_non_existing {
 }
 
 sub has_path {
-    my $m = shift;
-    my ($n, $f, $a, $i, $s) = @$m;
-    return 0 unless $a == @_;
+    my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @_[1..$#_] );
+    return 0 unless $a == @args;
     my $e;
     if ($a == 2) {
-	@_ = sort @_ if ($f & _UNORD);
-	$e = shift;
+	@args = sort @args if ($f & _UNORD);
+	$e = shift @args;
 	return 0 unless exists $s->{ $e };
         $s = $s->{ $e };
     }
-    $e = shift;
-    exists $s->{ $e };
+    $e = shift @args;
+    exists $s->{ $e } ? 1 : 0;
 }
 
 sub get_ids_by_paths {
@@ -110,17 +109,7 @@ sub get_ids_by_paths {
 }
 
 sub _get_path_count {
-    my $m = shift;
-    my ($n, $f, $a, $i, $s) = @$m;
-    my $e;
-    if (@_ == 2) {
-	@_ = sort @_ if ($f & _UNORD);
-	$e = shift;
-	return undef unless exists $s->{ $e };
-        $s = $s->{ $e };
-    }
-    $e = shift;
-    return exists $s->{ $e } ? 1 : 0;
+    goto &has_path;
 }
 
 sub has_paths { keys %{ $_[0]->[ _s ] } }

@@ -148,15 +148,6 @@ sub get_ids_by_paths {
     map !(@n = $m->_get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
 }
 
-sub _get_path_count {
-    my $m = $_[0];
-    return undef unless my ($n) = &_get_path_node;
-    my $f = $m->[ _f ];
-    return
-	($f & _COUNT) ? $n->[ _nc ] :
-	($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
-}
-
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names

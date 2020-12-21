@@ -59,15 +59,6 @@ sub get_ids_by_paths {
     map !(@n = $m->__get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
 }
 
-sub _get_path_count {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    return 0 unless my ($n) = &{ $m->can('__get_path_node') };
-    return
-	($f & _COUNT) ? $n->[ _nc ] :
-	($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
-}
-
 sub rename_path {
     my ($m, $from, $to) = @_;
     return unless my ($n, $p, $k, $l) = $m->__get_path_node( $from );
