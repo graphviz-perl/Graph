@@ -65,6 +65,7 @@ sub set_path {
 	    $i->[ $n ] = [ $e0 ];
 	}
     }
+    $n;
 }
 
 sub paths_non_existing {

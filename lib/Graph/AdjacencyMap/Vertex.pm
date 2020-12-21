@@ -42,6 +42,7 @@ sub __set_path_node {
     my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
     die "undefined index" if !defined $i;
     $m->[ _i ][ $i ] = [ @args[0..$arity-1] ];
+    $id;
 }
 
 sub __has_path {
