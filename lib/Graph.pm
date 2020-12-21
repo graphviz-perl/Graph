@@ -540,15 +540,28 @@ sub _edge_cache {
     for (my $ei = $#$Ei; $ei >= 0; $ei--) {
 	next if !defined(my $ev = $Ei->[$ei]);
 	next unless @$ev;
-	my ($f, $t) = @$ev[0, -1];
 	if ($directed) {
+	    my ($f, $t) = @$ev;
 	    push @{ $S0->{ $f } }, $ev;
 	    push @{ $P0->{ $t } }, $ev;
 	} else {
-	    push @{ $S0->{ $f } }, $ev;
-	    push @{ $S0->{ $t } }, [ reverse @$ev ] if $f != $t;
+	    my @e = values %{{ @$ev, reverse @$ev }};
+	    if (@e == 1) {
+		push @{ $S0->{ $e[0] } }, [ @e, @e ];
+		next;
+	    }
+	    for my $i (0..$#e) {
+		my ($f, @r) = _list_with_x_first($i, @e);
+		push @{ $S0->{ $f } }, [ $f, @r ];
+	    }
 	}
     }
+}
+
+sub _list_with_x_first {
+    return if @_ == 1;
+    my $i = shift;
+    ($_[$i], @_[0..$i-1], @_[$i+1..$#_]);
 }
 
 sub _edges {
