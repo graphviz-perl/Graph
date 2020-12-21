@@ -164,6 +164,22 @@ Graph::AdjacencyMap arity=2 flags: _MULTI
    0 {'0' => {}} {'x' => {'weight' => '2'}}
 EOF
 
+for my $cv (0, 1) {
+    my $g3 = Graph::Directed->new(hyperedged => 1, countvertexed => $cv);
+    $g3->add_edge([qw(a c)], [qw(d e f)]);
+    $g3->set_edge_attribute([qw(a c)], [qw(e g)], qw(weight 2));
+    is $g3->[ Graph::_E ]->stringify, <<'EOF';
+Graph::AdjacencyMap arity=0 flags: 0
+[[0,1],[2,3,4]]    0
+[[0,1],[3,5]] 1,{'weight' => '2'}
+EOF
+    my $got = [ $g3->as_hashes ];
+    is_deeply $got->[1], [
+	{ predecessors => [qw(a c)], successors => [qw(d e f)], attributes => {} },
+	{ predecessors => [qw(a c)], successors => [qw(e g)], attributes => { weight => 2 } },
+    ] or diag explain $got;
+}
+
 {
   my $null = Graph->new;
   ok($null, "boolify wins over stringify for empty graph");

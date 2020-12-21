@@ -45,7 +45,7 @@ sub set_paths {
 sub _successors_set {
     my $val = pop;
     my ($f, $map_s, $map_p, $id, $path) = @_;
-    my $pairs = Graph::AdjacencyMap::_successors_cartesian(($f & _UNORD), $path);
+    my $pairs = Graph::AdjacencyMap::_successors_cartesian(($f & _UNORD), 0, $path);
     no warnings 'uninitialized'; # needed 5.8
     vec($map_s->[ $_->[0] ], $_->[1], 1) = $val for @$pairs; # row-major
     return if !$map_p;
@@ -96,10 +96,14 @@ sub has_successor {
 
 sub get_ids_by_paths {
     my ($pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _pi ], @_ );
+    $deep ||= 0;
     map {
 	my @ret = map {
-	    my $id = $pi->{ $_ };
-	    defined $id ? $id : $ensure ? $m->set_paths($_) : return;
+	    my @ret2 = map {
+		my $id = $pi->{ $_ };
+		defined $id ? $id : $ensure ? $m->set_paths($_) : return;
+	    } $deep > 1 ? @$_ : $_;
+	    $deep > 1 ? \@ret2 : @ret2;
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
     } @$list;

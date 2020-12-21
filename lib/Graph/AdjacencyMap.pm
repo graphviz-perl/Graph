@@ -44,7 +44,7 @@ BEGIN {
 sub _new {
     my ($class, $flags, $arity) = @_;
     my $hyper = !$arity;
-    my $need_s = ($hyper || $arity > 1) && !($hyper && !($flags & _UNORD)); # no directed hyper yet
+    my $need_s = $arity != 1;
     my $need_p = $need_s && !($flags & _UNORD);
     bless [
 	0, $flags, $arity, [], {},
@@ -69,8 +69,11 @@ sub stringify {
     my ($f, $arity, $m) = (@{ $_[0] }[ _f, _arity ], $_[0]);
     my ($multi, @rows) = $f & _MULTI;
     my @p = $m->paths;
-    @p = $arity == 1 ? sort @p
-	: map $_->[0], sort { $a->[1] cmp $b->[1] } map [$_,"@$_"], @p; # use the Schwartz
+    @p = $arity == 1 ? sort @p :
+	map $_->[0], sort { $a->[1] cmp $b->[1] }
+	    ($arity == 0 && !($f & _UNORD))
+		? map [$_, join '|', map "@$_", @$_], @p
+		: map [$_,"@$_"], @p; # use the Schwartz
     if ($arity == 2) {
 	require Set::Object;
 	my ($pre, $suc, @s) = (Set::Object->new(map $_->[0], @p), Set::Object->new(map $_->[1], @p));
@@ -149,7 +152,7 @@ sub __set_path {
     my $is_multi = $f & _MULTI;
     my $k_orig = $k;
     $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
-    my $l = $a == 1 ? "$k" : "@$k";
+    my $l = ($a == 0 && !($f & _UNORD)) ? join '|', map join(' ', sort @$_), @$k : $a == 1 ? "$k" : "@$k";
     if (exists $pi->{ $l }) {
 	return ($pi->{ $l }) if !($inc_if_exists and ($f & _COUNTMULTI));
 	my $nc = \$m->[ _count ][ my $i = $pi->{ $l } ];
@@ -165,21 +168,21 @@ sub __set_path {
     $map_i->[ $pi->{ $l } = my $i = $m->[ _n ]++ ] = $k_orig;
     $m->[ _attr ][ $i ] = { ($id = ($id eq _GEN_ID) ? 0 : $id) => {} } if $is_multi;
     $m->[ _count ][ $i ] = $is_multi ? 0 : 1 if ($f & _COUNTMULTI);
-    _successors_add($f, $map_s, $map_p, $i, $k) if $map_s; # dereffed
+    _successors_add($f, $a, $map_s, $map_p, $i, $k) if $map_s; # dereffed
     ($i, $id);
 }
 
 sub _successors_add {
-    my ($f, $map_s, $map_p, $id, $path) = @_;
-    my $pairs = _successors_cartesian(($f & _UNORD), $path);
+    my ($f, $a, $map_s, $map_p, $id, $path) = @_;
+    my $pairs = _successors_cartesian(($f & _UNORD), $a == 0, $path);
     push @{ $map_s->{ $_->[0] }{ $_->[1] } }, $id for @$pairs;
     return if !$map_p;
     push @{ $map_p->{ $_->[1] }{ $_->[0] } }, $id for @$pairs;
 }
 
 sub _successors_del {
-    my ($f, $map_s, $map_p, $id, $path) = @_;
-    my $pairs = _successors_cartesian(($f & _UNORD), $path);
+    my ($f, $a, $map_s, $map_p, $id, $path) = @_;
+    my $pairs = _successors_cartesian(($f & _UNORD), $a == 0, $path);
     for (@$pairs) {
 	my ($p, $s) = @$_;
 	my @new = grep $_ != $id, @{ $map_s->{ $p }{ $s } };
@@ -197,14 +200,19 @@ sub _successors_del {
 }
 
 sub _successors_cartesian {
-    my ($unord, $seq) = @_;
-    return [ $seq ] if !$unord; # directed no hyper yet
-    return [] if !@$seq; # undirected hyperedge with no vertices
-    require Set::Object;
-    my @a = Set::Object->new(@$seq)->members;
-    my ($allow_self, @pairs) = @a < 2;
-    for my $p (@a) {
-	push @pairs, map [$p, $_], $allow_self ? @a : grep $p != $_, @a;
+    my ($unord, $hyper, $seq) = @_;
+    return [ $seq ] if !$unord and !$hyper;
+    return [] if $unord and $hyper and !@$seq;
+    my ($allow_self, $p_s, $s_s, @pairs);
+    if ($unord) {
+	require Set::Object;
+	my @a = Set::Object->new(@$seq)->members;
+	($allow_self, $p_s, $s_s) = (@a < 2, \@a, \@a);
+    } else {
+	($allow_self, $p_s, $s_s) = (1, @$seq);
+    }
+    for my $p (@$p_s) {
+	push @pairs, map [$p, $_], $allow_self ? @$s_s : grep $p != $_, @$s_s;
     }
     \@pairs;
 }
@@ -267,7 +275,7 @@ sub __has_path {
     &__arg;
     my ($f, $a, $pi, $k) = (@{ $_[0] }[ _f, _arity, _pi ], $_[1]);
     $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
-    my $l = $a == 1 ? "$k" : "@$k";
+    my $l = ($a == 0 && !($f & _UNORD)) ? join '|', map join(' ', sort @$_), @$k : $a == 1 ? "$k" : "@$k";
     my $id = $pi->{ $l };
     (defined $id ? $id : return, $l);
 }
@@ -309,17 +317,17 @@ sub _del_path_attr {
 
 sub _sequence_del {
     my ($m, $id, $l) = @_;
-    my ($f, $map_i, $pi, $map_s, $map_p) = @$m[ _f, _i, _pi, _s, _p ];
+    my ($f, $a, $map_i, $pi, $map_s, $map_p) = @$m[ _f, _arity, _i, _pi, _s, _p ];
     delete $pi->{ $l };
     delete $m->[ $_ ][ $id ] for _count, _attr;
     my $path = delete $map_i->[ $id ];
-    _successors_del($f, $map_s, $map_p, $id, $path) if $map_s;
+    _successors_del($f, $a, $map_s, $map_p, $id, $path) if $map_s;
     return 1;
 }
 
 sub get_paths_by_ids {
-    my ($i, undef, $list) = ( @{ $_[0] }[ _i ], @_ );
-    map [ @$i[ @$_ ] ], @$list;
+    my ($i, undef, $list, $deep) = ( @{ $_[0] }[ _i ], @_ );
+    $deep ? map [ map [ @$i[ @$_ ] ], @$_ ], @$list : map [ @$i[ @$_ ] ], @$list;
 }
 
 sub paths {
@@ -328,7 +336,8 @@ sub paths {
 
 sub get_ids_by_paths {
     my ($f, $a, $pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _f, _arity, _pi ], @_ );
-    my ($is_multi, $is_ref) = (map $f & $_, _MULTI, _REF);
+    $deep ||= 0;
+    my ($is_multi, $is_ref, $is_unord) = (map $f & $_, _MULTI, _REF, _UNORD);
     return map { # Fast path
 	my @ret = map {
 	    my $id = $pi->{ $a != 1 ? "@$_" : $_ };
@@ -337,16 +346,19 @@ sub get_ids_by_paths {
 		($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
-    } @$list if !$is_ref;
+    } @$list if $a and !$is_ref and $deep < 2;
     map {
 	my @ret = map {
-	    my $k = $_;
-	    $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
-	    my $l = $a == 1 ? "$k" : "@$k";
-	    my $id = $pi->{ $l };
-	    defined $id ? $id :
-		!$ensure ? return :
-		($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
+	    my @ret2 = map {
+		my $k = $_;
+		$k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
+		my $l = ($a == 0 && !$is_unord) ? join '|', map join(' ', sort @$_), @$k : $a == 1 ? "$k" : "@$k";
+		my $id = $pi->{ $l };
+		defined $id ? $id :
+		    !$ensure ? return :
+		    ($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
+	    } $deep > 1 ? @$_ : $_;
+	    $deep > 1 ? \@ret2 : @ret2;
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
     } @$list;
@@ -453,11 +465,12 @@ For C<_UNORD>, you must give the sequence already sorted.
 
 Set the path in the Map by the multi id.
 
-=head2 get_paths_by_ids([ \@idlist1, \@idlist2... ])
+=head2 get_paths_by_ids([ \@idlist1, \@idlist2... ], $deep)
 
 Given an array-ref of array-refs of vertex IDs, returns a list of
 array-refs of vertex-names.
 This is to look up vertex paths for use in edges. Only useful for arity 1.
+The C<$deep> option is useful with directed hyperedges.
 
 =head2 get_ids_by_paths
 
@@ -472,7 +485,7 @@ If C<$ensure> is true, will first create paths that do not already exist.
 If it is not, any non-existing paths will cause an empty list to be returned.
 
 If $deep is true, each sequence will be treated as a list of paths,
-and IDs filled in for the return values.
+and IDs filled in for the return values. This can have a value up to 2.
 
 =head2 rename_path($from, $to)
 

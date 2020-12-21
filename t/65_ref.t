@@ -18,8 +18,7 @@ my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap::Light', [_UNORD, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [$t] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [$v] ],
-    [ 'Graph::AdjacencyMap', [0, 0], [[qw()]] ],
-    [ 'Graph::AdjacencyMap', [0, 0], [[qw(2 7 9 12)]] ],
+    [ 'Graph::AdjacencyMap', [0, 0], [[[qw(2 7 9)], [qw(12 13)]]] ],
     [ 'Graph::AdjacencyMap', [_UNORD, 0], [[qw()]] ],
     [ 'Graph::AdjacencyMap', [_UNORD, 0], [[qw(2 7 9 12)]] ],
     [ 'Graph::AdjacencyMap', [0, 2], [[qw(2 7)]] ],
@@ -104,6 +103,34 @@ sub test_adjmap {
 	    $got = [ $m->paths_to($path->[1]) ];
 	    is_deeply $got, [ $path ], $label or diag explain $got;
 	}
+    } elsif ($arity == 0 and @$path) {
+	my ($froms, $tos) = $is_unord ? ($path, $path) : @$path;
+	for my $f (@$froms) {
+	    for my $t ($is_unord ? grep $_ ne $f, @$tos : @$tos) {
+		ok $m->has_successor($f, $t), $label;
+		ok !$m->has_successor($f, 99), $label;
+		ok !$m->has_successor(99, $t), $label;
+		next if $is_unord;
+		$got = [ $m->paths_to($t) ];
+		is_deeply $got, [ $path ], $label or diag explain $got;
+	    }
+	    $got = [ sort $m->successors($f) ];
+	    is_deeply $got, [ sort $is_unord ? grep $_ ne $f, @$tos : @$tos ], $label or diag explain $got;
+	    $got = [ $m->paths_from($f) ];
+	    is_deeply $got, [ $path ], $label or diag explain $got;
+	}
+	$got = [ sort $m->successors(@$froms) ];
+	is_deeply $got, [ sort @$tos ], $label or diag explain $got;
+	$got = [ $m->paths_from(@$froms) ];
+	is_deeply $got, [ $path ], $label or diag explain $got;
+	if (!$is_unord) {
+	    $got = [ sort $m->predecessors(@$tos) ];
+	    is_deeply $got, $froms, $label or diag explain $got;
+	    $got = [ sort $m->predecessors($tos->[0]) ];
+	    is_deeply $got, $froms, $label or diag explain $got;
+	    $got = [ $m->paths_to(@$tos) ];
+	    is_deeply $got, [ $path ], $label or diag explain $got;
+	}
     }
     ok( !$m->_has_path_attrs(@$path_maybe_id), $label );
     is( $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label );
@@ -150,6 +177,8 @@ sub test_adjmap {
 	my @paths_deep_maybe_id = map [ "1$_", $is_multi ? 0 : () ], @paths_to_create;
 	$got = [ $m->get_ids_by_paths(\@paths_to_create_deep, 1, 1) ];
 	is_deeply $got, [ [2, 4], [3, 5] ], $label or diag explain $got;
+	$got = [ $m->get_ids_by_paths([ \@paths_to_create_deep ], 1, 2) ];
+	is_deeply $got, [ [ [2, 4], [3, 5] ] ], $label or diag explain $got;
 	ok $m->${ \$map->{has} }(@$_), $label for @paths_deep_maybe_id;
 	ok( $m->has_any_paths, $label ) or diag explain $m;
 	$m->${ \$map->{del} }(@$_) for @paths_deep_maybe_id, @paths_to_create_maybe_id;

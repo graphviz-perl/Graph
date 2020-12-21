@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 66;
+use Test::More;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -150,4 +150,23 @@ is_deeply $got, [
     { vertices => ['a', 'b'], attributes => { hot => { weight => 123 } } },
     { vertices => ['c', 'd'], attributes => { hot => { weight => 45 } } },
     { vertices => ['d', 'e'], attributes => { hot => { weight => 46 } } },
-], 'hyperedge as_hashes' or diag explain $got;
+], 'undirected hyperedge as_hashes' or diag explain $got;
+
+$g = Graph->new(hyperedged => 1, multiedged => 1);
+$g->set_edge_attributes_by_id([qw(a b c)], [qw(f g)], 'hot',
+		           { color => 'pearl', weight => 'heavy' });
+$g->add_weighted_edge_by_id([qw(a b c)], [qw(f h)], 'hot', 123);
+$g->add_weighted_path_by_id(["c"], 45, ["d"], 46, ["e"], "hot");
+$got = ($g->as_hashes)[1];
+is_deeply $got, [
+    {
+        predecessors => [qw(a b c)],
+        successors => [qw(f g)],
+	attributes => { hot => { color => 'pearl', weight => 'heavy' } },
+    },
+    { predecessors => [qw(a b c)], successors => [qw(f h)], attributes => { hot => { weight => 123 } } },
+    { predecessors => ['c'], successors => ['d'], attributes => { hot => { weight => 45 } } },
+    { predecessors => ['d'], successors => ['e'], attributes => { hot => { weight => 46 } } },
+], 'directed hyperedge as_hashes' or diag explain $got;
+
+done_testing;

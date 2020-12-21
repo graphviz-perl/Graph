@@ -82,9 +82,13 @@ sub Infinity () { $Inf }
 use Graph::Attribute array => _A, map => 'graph';
 
 sub stringify {
-    my $u = &is_undirected;
+    my ($u, $h) = (&is_undirected, &is_hyperedged);
     my $e = $u ? '=' : '-';
-    my @s = sort map join($e, $u ? sort { "$a" cmp "$b" } @$_ : @$_), &_edges05;
+    my @edges = map join($e,
+	$u ? sort { "$a" cmp "$b" } @$_ :
+	$h ? map '['.join(",", sort { "$a" cmp "$b" } @$_).']', @$_ :
+	@$_), &_edges05;
+    my @s = sort @edges;
     push @s, sort { "$a" cmp "$b" } &isolated_vertices;
     join(",", @s);
 }
@@ -314,7 +318,8 @@ sub _vertex_ids_maybe_ensure {
     my $ensure = pop;
     my ($g, @args) = @_;
     my $V = $g->[ _V ];
-    return $V->get_ids_by_paths(\@args, $ensure) if ($V->[ _f ] & _REF);
+    my $deep = &is_hyperedged && &is_directed;
+    return $V->get_ids_by_paths(\@args, $ensure, $deep) if ($V->[ _f ] & _REF) or $deep;
     my $pi = $V->[ _pi ];
     my @non_exist = grep !exists $pi->{ $_ }, @args;
     return if !$ensure and @non_exist;
@@ -327,16 +332,19 @@ sub has_edge {
     my $E = $g->[ _E ];
     my ($Ef, $Ea) = @$E[ _f, _arity ];
     return 0 if $Ea and @_ != $Ea + 1;
+    my $directed = &is_directed;
+    my $deep = &is_hyperedged && $directed;
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
-    @i = sort @i if &is_undirected;
+    return defined $E->has_path($directed ? \@i : [ map [ sort @$_ ], @i ]) if $deep;
+    @i = sort @i if !$directed;
     exists $E->[ _pi ]{ "@i" };
 }
 
 sub any_edge {
-    my $g = $_[0];
+    my ($g, @args) = @_;
     my $E = $g->[ _E ];
-    my $Ef = $E->[ _f ];
-    return 0 if (my @i = &_vertex_ids) != @_ - 1;
+    my $V = $g->[ _V ];
+    return 0 if (my @i = $V->get_ids_by_paths(\@args)) != @args;
     $E->has_successor(@i);
 }
 
@@ -344,7 +352,7 @@ sub _edges05 {
     my $g = $_[0];
     my @e = $g->[ _E ]->paths;
     return @e if !wantarray;
-    $g->[ _V ]->get_paths_by_ids(\@e);
+    $g->[ _V ]->get_paths_by_ids(\@e, &is_hyperedged && &is_directed);
 }
 
 *unique_edges = \&_edges05;
@@ -476,45 +484,53 @@ sub _edges_at {
 }
 
 sub _edges_from {
-    return if (my @i = &_vertex_ids) != @_ - 1;
-    $_[0]->[ _E ]->paths_from(@i);
+    my ($g, @args) = @_;
+    my ($V, $E) = @$g[ _V, _E ];
+    return if (my @i = $V->get_ids_by_paths(\@args, &is_hyperedged && &is_directed)) != @args;
+    $E->paths_from(@i);
 }
 
 sub _edges_to {
     goto &_edges_from if &is_undirected;
-    return if (my @i = &_vertex_ids) != @_ - 1;
-    $_[0]->[ _E ]->paths_to(@i);
+    my ($g, @args) = @_;
+    my ($V, $E) = @$g[ _V, _E ];
+    return if (my @i = $V->get_ids_by_paths(\@args, &is_hyperedged && &is_directed)) != @args;
+    $E->paths_to(@i);
 }
 
 sub edges_at {
     goto &_edges_at if !wantarray;
-    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_at ]);
+    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_at ], &is_hyperedged && &is_directed);
 }
 
 sub edges_from {
     goto &_edges_from if !wantarray;
-    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_from ]);
+    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_from ], &is_hyperedged && &is_directed);
 }
 
 sub edges_to {
     goto &edges_from if &is_undirected;
     goto &_edges_to if !wantarray;
-    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_to ]);
+    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_to ], &is_hyperedged && &is_directed);
 }
 
 sub successors {
-    return if (my @i = &_vertex_ids) != @_ - 1;
-    my @v = $_[0]->[ _E ]->successors(@i);
+    my ($g, @args) = @_;
+    my ($V, $E) = @$g[ _V, _E ];
+    return if (my @i = $V->get_ids_by_paths(\@args)) != @args;
+    my @v = $E->successors(@i);
     return @v if !wantarray;
-    map @$_, $_[0]->[ _V ]->get_paths_by_ids([ \@v ]);
+    map @$_, $V->get_paths_by_ids([ \@v ]);
 }
 
 sub predecessors {
     goto &successors if &is_undirected;
-    return if (my @i = &_vertex_ids) != @_ - 1;
-    my @v = $_[0]->[ _E ]->predecessors(@i);
+    my ($g, @args) = @_;
+    my ($V, $E) = @$g[ _V, _E ];
+    return if (my @i = $V->get_ids_by_paths(\@args)) != @args;
+    my @v = $E->predecessors(@i);
     return @v if !wantarray;
-    map @$_, $_[0]->[ _V ]->get_paths_by_ids([ \@v ]);
+    map @$_, $V->get_paths_by_ids([ \@v ]);
 }
 
 sub _cessors_by_radius {
@@ -1002,7 +1018,8 @@ sub add_edges {
 	return $g;
     }
     my $uf = &has_union_find;
-    my @paths = $g->[ _V ]->get_ids_by_paths(\@edges, 1, 1);
+    my $deep = &is_hyperedged && &is_directed;
+    my @paths = $g->[ _V ]->get_ids_by_paths(\@edges, 1, 1 + ($deep ? 1 : 0));
     @paths = map [ sort @$_ ], @paths if &is_undirected;
     $g->[ _E ]->set_paths( @paths );
     $uf->union(@paths) if $uf;
@@ -1026,44 +1043,40 @@ sub rename_vertices {
 
 sub as_hashes {
     my ($g) = @_;
-    my (%n, %e, @e);
+    my (%v, %e, @e);
     my ($is_hyper, $is_directed)= (&is_hyperedged, &is_directed);
     if (&is_multivertexed) {
-        for my $v ($g->vertices) {
-            $n{$v} = {
+        for my $v ($g->unique_vertices) {
+            $v{$v} = {
                 map +($_ => $g->get_vertex_attributes_by_id($v, $_) || {}),
                     $g->get_multivertex_ids($v)
             };
         }
     } else {
-        %n = map +($_ => $g->get_vertex_attributes($_) || {}), $g->vertices;
+        %v = map +($_ => $g->get_vertex_attributes($_) || {}), $g->unique_vertices;
     }
-    if (&is_multiedged) {
-        for my $e ($g->edges) {
-            my $edge_attr = {
-                map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
-                    $g->get_multiedge_ids(@$e)
-            };
-            if ($is_hyper) {
-                my %h = (attributes => $edge_attr);
-                if ($is_directed) {
-                } else {
-                    $h{vertices} = $e;
-                }
-                push @e, \%h;
-            } else {
-                $e{ $e->[0] }{ $e->[1] } = $edge_attr;
-                $e{ $e->[1] }{ $e->[0] } = $edge_attr if !$is_directed;
-            }
-        }
-    } else {
-	for my $e ($g->edges) {
-	    my $edge_attr = $g->get_edge_attributes(@$e) || {};
+    my $multi_e = &is_multiedged;
+    for my $e ($g->edges) {
+	my $edge_attr = {
+	    $multi_e
+		? map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
+		    $g->get_multiedge_ids(@$e)
+		: %{ $g->get_edge_attributes(@$e)||{} }
+	};
+	if ($is_hyper) {
+	    my %h = (attributes => $edge_attr);
+	    if ($is_directed) {
+		@h{qw(predecessors successors)} = @$e;
+	    } else {
+		$h{vertices} = $e;
+	    }
+	    push @e, \%h;
+	} else {
 	    $e{ $e->[0] }{ $e->[1] } = $edge_attr;
 	    $e{ $e->[1] }{ $e->[0] } = $edge_attr if !$is_directed;
 	}
     }
-    ( \%n, $is_hyper ? \@e : \%e );
+    ( \%v, $is_hyper ? \@e : \%e );
 }
 
 sub ingest {
