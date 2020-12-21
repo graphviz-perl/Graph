@@ -18,21 +18,6 @@ sub stringify {
     goto &Graph::AdjacencyMap::Heavy::stringify;
 }
 
-require overload; # for de-overloading
-
-sub __strval {
-  my ($k, $f) = @_;
-  return $k unless ref $k && ($f & _REF);
-  (($f & _STR) xor overload::Method($k, '""')) ? overload::StrVal($k) : $k;
-}
-
-sub __set_path {
-    my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0))
-	if @_ - 1 != $_[0]->[ _arity ] + (($f & _MULTI) ? 1 : 0);
-    [ $_[0]->[ _s ] ||= { } ], [ __strval($_[1], $f) ];
-}
-
 sub __set_path_node {
     my ($m, $p, $l, @args) = @_;
     my $f = $m->[ _f ];
@@ -43,14 +28,6 @@ sub __set_path_node {
     die "undefined index" if !defined $i;
     $m->[ _i ][ $i ] = [ @args[0..$arity-1] ];
     $id;
-}
-
-sub __has_path {
-    my $f = $_[0]->[ _f ];
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$_[0]->stringify, @_ - 1, $_[0]->[ _arity ])
-	if @_ - 1 != $_[0]->[ _arity ];
-    return unless defined(my $p = $_[0]->[ _s ]);
-    return ([$p], [ __strval($_[1], $f) ]);
 }
 
 sub get_ids_by_paths {

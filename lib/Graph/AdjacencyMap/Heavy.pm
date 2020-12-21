@@ -13,8 +13,6 @@ use warnings;
 use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
 
-require overload; # for de-overloading
-
 sub stringify {
     my $m = shift;
     my @rows;
@@ -61,31 +59,6 @@ sub stringify {
 # because in BLOCK mode, $a is 1 while $b is right - probable perl bug
 sub _s_sort { $a->[1] cmp $b->[1] }
 
-sub __set_path {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
-    my $id = pop if $f & _MULTI;
-    &Graph::AdjacencyMap::__arg;
-    my $p;
-    $p = ($f & _HYPER) ?
-	(( $m->[ _s ] ||= [ ] )->[ @_-1 ] ||= { }) :
-	(  $m->[ _s ]                     ||= { });
-    my @p = $p;
-    my @k;
-    my @a = @_[1..$#_];
-    push @_, $id if $f & _MULTI;
-    while (@a) {
-	my $k = shift @a;
-	my $q = ref $k && ($f & _REF) && overload::Method($k, '""') ? overload::StrVal($k) : $k;
-	if (@a) {
-	    $p = $p->{ $q } ||= {};
-	    push @p, $p;
-	}
-	push @k, $q;
-    }
-    return (\@p, \@k);
-}
-
 sub __set_path_node {
     my ($m, $p, $l, @args) = @_;
     my $f = $m->[ _f ] ;
@@ -98,27 +71,6 @@ sub __set_path_node {
     } else {
 	return $m->_inc_node( \$p->[-1]->{ $l }, $id );
     }
-}
-
-sub __has_path {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    &Graph::AdjacencyMap::__arg;
-    return if !defined(my $p = $m->[ _s ]);
-    return if ($f & _HYPER) and !defined($p = $p->[ @_ - 1 ]);
-    my @p = $p;
-    my @k;
-    my @a = @_[1..$#_];
-    @a = map ref() && overload::Method($_, '""') ? overload::StrVal($_) : $_, @a if $f & _REF;
-    while (@a) {
-	my $k = shift @a;
-	if (@a) {
-	    return unless defined($p = $p->{ $k });
-	    push @p, $p;
-	}
-	push @k, $k;
-    }
-    return (\@p, \@k);
 }
 
 sub _get_path_node {
