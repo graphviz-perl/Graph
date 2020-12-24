@@ -36,7 +36,7 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
 %EXPORT_TAGS =
     (flags =>  [@FLAGS, keys %FLAG_COMBOS, qw(_GEN_ID)],
-     fields => [qw(_n _f _arity _i _s _p _g _u _ni _nc _na _nm)]);
+     fields => [qw(_n _f _arity _i _s _g _u _ni _nc _na _nm)]);
 @EXPORT_OK = map @$_, values %EXPORT_TAGS;
 
 my $_GEN_ID = 0;
@@ -53,8 +53,7 @@ sub _f () { 1 } # Flags.
 sub _arity () { 2 } # Arity.
 sub _i () { 3 } # Index to path.
 sub _s () { 4 } # Successors / Path to Index.
-sub _p () { 5 } # Predecessors.
-sub _g () { 6 } # Graph (AdjacencyMap::Light)
+sub _g () { 5 } # Graph (AdjacencyMap::Light)
 
 sub _V () { 2 }  # Graph::_V()
 
@@ -128,7 +127,7 @@ sub _dumper {
 
 sub _new {
     my ($class, $flags, $arity, @extra) = @_;
-    bless [ 0, $flags, $arity, [], ($flags & _HYPER ? ([], []) : ({}, {})), @extra ], $class;
+    bless [ 0, $flags, $arity, [], ($flags & _HYPER ? [] : {}), @extra ], $class;
 }
 
 sub _ids {

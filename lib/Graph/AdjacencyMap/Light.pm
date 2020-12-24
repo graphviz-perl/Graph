@@ -36,7 +36,7 @@ sub stringify {
 sub set_path {
     my ($m, @args) = @_;
     return if @args == 0;
-    my ($n, $f, $a, $i, $s, $p) = @$m;
+    my ($n, $f, $a, $i, $s) = @$m;
     @args = sort @args if ($f & _UNORD) and $a == 2;
     my $e0 = shift @args;
     return $n if exists $s->{ $e0 } && (($a == 1) or exists $s->{ $e0 }->{ $args[0] });
@@ -44,7 +44,7 @@ sub set_path {
     $i->[ $n ] = [ $e0, @args ];
     if ($a == 2) {
 	my $e1 = shift @args;
-	$s->{ $e0 }->{ $e1 } = $p->{ $e1 }->{ $e0 } = $n;
+	$s->{ $e0 }->{ $e1 } = $n;
     } else {
 	$s->{ $e0 } = $n;
     }
@@ -91,28 +91,25 @@ sub has_paths { keys %{ $_[0]->[ _s ] } }
 
 sub del_path {
     my $m = shift;
-    my ($n, $f, $a, $i, $s, $p) = @$m;
+    my ($n, $f, $a, $i, $s) = @$m;
     @_ = sort @_ if @_ > 1 and $f & _UNORD;
     my $e0 = shift;
     return 0 if !defined($n = $s->{ $e0 });
     if (@_ == 1) {
 	my $e1 = shift;
 	return 0 if !defined($n = $n->{ $e1 }); # "actual" n ie id
-	delete $i->[ $n ];
 	delete $s->{ $e0 }->{ $e1 };
-	delete $p->{ $e1 }->{ $e0 };
 	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
-	delete $p->{ $e1 } unless keys %{ $p->{ $e1 } };
     } else {
-	delete $i->[ $n ];
 	delete $s->{ $e0 };
     }
+    delete $i->[ $n ];
     return 1;
 }
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    my ($n, $f, $a, $i, $s, $p) = @$m;
+    my ($n, $f, $a, $i, $s) = @$m;
     return 1 if $a > 1; # arity > 1, all integers, no names
     return 0 unless exists $s->{ $from };
     $s->{ $to } = delete $s->{ $from };
@@ -124,7 +121,7 @@ sub __attr {
     # Major magic takes place here: we rebless the appropriate 'light'
     # map into a more complex map and then redispatch the method.
     # The other map types will sort @_ for _UNORD purposes.
-    my ($n, $f, $a, $i, $s, $p, $g) = @{ $_[0] };
+    my ($n, $f, $a, $i, $s, $g) = @{ $_[0] };
     if ($a > 1) { # Edges, then.
 	my @E = $g->edges;
 	$_[0] = $g->[ _E ] = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 2);
@@ -132,7 +129,7 @@ sub __attr {
     } else {
 	my @V = @{ $g->[ _V ] };
 	$_[0] = $g->[ _V ] = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 1);
-	@{ $_[0] }[ _n, _i, _s, _p ] = @V[ _n, _i, _s, _p ];
+	@{ $_[0] }[ _n, _i, _s ] = @V[ _n, _i, _s ];
     }
     goto &Graph::AdjacencyMap::__attr; # Redispatch.
 }
