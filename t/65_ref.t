@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 1327;
+use Test::More tests => 1347;
 
 use Graph;
 use Graph::AdjacencyMap qw(:flags);
@@ -84,6 +84,15 @@ sub test_adjmap {
     ok( $m->_has_path_attrs(@$path) );
     is_deeply [ $m->_get_path_attr_names(@$path) ], [ 'say' ];
     is_deeply [ $m->_get_path_attr_values(@$path) ], [ 'hi' ];
+    if (@$path_expected == 1) {
+	my @new_path = @$path_expected;
+	my @new_path_full = @$path;
+	$new_path_full[0] = $new_path[0] = 'newname';
+	ok $m->rename_path(@$path_expected, @new_path);
+	is_deeply [ $m->_get_path_attr_names(@new_path_full) ], [ 'say' ];
+	ok $m->rename_path(@new_path, @$path_expected);
+	is_deeply [ $m->_get_path_attr_names(@$path) ], [ 'say' ];
+    }
     $got = $m->_get_path_attrs(@$path);
     is_deeply $got, { say => 'hi' } or diag explain $got;
     $got = { %$got, extra => 'hello' };
