@@ -14,7 +14,12 @@ use Scalar::Util qw(weaken);
 
 sub _V () { 2 } # Graph::_V
 sub _E () { 3 } # Graph::_E
-sub _F () { 0 } # Graph::_F
+
+sub _is_COUNT    () { 0 }
+sub _is_MULTI    () { 0 }
+sub _is_HYPER    () { 0 }
+sub _is_UNIQ     () { 0 }
+sub _is_REF      () { 0 }
 
 sub _new {
     my ($class, $flags, $arity, $graph) = @_;
@@ -29,60 +34,30 @@ sub stringify {
 }
 
 sub set_path {
-    my $m = shift;
-    return if @_ == 0 && !($m->[ _f ] & _HYPER);
+    my ($m, @args) = @_;
+    return if @args == 0;
     my ($n, $f, $a, $i, $s, $p) = @$m;
+    @args = sort @args if ($f & _UNORD) and $a == 2;
+    my $e0 = shift @args;
+    return $n if exists $s->{ $e0 } && (($a == 1) or exists $s->{ $e0 }->{ $args[0] });
+    $n = $m->[ _n ]++;
+    $i->[ $n ] = [ $e0, @args ];
     if ($a == 2) {
-	@_ = sort @_ if ($f & _UNORD);
-    }
-    my $e0 = shift;
-    if ($a == 2) {
-	my $e1 = shift;
-	unless (exists $s->{ $e0 } && exists $s->{ $e0 }->{ $e1 }) {
-	    $n = $m->[ _n ]++;
-	    $i->[ $n ] = [ $e0, $e1 ];
-	    $s->{ $e0 }->{ $e1 } = $n;
-	    $p->{ $e1 }->{ $e0 } = $n;
-	}
+	my $e1 = shift @args;
+	$s->{ $e0 }->{ $e1 } = $p->{ $e1 }->{ $e0 } = $n;
     } else {
-	unless (exists $s->{ $e0 }) {
-	    $n = $m->[ _n ]++;
-	    $s->{ $e0 } = $n;
-	    $i->[ $n ] = [ $e0 ];
-	}
+	$s->{ $e0 } = $n;
     }
     $n;
 }
 
 sub paths_non_existing {
-    my ($m, $list) = @_;
-    my ($n, $f, $a, $i, $s) = @$m;
-    my $unord = $f & _UNORD;
-    map {
-	my @p = @$_;
-	@p = sort @p if $unord;
-	my $this_s = $s;
-	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	!defined $this_s ? $_ : ();
-    } @$list;
+    push @_, 0;
+    goto &_paths_lookup;
 }
 
-sub has_path {
-    my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @_[1..$#_] );
-    return 0 unless $a == @args;
-    my $e;
-    if ($a == 2) {
-	@args = sort @args if ($f & _UNORD);
-	$e = shift @args;
-	return 0 unless exists $s->{ $e };
-        $s = $s->{ $e };
-    }
-    $e = shift @args;
-    exists $s->{ $e } ? 1 : 0;
-}
-
-sub get_ids_by_paths {
-    my ($m, $list) = @_;
+sub _paths_lookup {
+    my ($m, $list, $want_exist) = @_;
     my ($n, $f, $a, $i, $s) = @$m;
     my $unord = $a > 1 && ($f & _UNORD);
     map {
@@ -90,8 +65,22 @@ sub get_ids_by_paths {
 	@p = sort @p if $unord;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $this_s : ();
+	($want_exist xor !defined $this_s) ? ($want_exist ? $this_s : $_) : ();
     } @$list;
+}
+
+sub has_path {
+    my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @_[1..$#_] );
+    return 0 unless $a == @args;
+    @args = sort @args if ($f & _UNORD);
+    my $e;
+    $s = $s->{ shift @args } while defined $s and @args;
+    defined $s ? 1 : 0;
+}
+
+sub get_ids_by_paths {
+    push @_, 1;
+    goto &_paths_lookup;
 }
 
 sub _get_path_count {
@@ -135,33 +124,17 @@ sub __attr {
     # Major magic takes place here: we rebless the appropriate 'light'
     # map into a more complex map and then redispatch the method.
     # The other map types will sort @_ for _UNORD purposes.
-    my $m = $_[0];
-    my ($n, $f, $a, $i, $s, $p, $g) = @$m;
-    my @V = @{ $g->[ _V ] };
-    my @E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
-    # ZZZ: an example of failing tests is t/52_edge_attributes.t.
+    my ($n, $f, $a, $i, $s, $p, $g) = @{ $_[0] };
     if ($a > 1) { # Edges, then.
-	# print "Reedging.\n";
-	@E = $g->edges; # TODO: Both these (ZZZ) lines are mysteriously needed!
-	$g->[ _E ] = $m = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 2);
+	my @E = $g->edges;
+	$_[0] = $g->[ _E ] = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 2);
 	$g->add_edges( @E );
     } else {
-	# print "Revertexing.\n";
-	$m = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 1);
-	$m->[ _n ] = $V[ _n ];
-	$m->[ _i ] = $V[ _i ];
-	$m->[ _s ] = $V[ _s ];
-	$m->[ _p ] = $V[ _p ];
-	$g->[ _V ] = $m;
+	my @V = @{ $g->[ _V ] };
+	$_[0] = $g->[ _V ] = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 1);
+	@{ $_[0] }[ _n, _i, _s, _p ] = @V[ _n, _i, _s, _p ];
     }
-    $_[0] = $m;
     goto &Graph::AdjacencyMap::__attr; # Redispatch.
 }
-
-sub _is_COUNT    () { 0 }
-sub _is_MULTI    () { 0 }
-sub _is_HYPER    () { 0 }
-sub _is_UNIQ     () { 0 }
-sub _is_REF      () { 0 }
 
 1;
