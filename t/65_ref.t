@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 1347;
+use Test::More tests => 1360;
 
 use Graph;
 use Graph::AdjacencyMap qw(:flags);
@@ -107,7 +107,9 @@ sub test_adjmap {
     $m->_del_path_attr(@$path, 'say');
     is_deeply [ $m->_get_path_attr_names(@$path) ], [ ], $label;
     is( $m->_get_path_count(@$path_expected), 1, $label );
+    $m->_set_path_attr(@$path, 'say', 'hi');
     $m->_del_path_attrs(@$path);
+    ok( !$m->_has_path_attr(@$path, 'say'), $label );
     is( $m->_get_path_count(@$path_expected), 1, $label );
     if ($is_multi) {
 	is $m->${ \$map->{set} }(@$path_expected, _GEN_ID), 0, $label;
