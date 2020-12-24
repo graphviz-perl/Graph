@@ -112,6 +112,7 @@ sub stringify {
 sub _s_sort { $a->[1] cmp $b->[1] }
 
 sub _stringify_fields {
+    return '0' if !$_[0];
     join '|', grep $_[0] & $FLAG2I{$_}, @FLAGS;
 }
 
