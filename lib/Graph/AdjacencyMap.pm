@@ -333,9 +333,8 @@ sub _has_path_attrs {
     keys %$attrs ? 1 : 0;
 }
 
-sub _set_path_attrs {
+sub _set_path_attr_common {
     my $f = $_[0]->[ _f ];
-    my $attrs = pop;
     my $id   = pop if ($f & _MULTI);
     &{ $_[0]->can('__attr') };
     my ($m) = @_;
@@ -344,12 +343,19 @@ sub _set_path_attrs {
     my $l = $k->[-1];
     $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
     if (($f & _MULTI)) {
-	$p->[-1]->{ $l }->[ _nm ]->{ $id } = $attrs;
+	return \$p->[-1]->{ $l }->[ _nm ]->{ $id };
     } else {
 	# Extend the node if it is a simple id node.
 	$p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
-	$p->[-1]->{ $l }->[ _na ] = $attrs;
+	return \$p->[-1]->{ $l }->[ _na ];
     }
+}
+
+sub _set_path_attrs {
+    my $f = $_[0]->[ _f ];
+    my $attrs = pop;
+    my $handle = &_set_path_attr_common;
+    $$handle = $attrs;
 }
 
 sub _has_path_attr {
@@ -362,21 +368,8 @@ sub _set_path_attr {
     my $f = $_[0]->[ _f ];
     my $val  = pop;
     my $attr = pop;
-    my $id   = pop if ($f & _MULTI);
-    &{ $_[0]->can('__attr') }; # _LIGHT maps need this to get upgraded when needed, also sorts for _UNORD
-    my ($m) = @_;
-    push @_, $id if ($f & _MULTI);
-    my ($p, $k) = &{ $m->can('__set_path') };
-    my $l = $k->[-1];
-    $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
-    if (($f & _MULTI)) {
-	$p->[-1]->{ $l }->[ _nm ]->{ $id }->{ $attr } = $val;
-    } else {
-	# Extend the node if it is a simple id node.
-	$p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
-	$p->[-1]->{ $l }->[ _na ]->{ $attr } = $val;
-    }
-    return $val;
+    my $handle = &_set_path_attr_common;
+    return $$handle->{ $attr } = $val;
 }
 
 sub __strval {
