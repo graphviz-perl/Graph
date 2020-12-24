@@ -10,10 +10,8 @@ use warnings;
 use Graph::AdjacencyMap qw(:flags :fields);
 use base 'Graph::AdjacencyMap';
 
-use Scalar::Util qw(weaken);
-
-sub _V () { 2 } # Graph::_V
-sub _E () { 3 } # Graph::_E
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 sub _is_COUNT    () { 0 }
 sub _is_MULTI    () { 0 }
@@ -22,15 +20,8 @@ sub _is_UNIQ     () { 0 }
 sub _is_REF      () { 0 }
 
 sub _new {
-    my ($class, $flags, $arity, $graph) = @_;
-    my $m = $class->SUPER::_new($flags | _LIGHT, $arity, $graph);
-    weaken $m->[ _g ]; # So that DESTROY finds us earlier.
-    return $m;
-}
-
-sub stringify {
-    my $m = shift;
-    'Graph: ' . $m->[ _g ] . "\n" . $m->SUPER::stringify;
+    my ($class, $flags, $arity) = @_;
+    $class->SUPER::_new($flags | _LIGHT, $arity, {});
 }
 
 sub set_path {
@@ -109,29 +100,42 @@ sub del_path {
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    my ($n, $f, $a, $i, $s) = @$m;
+    my (undef, undef, $a, $i, $s, $attr) = @$m;
     return 1 if $a > 1; # arity > 1, all integers, no names
     return 0 unless exists $s->{ $from };
     $s->{ $to } = delete $s->{ $from };
+    $attr->{ $to } = delete $attr->{ $from } if $attr->{ $from };
     $i->[ $s->{ $to } ] = [ $to ];
     return 1;
 }
 
-sub __attr {
-    # Major magic takes place here: we rebless the appropriate 'light'
-    # map into a more complex map and then redispatch the method.
-    # The other map types will sort @_ for _UNORD purposes.
-    my ($n, $f, $a, $i, $s, $g) = @{ $_[0] };
-    if ($a > 1) { # Edges, then.
-	my @E = $g->edges;
-	$_[0] = $g->[ _E ] = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 2);
-	$g->add_edges( @E );
-    } else {
-	my @V = @{ $g->[ _V ] };
-	$_[0] = $g->[ _V ] = Graph::AdjacencyMap->_new(($f & ~_LIGHT), 1);
-	@{ $_[0] }[ _n, _i, _s ] = @V[ _n, _i, _s ];
-    }
-    goto &Graph::AdjacencyMap::__attr; # Redispatch.
+sub _set_path_attr_common {
+    &Graph::AdjacencyMap::__arg;
+    &set_path;
+    my ($m, @e) = @_;
+    my $attr = $m->[ _attr ];
+    $attr = $attr->{ shift @e } ||= {} while $attr and @e > 1;
+    \$attr->{ $e[0] };
+}
+
+sub _get_path_attrs {
+    &Graph::AdjacencyMap::__arg;
+    my ($m, @e) = @_;
+    my $attr = $m->[ _attr ];
+    $attr = $attr->{ shift @e } while $attr and @e > 0;
+    return $attr if $attr;
+    return;
+}
+
+sub _del_path_attrs {
+    &Graph::AdjacencyMap::__arg;
+    return undef unless &has_path;
+    my ($m, @e) = @_;
+    my $attr = $m->[ _attr ];
+    $attr = $attr->{ shift @e } while $attr and @e > 1;
+    return 0 unless $attr and exists $attr->{ $e[0] };
+    delete $attr->{ $e[0] };
+    1;
 }
 
 1;

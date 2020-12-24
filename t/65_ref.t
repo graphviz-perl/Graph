@@ -12,8 +12,8 @@ my $u = bless { 3, 4 }, "Ubu";
 my $v = cplx(3, 4);
 my $z = cplx(4, 5);
 my @MAP_TESTS = (
-    [ 'Graph::AdjacencyMap::Light', [0, 1, Graph->new], ['a'] ],
-    [ 'Graph::AdjacencyMap::Light', [0, 2, Graph->new], [qw(a b)] ],
+    [ 'Graph::AdjacencyMap::Light', [0, 1], ['a'] ],
+    [ 'Graph::AdjacencyMap::Light', [0, 2], [qw(a b)] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [$t] ],
     [ 'Graph::AdjacencyMap', [_REF, 2], [$u, $v] ],
     [ 'Graph::AdjacencyMap', [_UNIQ, 2], [qw(a b)] ],

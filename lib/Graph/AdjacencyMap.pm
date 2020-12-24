@@ -36,7 +36,7 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
 %EXPORT_TAGS =
     (flags =>  [@FLAGS, keys %FLAG_COMBOS, qw(_GEN_ID)],
-     fields => [qw(_n _f _arity _i _s _g _u _ni _nc _na _nm)]);
+     fields => [qw(_n _f _arity _i _s _attr _u _ni _nc _na _nm)]);
 @EXPORT_OK = map @$_, values %EXPORT_TAGS;
 
 my $_GEN_ID = 0;
@@ -53,9 +53,7 @@ sub _f () { 1 } # Flags.
 sub _arity () { 2 } # Arity.
 sub _i () { 3 } # Index to path.
 sub _s () { 4 } # Successors / Path to Index.
-sub _g () { 5 } # Graph (AdjacencyMap::Light)
-
-sub _V () { 2 }  # Graph::_V()
+sub _attr () { 5 } # attributes (AdjacencyMap::Light)
 
 sub stringify {
     my $m = shift;
@@ -65,7 +63,6 @@ sub stringify {
     my $f = $m->[ _f ];
     my $hyper = $f & _HYPER;
     my $multi = $f & _MULTI;
-    my $light = $f & _LIGHT;
     my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
     if ($a == 2) {
 	my (%p, %s);
@@ -82,7 +79,7 @@ sub stringify {
 		my $attrs = $multi
 		    ? (( $m->__get_path_node( $u, $v ) )[0] || [])->[-1]
 		    : $m->_get_path_attrs( $u, $v )
-		    if $text and !$light;
+		    if $text;
 		$text = $m->_dumper($attrs) if defined $attrs;
 		push @r, $text;
 	    }
@@ -94,7 +91,7 @@ sub stringify {
 	    my ($text) = $m->get_ids_by_paths([ $v ]);
 	    my $attrs = $multi
 		? (( $m->__get_path_node( @$v ) )[0] || [])->[-1]
-		: $m->_get_path_attrs(@$v) if !$light;
+		: $m->_get_path_attrs(@$v);
 	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
 	    push @r, $text;
 	    push @rows, \@r;
@@ -329,14 +326,14 @@ sub rename_path {
 }
 
 sub _has_path_attrs {
-    return undef unless defined(my $attrs = &_get_path_attrs);
+    return undef unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     keys %$attrs ? 1 : 0;
 }
 
 sub _set_path_attr_common {
     my $f = $_[0]->[ _f ];
     my $id   = pop if ($f & _MULTI);
-    &{ $_[0]->can('__attr') };
+    &__arg;
     my ($m) = @_;
     push @_, $id if ($f & _MULTI);
     my ($p, $k) = &{ $m->can('__set_path') };
@@ -354,13 +351,13 @@ sub _set_path_attr_common {
 sub _set_path_attrs {
     my $f = $_[0]->[ _f ];
     my $attrs = pop;
-    my $handle = &_set_path_attr_common;
+    my $handle = &{ $_[0]->can('_set_path_attr_common') };
     $$handle = $attrs;
 }
 
 sub _has_path_attr {
     my $attr = pop;
-    return undef unless defined(my $attrs = &_get_path_attrs);
+    return undef unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     exists $attrs->{$attr};
 }
 
@@ -368,7 +365,7 @@ sub _set_path_attr {
     my $f = $_[0]->[ _f ];
     my $val  = pop;
     my $attr = pop;
-    my $handle = &_set_path_attr_common;
+    my $handle = &{ $_[0]->can('_set_path_attr_common') };
     return $$handle->{ $attr } = $val;
 }
 
@@ -400,7 +397,7 @@ sub __set_path {
 sub _get_path_attrs {
     my $f = $_[0]->[ _f ];
     my $id = pop if ($f & _MULTI);
-    &{ $_[0]->can('__attr') };
+    &__arg;
     my ($m) = @_;
     if (($f & _MULTI)) {
 	return unless my ($p, $k) = &{ $m->can('__has_path') };
@@ -416,17 +413,17 @@ sub _get_path_attrs {
 
 sub _get_path_attr {
     my $attr = pop;
-    return undef unless defined(my $attrs = &_get_path_attrs);
+    return undef unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     $attrs->{$attr};
 }
 
 sub _get_path_attr_names {
-    return unless defined(my $attrs = &_get_path_attrs);
+    return unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     keys %$attrs;
 }
 
 sub _get_path_attr_values {
-    return unless defined(my $attrs = &_get_path_attrs);
+    return unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     values %$attrs;
 }
 
@@ -454,7 +451,7 @@ sub _get_path_count {
 sub _del_path_attrs {
     my $f = $_[0]->[ _f ];
     my $id = pop if ($f & _MULTI);
-    &{ $_[0]->can('__attr') };
+    &__arg;
     my ($m) = @_;
     if ($f & _MULTI) {
 	return unless my ($p, $k) = &{ $m->can('__has_path') };
@@ -473,7 +470,7 @@ sub _del_path_attrs {
 
 sub _del_path_attr {
     my $attr = pop;
-    return unless defined(my $attrs = &_get_path_attrs);
+    return unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     return 0 unless exists $attrs->{$attr};
     delete $attrs->{$attr};
     return 1 if keys %$attrs;
@@ -495,7 +492,6 @@ sub __arg {
     # Alphabetic or numeric sort, does not matter as long as it unifies.
     @_ = ($_[0], $f & _UNORD ? sort @a : @a);
 }
-*__attr = \&__arg;
 
 1;
 __END__

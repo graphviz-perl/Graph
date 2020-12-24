@@ -206,10 +206,10 @@ sub new {
     $g->[ _G ] = 0;
     $g->[ _V ] = $vflags ?
 	_am_heavy($vflags, 1) :
-	     _am_light($vflags, 1, $g);
+	    _am_light($vflags, 1);
     $g->[ _E ] = ($eflags & ~_UNORD) ?
 	_am_heavy($eflags, 2) :
-	    _am_light($eflags, 2, $g);
+	    _am_light($eflags, 2);
 
     $g->add_vertices(@V) if @V;
 
@@ -231,7 +231,6 @@ sub _am_light {
 }
 
 sub _am_heavy {
-    require Graph::AdjacencyMap;
     Graph::AdjacencyMap->_new(@_);
 }
 
