@@ -152,11 +152,14 @@ my $y = cplx(3,4);
 $g = Graph->new(refvertexed => 1);
 $g->add_edge($x,$y);
 my @e = $g->edges;
-is("@{$e[0]}", "1+2i 3+4i");
+is("@{$e[0] || []}", "1+2i 3+4i");
 $x->Im(5);
-is("@{$e[0]}", "1+5i 3+4i");
+is("@{$e[0] || []}", "1+5i 3+4i");
+SKIP: {
+skip 'no object to invoke', 1 unless @e and ref $e[0]->[1];
 $e[0]->[1]->Im(6);
 is("$y", "3+6i");
+}
 
 use vars qw($foo $bar);
 
