@@ -127,8 +127,8 @@ sub _dumper {
 }
 
 sub _new {
-    my $class = shift;
-    bless [ 0, @_ ], $class;
+    my ($class, $flags, $arity, @extra) = @_;
+    bless [ 0, $flags, $arity, [], ($flags & _HYPER ? ([], []) : ({}, {})), @extra ], $class;
 }
 
 sub _ids {
@@ -386,8 +386,8 @@ sub __set_path {
     my $id = pop if my $is_multi = $f & _MULTI;
     &Graph::AdjacencyMap::__arg;
     my @p = my $p = ($f & _HYPER) ?
-	(( $m->[ _s ] ||= [ ] )->[ @_-1 ] ||= { }) :
-	(  $m->[ _s ]                     ||= { });
+	(( $m->[ _s ] )->[ @_-1 ] ||= { }) :
+	(  $m->[ _s ]             ||= { });
     my @k;
     my @a = @_[1..$#_];
     push @_, $id if $is_multi;

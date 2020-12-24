@@ -23,7 +23,7 @@ sub _is_REF      () { 0 }
 
 sub _new {
     my ($class, $flags, $arity, $graph) = @_;
-    my $m = $class->SUPER::_new($flags | _LIGHT, $arity, [], {}, {}, $graph);
+    my $m = $class->SUPER::_new($flags | _LIGHT, $arity, $graph);
     weaken $m->[ _g ]; # So that DESTROY finds us earlier.
     return $m;
 }
