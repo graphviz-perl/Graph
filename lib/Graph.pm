@@ -334,10 +334,11 @@ sub add_edge {
 	push @_, _GEN_ID;
 	goto &add_edge_by_id;
     }
-    my @e = &_vertex_ids_ensure;
-    $g->[ _E ]->set_path( @e );
+    my @i = &_vertex_ids_ensure;
+    @i = sort @i if &is_undirected;
+    $g->[ _E ]->set_path( @i );
     $g->[ _G ]++;
-    $g->_union_find_add_edge( @e ) if &has_union_find;
+    $g->_union_find_add_edge( @i ) if &has_union_find;
     return $g;
 }
 
@@ -377,8 +378,8 @@ sub has_edge {
     my $Ef = $E->[ _f ];
     return 0 if !($Ef & _HYPER) and @_ != 3;
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
+    @i = sort @i if &is_undirected;
     return $E->get_ids_by_paths([ \@i ]) if !(@i == 2 && !($Ef & (_HYPER|_REF|_UNIQ))); # Slow path.
-    @i = sort @i if ($Ef & _UNORD);
     my $s = $E->[ _s ];
     return exists $s->{ $i[0] } &&
 	   exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
@@ -389,6 +390,7 @@ sub any_edge {
     my $E = $g->[ _E ];
     my $Ef = $E->[ _f ];
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
+    @i = sort @i if &is_undirected;
     &_edge_cache;
     my $N0 = $g->[ _S ][0];
     my $s = $N0->{ $i[0] };
@@ -415,8 +417,7 @@ sub edges {
 }
 
 sub has_edges {
-    my $g = shift;
-    scalar $g->[ _E ]->has_paths( @_ );
+    scalar $_[0]->[ _E ]->has_paths;
 }
 
 ###
@@ -471,6 +472,7 @@ sub add_edge_by_id {
     &expect_multiedged;
     my $g = $_[0];
     my @i = &_vertex_ids_ensure_multi;
+    @i = ((sort @i[0..$#i-1]), $i[-1]) if &is_undirected;
     $g->[ _E ]->set_path_by_multi_id( @i );
     $g->[ _G ]++;
     $g->_union_find_add_edge( @i[0..$#i-1] ) if &has_union_find;
@@ -481,6 +483,7 @@ sub add_edge_get_id {
     &expect_multiedged;
     my $g = $_[0];
     my @i = &_vertex_ids_ensure;
+    @i = sort @i if &is_undirected;
     my $id = $g->[ _E ]->set_path_by_multi_id( @i, _GEN_ID );
     $g->[ _G ]++;
     $g->_union_find_add_edge( @i ) if &has_union_find;
@@ -492,6 +495,7 @@ sub has_edge_by_id {
     my $g = $_[0];
     my @i = &_vertex_ids_multi;
     return 0 if @i == 0 && @_ - 1;
+    @i = ((sort @i[0..$#i-1]), $i[-1]) if &is_undirected;
     $g->[ _E ]->has_path_by_multi_id( @i );
 }
 
@@ -501,6 +505,7 @@ sub delete_edge_by_id {
     my $g = $_[0];
     my $E = $g->[ _E ];
     return unless my @i = &_vertex_ids_multi;
+    @i = ((sort @i[0..$#i-1]), $i[-1]) if &is_undirected;
     return unless $E->has_path_by_multi_id( @i );
     $E->del_path_by_multi_id( @i );
     $g->[ _G ]++;
@@ -664,6 +669,7 @@ sub delete_edge {
     &expect_non_unionfind;
     my $g = $_[0];
     my @i = &_vertex_ids;
+    @i = sort @i if &is_undirected;
     return $g unless @i and $g->[ _E ]->del_path( @i );
     $g->[ _G ]++;
     return $g;
@@ -692,6 +698,7 @@ sub get_edge_count {
     my $g = $_[0];
     my @i = &_vertex_ids;
     return 0 unless @i;
+    @i = sort @i if &is_undirected;
     $g->[ _E ]->_get_path_count( @i ) || 0;
 }
 
@@ -941,6 +948,13 @@ for my $entity (qw(vertex edge)) {
     }
 }
 
+sub _sort_args {
+    my ($is_multi, @args) = @_;
+    $is_multi
+	? ((sort @args[0..$#args-1]), $args[-1])
+	: sort @args;
+}
+
 sub _set_attribute {
     my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
     my $value = pop;
@@ -948,6 +962,7 @@ sub _set_attribute {
     no strict 'refs';
     &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_set_path_attr( @args, $attr, $value );
 }
 
@@ -957,6 +972,7 @@ sub _set_attributes {
     no strict 'refs';
     &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_set_path_attrs( @args, $attr );
 }
 
@@ -965,6 +981,7 @@ sub _has_attributes {
     no strict 'refs';
     return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_has_path_attrs( @args );
 }
 
@@ -974,6 +991,7 @@ sub _has_attribute {
     no strict 'refs';
     return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_has_path_attr( @args, $attr );
 }
 
@@ -982,6 +1000,7 @@ sub _get_attributes {
     no strict 'refs';
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     scalar $_[0]->[ $offset ]->_get_path_attrs( @args );
 }
 
@@ -991,6 +1010,7 @@ sub _get_attribute {
     my $attr = pop;
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     scalar $_[0]->[ $offset ]->_get_path_attr( @args, $attr );
 }
 
@@ -999,6 +1019,7 @@ sub _get_attribute_names {
     no strict 'refs';
     return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_get_path_attr_names( @args );
 }
 
@@ -1007,6 +1028,7 @@ sub _get_attribute_values {
     no strict 'refs';
     return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_get_path_attr_values( @args );
 }
 
@@ -1015,6 +1037,7 @@ sub _delete_attributes {
     no strict 'refs';
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_del_path_attrs( @args );
 }
 
@@ -1024,6 +1047,7 @@ sub _delete_attribute {
     no strict 'refs';
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
+    @args = _sort_args($is_multi, @args) if &is_undirected;
     $_[0]->[ $offset ]->_del_path_attr( @args, $attr );
 }
 

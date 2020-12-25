@@ -28,7 +28,6 @@ sub set_path {
     my ($m, @args) = @_;
     return if @args == 0;
     my ($n, $f, $a, $i, $s) = @$m;
-    @args = sort @args if ($f & _UNORD) and $a == 2;
     my $e0 = shift @args;
     return $n if exists $s->{ $e0 } && (($a == 1) or exists $s->{ $e0 }->{ $args[0] });
     $n = $m->[ _n ]++;
@@ -50,10 +49,8 @@ sub paths_non_existing {
 sub _paths_lookup {
     my ($m, $list, $want_exist) = @_;
     my ($n, $f, $a, $i, $s) = @$m;
-    my $unord = $a > 1 && ($f & _UNORD);
     map {
 	my @p = @$_;
-	@p = sort @p if $unord;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	($want_exist xor !defined $this_s) ? ($want_exist ? $this_s : $_) : ();
@@ -63,7 +60,6 @@ sub _paths_lookup {
 sub has_path {
     my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @_[1..$#_] );
     return 0 unless $a == @args;
-    @args = sort @args if ($f & _UNORD);
     my $e;
     $s = $s->{ shift @args } while defined $s and @args;
     defined $s ? 1 : 0;
@@ -83,7 +79,6 @@ sub has_paths { keys %{ $_[0]->[ _s ] } }
 sub del_path {
     my $m = shift;
     my ($n, $f, $a, $i, $s) = @$m;
-    @_ = sort @_ if @_ > 1 and $f & _UNORD;
     my $e0 = shift;
     return 0 if !defined($n = $s->{ $e0 });
     if (@_ == 1) {

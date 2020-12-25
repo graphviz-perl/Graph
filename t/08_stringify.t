@@ -51,9 +51,9 @@ Graph::AdjacencyMap::Light arity=2 flags: _UNORD|_LIGHT
  to:    1    2    3    4    5
    0    1    1    1    1    1
    1         1    1    1    1
-   2    1         1    1    1
-   3    1    1         1    1
-   4    1    1    1         1
+   2              1    1    1
+   3                   1    1
+   4                        1
 EOF
 
 is $g1->[ Graph::_V ]->stringify, <<'EOF';

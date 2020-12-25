@@ -300,10 +300,8 @@ sub paths {
 sub get_ids_by_paths {
     my ($m, $list) = @_;
     my ($n, $f, $a, $i, $s) = @$m;
-    my $unord = $a > 1 && ($f & _UNORD);
     return map { # Fast path
 	my @p = @$_;
-	@p = sort @p if $unord;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	defined $this_s ? ref $this_s ? $this_s->[ _ni ] : $this_s : ();
@@ -478,12 +476,11 @@ sub __arg {
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
 		  @_ - 1, $m->[ _arity ])
         if !($f & _HYPER) and @_ - 1 != $m->[ _arity ];
-    return if !($f & _UNORDUNIQ);
+    return if !($f & _UNIQ);
     my @a = @_[1..$#_];
     my %u;
     @a = grep !$u{$_}++, @a if $f & _UNIQ;
-    # Alphabetic or numeric sort, does not matter as long as it unifies.
-    @_ = ($_[0], $f & _UNORD ? sort @a : @a);
+    @_ = ($_[0], @a);
 }
 
 1;
