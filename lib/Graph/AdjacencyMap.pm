@@ -183,18 +183,6 @@ sub __get_path_node {
     exists $p->[-1]->{ $k->[-1] } ? ( $p->[-1]->{ $k->[-1] }, $p, $k ) : ();
 }
 
-sub __set_path_node {
-    my ($m, $p, $l, @args) = @_;
-    my $f = $m->[ _f ];
-    my $id = pop @args if $f & _MULTI;
-    my $arity = $m->[ _arity ];
-    return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
-    my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
-    die "undefined index" if !defined $i;
-    $m->[ _i ][ $i ] = \@args;
-    defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
-}
-
 sub __has_path {
     &__arg;
     my ($m, @a) = @_;
@@ -214,6 +202,36 @@ sub __has_path {
 	push @k, $k;
     }
     return (\@p, \@k);
+}
+
+sub _set_path_attr_common {
+    my $f = $_[0]->[ _f ];
+    my $id   = pop if ($f & _MULTI);
+    &__arg;
+    my ($m) = @_;
+    push @_, $id if ($f & _MULTI);
+    my ($p, $k) = &__set_path;
+    my $l = $k->[-1];
+    $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
+    if (($f & _MULTI)) {
+	return \$p->[-1]->{ $l }->[ _nm ]->{ $id };
+    } else {
+	# Extend the node if it is a simple id node.
+	$p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
+	return \$p->[-1]->{ $l }->[ _na ];
+    }
+}
+
+sub __set_path_node {
+    my ($m, $p, $l, @args) = @_;
+    my $f = $m->[ _f ];
+    my $id = pop @args if $f & _MULTI;
+    my $arity = $m->[ _arity ];
+    return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
+    my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
+    die "undefined index" if !defined $i;
+    $m->[ _i ][ $i ] = \@args;
+    defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
 }
 
 sub set_path {
@@ -322,24 +340,6 @@ sub rename_path {
 sub _has_path_attrs {
     return undef unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
     keys %$attrs ? 1 : 0;
-}
-
-sub _set_path_attr_common {
-    my $f = $_[0]->[ _f ];
-    my $id   = pop if ($f & _MULTI);
-    &__arg;
-    my ($m) = @_;
-    push @_, $id if ($f & _MULTI);
-    my ($p, $k) = &__set_path;
-    my $l = $k->[-1];
-    $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
-    if (($f & _MULTI)) {
-	return \$p->[-1]->{ $l }->[ _nm ]->{ $id };
-    } else {
-	# Extend the node if it is a simple id node.
-	$p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
-	return \$p->[-1]->{ $l }->[ _na ];
-    }
 }
 
 sub _set_path_attrs {
