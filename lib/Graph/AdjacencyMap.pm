@@ -167,22 +167,6 @@ sub _inc_node {
     return $id;
 }
 
-sub __get_path_node {
-    my ($p, $k);
-    &__arg;
-    my $f = $_[0]->[ _f ];
-    my ($m) = @_;
-    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ|_MULTI))) { # Fast path.
-	my $s = $m->[ _s ];
-	return unless exists $s->{ $_[1] };
-	$p = [ $s, $s->{ $_[1] } ];
-	$k = [ $_[1], $_[2] ];
-    } else {
-	return unless ($p, $k) = &__has_path;
-    }
-    exists $p->[-1]->{ $k->[-1] } ? ( $p->[-1]->{ $k->[-1] }, $p, $k ) : ();
-}
-
 sub __has_path {
     &__arg;
     my ($m, @a) = @_;
@@ -277,6 +261,22 @@ sub has_path {
     return exists $p->[-1]->{ $k->[-1] };
 }
 
+sub __get_path_node {
+    my ($p, $k);
+    &__arg;
+    my $f = $_[0]->[ _f ];
+    my ($m) = @_;
+    if ($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ|_MULTI))) { # Fast path.
+	my $s = $m->[ _s ];
+	return unless exists $s->{ $_[1] };
+	$p = [ $s, $s->{ $_[1] } ];
+	$k = [ $_[1], $_[2] ];
+    } else {
+	return unless ($p, $k) = &__has_path;
+    }
+    exists $p->[-1]->{ $k->[-1] } ? ( $p->[-1]->{ $k->[-1] }, $p, $k ) : ();
+}
+
 sub has_path_by_multi_id {
     my $m = $_[0];
     my $id = pop;
@@ -322,6 +322,62 @@ sub get_multi_ids {
     keys %{ $n->[ _nm ] };
 }
 
+sub rename_path {
+    my ($m, $from, $to) = @_;
+    return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
+    return unless my ($n, $p, $k) = $m->__get_path_node( $from );
+    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = [ $to ];
+    $p->[ -1 ]{ $to } = delete $p->[-1]{ $k->[-1] };
+    return 1;
+}
+
+sub _get_path_attrs {
+    my $f = $_[0]->[ _f ];
+    my $id = pop if ($f & _MULTI);
+    &__arg;
+    my ($m) = @_;
+    if (($f & _MULTI)) {
+	return unless my ($p, $k) = &__has_path;
+	push @_, $id;
+	$p->[-1]->{ $k->[-1] }->[ _nm ]->{ $id };
+    } else {
+	return unless my ($n) = &__get_path_node;
+	return $n->[ _na ] if ref $n && $#$n == _na;
+	return;
+    }
+}
+
+sub _get_path_node {
+    my $m = $_[0];
+    my $f = $m->[ _f ];
+    goto &__get_path_node # Slow path
+	if !($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ)));
+    &__arg;
+    return unless exists $m->[ _s ]->{ $_[1] };
+    my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
+    my $l = $_[2];
+    exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, [ @_[1,2] ] ) : ();
+}
+
+sub _del_path_attrs {
+    my $f = $_[0]->[ _f ];
+    my $id = pop if ($f & _MULTI);
+    &__arg;
+    my ($m) = @_;
+    if ($f & _MULTI) {
+	return unless my ($p, $k) = &__has_path;
+	push @_, $id;
+	$p->[-1]->{ $k->[-1] }->[ _nm ]->{ $id } = undef;
+	return 1;
+    } else {
+	return undef unless my ($n) = &__get_path_node;
+	return 0 if !ref $n;
+	my $e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
+	$#$n = _na - 1;
+	return $e;
+    }
+}
+
 sub get_paths_by_ids {
     my ($m, $list) = @_;
     my $i = $m->[ _i ];
@@ -343,15 +399,6 @@ sub get_ids_by_paths {
     } @$list if $a == 2 && !($f & (_HYPER|_REF|_UNIQ));
     my @n;
     map !(@n = $m->_get_path_node(@$_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
-}
-
-sub rename_path {
-    my ($m, $from, $to) = @_;
-    return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
-    return unless my ($n, $p, $k) = $m->__get_path_node( $from );
-    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = [ $to ];
-    $p->[ -1 ]{ $to } = delete $p->[-1]{ $k->[-1] };
-    return 1;
 }
 
 sub _has_path_attrs {
@@ -387,22 +434,6 @@ sub __strval {
     (($f & _STR) xor overload::Method($k, '""')) ? overload::StrVal($k) : $k;
 }
 
-sub _get_path_attrs {
-    my $f = $_[0]->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    &__arg;
-    my ($m) = @_;
-    if (($f & _MULTI)) {
-	return unless my ($p, $k) = &__has_path;
-	push @_, $id;
-	$p->[-1]->{ $k->[-1] }->[ _nm ]->{ $id };
-    } else {
-	return unless my ($n) = &__get_path_node;
-	return $n->[ _na ] if ref $n && $#$n == _na;
-	return;
-    }
-}
-
 sub _get_path_attr {
     my $attr = pop;
     return undef unless defined(my $attrs = &{ $_[0]->can('_get_path_attrs') });
@@ -419,18 +450,6 @@ sub _get_path_attr_values {
     values %$attrs;
 }
 
-sub _get_path_node {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
-    goto &__get_path_node # Slow path
-	if !($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ)));
-    &__arg;
-    return unless exists $m->[ _s ]->{ $_[1] };
-    my $p = [ $m->[ _s ], $m->[ _s ]->{ $_[1] } ];
-    my $l = $_[2];
-    exists $p->[-1]->{ $l } ? ( $p->[-1]->{ $l }, $p, [ @_[1,2] ] ) : ();
-}
-
 sub _get_path_count {
     my $m = $_[0];
     return undef unless my ($n) = &_get_path_node;
@@ -438,25 +457,6 @@ sub _get_path_count {
     return
         ($f & _COUNT) ? $n->[ _nc ] :
         ($f & _MULTI) ? scalar keys %{ $n->[ _nm ] } : 1;
-}
-
-sub _del_path_attrs {
-    my $f = $_[0]->[ _f ];
-    my $id = pop if ($f & _MULTI);
-    &__arg;
-    my ($m) = @_;
-    if ($f & _MULTI) {
-	return unless my ($p, $k) = &__has_path;
-	push @_, $id;
-	$p->[-1]->{ $k->[-1] }->[ _nm ]->{ $id } = undef;
-	return 1;
-    } else {
-	return undef unless my ($n) = &__get_path_node;
-	return 0 if !ref $n;
-	my $e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
-	$#$n = _na - 1;
-	return $e;
-    }
 }
 
 sub _del_path_attr {
