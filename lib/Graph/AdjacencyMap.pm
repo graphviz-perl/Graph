@@ -222,7 +222,7 @@ sub set_path {
     return if @_ == 1 && !($f & _HYPER);
     &__arg;
     my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, defined $k->[-1] ? $k->[-1] : "", @_[1..$#_] );
+    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
 }
 
 sub set_path_by_multi_id {
