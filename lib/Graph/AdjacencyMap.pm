@@ -36,23 +36,20 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
 %EXPORT_TAGS =
     (flags =>  [@FLAGS, keys %FLAG_COMBOS, qw(_GEN_ID)],
-     fields => [qw(_n _f _arity _i _s _attr _u _ni _nc _na)]);
+     fields => [qw(_n _f _arity _i _s _attr _count)]);
 @EXPORT_OK = map @$_, values %EXPORT_TAGS;
 
 my $_GEN_ID = 0;
 
 sub _GEN_ID () { \$_GEN_ID }
 
-sub _ni () { 0 } # Node index.
-sub _nc () { 1 } # Node count.
-sub _na () { 2 } # Node attributes - two-level for MULTI
-
 sub _n () { 0 } # Next id.
 sub _f () { 1 } # Flags.
 sub _arity () { 2 } # Arity.
 sub _i () { 3 } # Index to path.
 sub _s () { 4 } # Successors / Path to Index.
-sub _attr () { 5 } # attributes (AdjacencyMap::Light)
+sub _attr () { 5 } # attributes - two-level for MULTI
+sub _count () { 6 }
 
 sub stringify {
     my $m = shift;
@@ -76,7 +73,7 @@ sub stringify {
 	    for my $v (@s) {
 		my $text = $m->has_path([$u, $v]) ? 1 : '';
 		my $attrs = $multi
-		    ? (( $m->__get_path_node([$u, $v]) )[0] || [])->[-1]
+		    ? $m->[ _attr ][ ( $m->__has_path( [$u, $v] ) )[0] ]
 		    : $m->_get_path_attrs([$u, $v])
 		    if $text;
 		$text = $m->_dumper($attrs) if defined $attrs;
@@ -89,7 +86,7 @@ sub stringify {
 	    my @r = $a == 1 ? $v->[0] : '[' . join(' ', @$v) . ']';
 	    my ($text) = $m->get_ids_by_paths([ $v ]);
 	    my $attrs = $multi
-		? (( $m->__get_path_node( $v ) )[0] || [])->[-1]
+		? $m->[ _attr ][ ( $m->__has_path( $v ) )[0] ]
 		: $m->_get_path_attrs($v);
 	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
 	    push @r, $text;
@@ -122,8 +119,8 @@ sub _dumper {
 }
 
 sub _new {
-    my ($class, $flags, $arity, @extra) = @_;
-    bless [ 0, $flags, $arity, [], ($flags & _HYPER ? [] : {}), @extra ], $class;
+    my ($class, $flags, $arity) = @_;
+    bless [ 0, $flags, $arity, [], ($flags & _HYPER ? [] : {}), [], [] ], $class;
 }
 
 sub _ids {
@@ -139,56 +136,57 @@ sub __has_path {
     my ($f, $s, @k) = (@{ $_[0] }[ _f, _s ], @{ $_[1] });
     @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
     return if !defined($s = ($f & _HYPER) ? $s->[ @k ] : $s);
-    ([$s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]], [@k?@k:'']);
+    my @p = ($s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]);
+    @k = '' if !@k;
+    (exists $s->{$k[-1]} ? $s->{$k[-1]} : return, \@p, \@k);
 }
 
 sub set_path {
     &__arg;
     return if !@{ $_[1] } && !($_[0]->[ _f ] & _HYPER);
-    goto &set_path_by_multi_id;
+    push @_, 1;
+    (&__set_path)[0];
 }
 
 sub __set_path {
     my $inc_if_exists = pop;
     &__arg;
     my ($f, $map_i, $s, $m, $id, @a) = (@{ $_[0] }[ _f, _i, _s ], @_[0, 2], @{ $_[1] });
-    my ($is_multi, $is_countmulti) = ($f & _MULTI, $f & _COUNTMULTI);
+    my $is_multi = $f & _MULTI;
     my @path = @a;
     @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
     my $p = (($f & _HYPER) ? $s->[ @a ] : $s) ||= { };
     $p = $p->{ $_ } ||= {} for @a[0..$#a-1];
     my $l = ( @a ? @a : '' )[-1];
     if (exists $p->{ $l }) {
-	return ($p, $l) if !($inc_if_exists and $is_countmulti);
-	my $na = (my $n = $p->{ $l })->[ _na ];
-	$n->[ _nc ]++, return ($p, $l) if !$is_multi;
+	return ($p->{ $l }) if !($inc_if_exists and ($f & _COUNTMULTI));
+	my $nc = \$m->[ _count ][ my $i = $p->{ $l } ];
+	$$nc++, return ($i) if !$is_multi;
+	my $na = $m->[ _attr ][ $i ];
 	if ($id eq _GEN_ID) {
-	    $n->[ _nc ]++ while exists $na->{ $n->[ _nc ] };
-	    $id = $n->[ _nc ];
+	    $$nc++ while exists $na->{ $$nc };
+	    $id = $$nc;
 	}
 	$na->{ $id } = { };
-	return ($p, $l, $id);
+	return ($i, $id);
     }
-    $map_i->[ my $i = $m->[ _n ]++ ] = \@path;
-    return ($p, $l, $p->{ $l } = $i) if !$is_countmulti;
-    $p->{ $l } = $is_multi
-	? [$i, 0, { ($id = ($id eq _GEN_ID) ? 0 : $id) => {} }]
-	: [$i, 1];
-    ($p, $l, $is_multi ? $id : $i);
+    $map_i->[ $p->{ $l } = my $i = $m->[ _n ]++ ] = \@path;
+    $m->[ _attr ][ $i ] = { ($id = ($id eq _GEN_ID) ? 0 : $id) => {} } if $is_multi;
+    $m->[ _count ][ $i ] = $is_multi ? 0 : 1 if ($f & _COUNTMULTI);
+    ($i, $id);
 }
 
 sub _set_path_attr_common {
     &__arg;
     push @_, 0;
-    my ($p, $l) = &__set_path;
-    return \$p->{ $l }->[ _na ]->{ $_[2] } if ($_[0]->[ _f ] & _MULTI);
-    $p->{ $l } = [$p->{ $l }, 1] if !ref $p->{ $l }; # Extend if simple id node
-    return \$p->{ $l }->[ _na ];
+    my ($i) = &__set_path;
+    my $attr = (my $m = $_[0])->[ _attr ];
+    ($m->[ _f ] & _MULTI) ? \$attr->[ $i ]{ $_[2] } : \$attr->[ $i ];
 }
 
 sub set_path_by_multi_id {
     push @_, 1;
-    (&__set_path)[2];
+    (&__set_path)[1];
 }
 
 sub paths_non_existing {
@@ -197,26 +195,12 @@ sub paths_non_existing {
 }
 
 sub has_path {
-    return unless my ($p, $k) = &__has_path;
-    return exists $p->[-1]->{ $k->[-1] };
-}
-
-sub __get_path_node {
-    my ($p, $k);
-    &__arg;
-    my ($f, $a, $s, @a) = (@{ $_[0] }[ _f, _arity, _s ], @{ $_[1] });
-    if ($a == 2 && @a == 2 && !($f & (_HYPER|_REF|_UNIQ))) {
-	return unless exists $s->{ $a[0] };
-	($p, $k) = ([ $s, $s->{ $a[0] } ], \@a);
-    } else {
-	return unless ($p, $k) = &__has_path;
-    }
-    exists $p->[-1]->{ $k->[-1] } ? ( $p->[-1]->{ $k->[-1] }, $p, $k ) : ();
+    defined( ( &__has_path )[0] );
 }
 
 sub has_path_by_multi_id {
-    return undef unless my ($n) = &__get_path_node;
-    return exists $n->[ _na ]->{ $_[2] };
+    return undef unless my ($i) = &__has_path;
+    return exists $_[0]->[ _attr ][ $i ]->{ $_[2] };
 }
 
 sub _sequence_del {
@@ -232,48 +216,50 @@ sub _sequence_del {
 }
 
 sub del_path {
-    return unless my ($n, $p, $k) = &__get_path_node;
-    return 1 if &_is_COUNT and --$n->[ _nc ] > 0;
-    _sequence_del($_[0]->[ _i ], ref $n ? $n->[ _ni ] : $n, $p, $k);
+    return unless my ($i, $p, $k) = &__has_path;
+    return 1 if &_is_COUNT and --$_[0]->[ _count ][ $i ] > 0;
+    _sequence_del((my $m = $_[0])->[ _i ], $i, $p, $k);
+    delete $m->[ $_ ]->[ $i ] for _count, _attr;
+    1;
 }
 
 sub del_path_by_multi_id {
-    return unless my ($n, $p, $k) = &__get_path_node;
-    delete $n->[ _na ]->{ $_[2] };
-    return 1 if keys %{ $n->[ _na ] };
-    _sequence_del($_[0]->[ _i ], $n->[ _ni ], $p, $k);
+    return unless my ($i, $p, $k) = &__has_path;
+    delete((my $attrs = (my $m = $_[0])->[ _attr ][ $i ])->{ $_[2] });
+    return 1 if keys %$attrs;
+    _sequence_del($m->[ _i ], $i, $p, $k);
+    delete $m->[ $_ ]->[ $i ] for _count, _attr;
+    1;
 }
 
 sub get_multi_ids {
-    return unless ($_[0]->[ _f ] & _MULTI) and my ($n) = &__get_path_node;
-    keys %{ $n->[ _na ] };
+    return unless ((my $m = $_[0])->[ _f ] & _MULTI) and my ($i) = &__has_path;
+    keys %{ $m->[ _attr ][ $i ] };
 }
 
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
-    return unless my ($n, $p, $k) = $m->__get_path_node([$from]);
-    $m->[ _i ][ ref $n ? $n->[ _ni ] : $n ] = [ $to ];
+    return unless my ($i, $p, $k) = $m->__has_path([$from]);
     $p->[ -1 ]{ $to } = delete $p->[-1]{ $k->[-1] };
+    $m->[ _i ][ $i ] = [ $to ];
     return 1;
 }
 
 sub _get_path_attrs {
     &__arg;
-    return unless my ($n) = &__get_path_node;
-    return $n->[ _na ]->{ $_[2] } if ($_[0]->[ _f ] & _MULTI);
-    return $n->[ _na ] if ref $n && $#$n == _na;
+    return unless my ($i) = &__has_path;
+    my $attrs = (my $m = $_[0])->[ _attr ][ $i ];
+    ($m->[ _f ] & _MULTI) ? $attrs->{ $_[2] } : $attrs;
 }
 
 sub _del_path_attrs {
-    my $id = $_[2] if my $is_multi = ((my $f = $_[0]->[ _f ]) & _MULTI);
+    my $is_multi = ((my $m = $_[0])->[ _f ] & _MULTI);
     &__arg;
-    return unless my ($n) = &__get_path_node;
-    return $n->[ _na ]->{ $id } = undef, 1 if $is_multi;
-    return 0 if !ref $n;
-    my $e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
-    $#$n = _na - 1;
-    return $e;
+    return unless my ($i) = &__has_path;
+    my $attr = $m->[ _attr ];
+    return $attr->[ $i ]{ $_[2] } = undef, 1 if $is_multi;
+    delete $attr->[ $i ];
 }
 
 sub get_paths_by_ids {
@@ -291,10 +277,19 @@ sub get_ids_by_paths {
 	my @p = @$_;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? ref $this_s ? $this_s->[ _ni ] : $this_s : ();
-    } @$list if $a == 2 && !($f & (_HYPER|_REF|_UNIQ));
-    my @n;
-    map !(@n = $m->__get_path_node($_)) ? () : ref $n[0] ? $n[0]->[ _ni ] : $n[0], @$list;
+	defined $this_s ? $this_s : ();
+    } @$list if !($f & (_HYPER|_REF|_UNIQ));
+    my $is_hyper = $f & _HYPER;
+    map {
+	my @p = @$_;
+	my $this_s = $is_hyper ? $s->[ @p ] : $s;
+	if (@p) {
+	    $this_s = $this_s->{ shift @p } while @p and defined $this_s;
+	} else {
+	    $this_s = $this_s->{''};
+	}
+	defined $this_s ? $this_s : ();
+    } ($f & _REF) ? map [ map ref() ? __strval($_, $f) : $_, @$_ ], @$list : @$list;
 }
 
 sub _has_path_attrs {
@@ -333,11 +328,11 @@ sub _get_path_attr_values {
 }
 
 sub _get_path_count {
-    return undef unless my ($n) = &__get_path_node;
-    my $f = $_[0]->[ _f ];
+    return undef unless my ($i) = &__has_path;
+    my $f = (my $m = $_[0])->[ _f ];
     return
-        ($f & _COUNT) ? $n->[ _nc ] :
-        ($f & _MULTI) ? scalar keys %{ $n->[ _na ] } : 1;
+        ($f & _COUNT) ? $m->[ _count ][ $i ] :
+        ($f & _MULTI) ? scalar keys %{ $m->[ _attr ][ $i ] } : 1;
 }
 
 sub _del_path_attr {
@@ -345,7 +340,7 @@ sub _del_path_attr {
     return 0 unless exists $attrs->{ my $attr = $_[-1] };
     delete $attrs->{$attr};
     return 1 if keys %$attrs;
-    &_del_path_attrs;
+    &{ $_[0]->can('_del_path_attrs') };
     1;
 }
 

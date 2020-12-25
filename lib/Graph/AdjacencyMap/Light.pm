@@ -21,7 +21,8 @@ sub _is_REF      () { 0 }
 
 sub _new {
     my ($class, $flags, $arity) = @_;
-    $class->SUPER::_new($flags | _LIGHT, $arity, {});
+    (my $m = $class->SUPER::_new($flags | _LIGHT, $arity))->[ _attr ] = {};
+    $m;
 }
 
 sub set_path {
