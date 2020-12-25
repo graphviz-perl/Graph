@@ -1,3 +1,4 @@
+0.9714 2020-12-25
 - remove "omni*" - hypergraphs are simply directed or undirected
 - as_hashes works with undirected hypergraphs
 - add_edge with != 2 vertices only for undirected hypergraph
