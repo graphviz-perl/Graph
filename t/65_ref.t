@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 1360;
+use Test::More tests => 1424;
 
 use Graph;
 use Graph::AdjacencyMap qw(:flags);
@@ -18,6 +18,8 @@ my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap', [_REF, 2], [$u, $v] ],
     [ 'Graph::AdjacencyMap', [_UNIQ, 2], [qw(a b)] ],
     [ 'Graph::AdjacencyMap', [_UNIQ|_HYPER, 2], [qw(a a b)] ],
+    [ 'Graph::AdjacencyMap', [_HYPER, 2], [qw()] ],
+    [ 'Graph::AdjacencyMap', [_HYPER, 2], [qw(a b c d)] ],
     [ 'Graph::AdjacencyMap', [0, 2], [qw(a b)] ],
     [ 'Graph::AdjacencyMap', [_MULTI|_UNORD, 1], [qw(a b)] ],
     [ 'Graph::AdjacencyMap', [_MULTI|_UNORD, 2], [qw(a b c)] ],
