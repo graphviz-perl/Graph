@@ -204,6 +204,32 @@ sub __has_path {
     return (\@p, \@k);
 }
 
+sub set_path {
+    my ($m) = @_;
+    my $f = $m->[ _f ];
+    return if @_ == 1 && !($f & _HYPER);
+    &__arg;
+    my ($p, $k) = &__set_path;
+    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
+}
+
+sub __set_path {
+    my $f = $_[0]->[ _f ];
+    my $id = pop if my $is_multi = $f & _MULTI;
+    &__arg;
+    my ($m, @a) = @_;
+    my @p = my $p = ($f & _HYPER) ?
+	(( $m->[ _s ] )->[ @a ] ||= { }) :
+	(  $m->[ _s ]           ||= { });
+    my @k;
+    push @_, $id if $is_multi;
+    while (@a) {
+	push @k, my $q = __strval(my $k = shift @a, $f);
+	push @p, $p = $p->{ $q } ||= {} if @a;
+    }
+    return (\@p, @k ? \@k : ['']);
+}
+
 sub _set_path_attr_common {
     my $f = $_[0]->[ _f ];
     my $id   = pop if ($f & _MULTI);
@@ -222,6 +248,12 @@ sub _set_path_attr_common {
     }
 }
 
+sub set_path_by_multi_id {
+    my $m = $_[0];
+    my ($p, $k) = &__set_path;
+    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
+}
+
 sub __set_path_node {
     my ($m, $p, $l, @args) = @_;
     my $f = $m->[ _f ];
@@ -232,21 +264,6 @@ sub __set_path_node {
     die "undefined index" if !defined $i;
     $m->[ _i ][ $i ] = \@args;
     defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
-}
-
-sub set_path {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    return if @_ == 1 && !($f & _HYPER);
-    &__arg;
-    my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
-}
-
-sub set_path_by_multi_id {
-    my $m = $_[0];
-    my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
 }
 
 sub paths_non_existing {
@@ -368,23 +385,6 @@ sub __strval {
     return $k unless ref $k && ($f & _REF);
     require overload;
     (($f & _STR) xor overload::Method($k, '""')) ? overload::StrVal($k) : $k;
-}
-
-sub __set_path {
-    my $f = $_[0]->[ _f ];
-    my $id = pop if my $is_multi = $f & _MULTI;
-    &__arg;
-    my ($m, @a) = @_;
-    my @p = my $p = ($f & _HYPER) ?
-	(( $m->[ _s ] )->[ @a ] ||= { }) :
-	(  $m->[ _s ]           ||= { });
-    my @k;
-    push @_, $id if $is_multi;
-    while (@a) {
-	push @k, my $q = __strval(my $k = shift @a, $f);
-	push @p, $p = $p->{ $q } ||= {} if @a;
-    }
-    return (\@p, @k ? \@k : ['']);
 }
 
 sub _get_path_attrs {
