@@ -1,3 +1,5 @@
+- fix AdjacencyMap::Light attributes so delete when path deleted
+
 0.9714 2020-12-25
 - remove "omni*" - hypergraphs are simply directed or undirected
 - as_hashes works with undirected hypergraphs

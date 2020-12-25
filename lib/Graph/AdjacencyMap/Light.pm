@@ -78,7 +78,7 @@ sub has_paths { keys %{ $_[0]->[ _s ] } }
 
 sub del_path {
     my $m = shift;
-    my ($n, $f, $a, $i, $s) = @$m;
+    my ($n, $i, $s, $attr) = @$m[ _n, _i, _s, _attr ];
     my $e0 = shift;
     return 0 if !defined($n = $s->{ $e0 });
     if (@_ == 1) {
@@ -86,8 +86,11 @@ sub del_path {
 	return 0 if !defined($n = $n->{ $e1 }); # "actual" n ie id
 	delete $s->{ $e0 }->{ $e1 };
 	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
+	delete $attr->{ $e0 }->{ $e1 };
+	delete $attr->{ $e0 } unless keys %{ $attr->{ $e0 } };
     } else {
 	delete $s->{ $e0 };
+	delete $attr->{ $e0 };
     }
     delete $i->[ $n ];
     return 1;
@@ -95,7 +98,7 @@ sub del_path {
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    my (undef, undef, $a, $i, $s, $attr) = @$m;
+    my ($a, $i, $s, $attr) = @$m[ _arity, _i, _s, _attr ];
     return 1 if $a > 1; # arity > 1, all integers, no names
     return 0 unless exists $s->{ $from };
     $s->{ $to } = delete $s->{ $from };
