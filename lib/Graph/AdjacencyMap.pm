@@ -189,12 +189,12 @@ sub __has_path {
 }
 
 sub set_path {
-    my ($m) = @_;
-    my $f = $m->[ _f ];
-    return if @_ == 1 && !($f & _HYPER);
     &__arg;
+    my ($m, @a) = @_;
+    my $f = $m->[ _f ];
+    return if !@a && !($f & _HYPER);
     my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
+    $m->__set_path_node( $p, $k->[-1], @a );
 }
 
 sub __set_path {
@@ -202,11 +202,11 @@ sub __set_path {
     my $id = pop if my $is_multi = $f & _MULTI;
     &__arg;
     my ($m, @a) = @_;
+    push @_, $id if $is_multi;
     my @p = my $p = ($f & _HYPER) ?
 	(( $m->[ _s ] )->[ @a ] ||= { }) :
 	(  $m->[ _s ]           ||= { });
     my @k;
-    push @_, $id if $is_multi;
     while (@a) {
 	push @k, my $q = __strval(my $k = shift @a, $f);
 	push @p, $p = $p->{ $q } ||= {} if @a;
@@ -218,11 +218,11 @@ sub _set_path_attr_common {
     my $f = $_[0]->[ _f ];
     my $id   = pop if ($f & _MULTI);
     &__arg;
-    my ($m) = @_;
     push @_, $id if ($f & _MULTI);
+    my ($m, @a) = @_;
     my ($p, $k) = &__set_path;
     my $l = $k->[-1];
-    $m->__set_path_node( $p, $l, @_[1..$#_] ) unless exists $p->[-1]->{ $l };
+    $m->__set_path_node( $p, $l, @a ) unless exists $p->[-1]->{ $l };
     if (($f & _MULTI)) {
 	return \$p->[-1]->{ $l }->[ _nm ]->{ $id };
     } else {
@@ -233,9 +233,9 @@ sub _set_path_attr_common {
 }
 
 sub set_path_by_multi_id {
-    my $m = $_[0];
+    my ($m, @a) = @_;
     my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @_[1..$#_] );
+    $m->__set_path_node( $p, $k->[-1], @a );
 }
 
 sub __set_path_node {
@@ -470,14 +470,13 @@ sub _del_path_attr {
 }
 
 sub __arg {
-    my ($m) = @_;
+    my ($m, @a) = @_;
     return if @_ < 3; # nothing to do if 1 or 0 passed args
     my $f = $m->[ _f ];
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
-		  @_ - 1, $m->[ _arity ])
-        if !($f & _HYPER) and @_ - 1 != $m->[ _arity ];
+		  @a, $m->[ _arity ])
+        if !($f & _HYPER) and @a != $m->[ _arity ];
     return if !($f & _UNIQ);
-    my @a = @_[1..$#_];
     my %u;
     @a = grep !$u{$_}++, @a if $f & _UNIQ;
     @_ = ($_[0], @a);
