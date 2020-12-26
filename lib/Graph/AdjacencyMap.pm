@@ -223,13 +223,10 @@ sub _set_path_attr_common {
     my ($p, $k) = &__set_path;
     my $l = $k->[-1];
     $m->__set_path_node( $p, $l, @a ) unless exists $p->[-1]->{ $l };
-    if (($f & _MULTI)) {
-	return \$p->[-1]->{ $l }->[ _nm ]->{ $id };
-    } else {
-	# Extend the node if it is a simple id node.
-	$p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
-	return \$p->[-1]->{ $l }->[ _na ];
-    }
+    return \$p->[-1]->{ $l }->[ _nm ]->{ $id } if ($f & _MULTI);
+    # Extend the node if it is a simple id node.
+    $p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
+    return \$p->[-1]->{ $l }->[ _na ];
 }
 
 sub set_path_by_multi_id {
