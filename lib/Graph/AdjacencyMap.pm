@@ -152,41 +152,32 @@ sub set_path {
 
 sub __set_path {
     my $inc_if_exists = pop;
-    my $f = $_[0]->[ _f ];
-    my $id = pop if my $is_multi = $f & _MULTI;
+    my $id = pop if my $is_multi = (my $f = $_[0]->[ _f ]) & _MULTI;
     &__arg;
     my ($m, @a) = @_;
     push @_, $id if $is_multi;
+    my $is_countmulti = $f & _COUNTMULTI;
     my @path = @a;
     @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
     my $p = (($f & _HYPER) ? $m->[ _s ]->[ @a ] : $m->[ _s ]) ||= { };
     my @p = ($p, map $p = $p->{ $_ } ||= {}, @a[0..$#a-1]);
-    my @k = @a ? @a : '';
-    my $l = $k[-1];
-    if (exists $p[-1]->{ $l }) {
-	if ($inc_if_exists and &_is_COUNTMULTI) {
-	    my $nm = (my $n = $p[-1]->{ $l })->[ _nm ];
-	    if ($is_multi) {
-		if ($id eq _GEN_ID) {
-		    $n->[ _nc ]++ while exists $nm->{ $n->[ _nc ] };
-		    $id = $n->[ _nc ];
-		}
-		$nm->{ $id } = { };
-	    } else {
-		$n->[ _nc ]++;
-	    }
+    my $l = ( my @k = @a ? @a : '' )[-1];
+    if (exists $p->{ $l }) {
+	return (\@p, \@k) if !($inc_if_exists and $is_countmulti);
+	my $nm = (my $n = $p->{ $l })->[ _nm ];
+	$n->[ _nc ]++, return (\@p, \@k) if !$is_multi;
+	if ($id eq _GEN_ID) {
+	    $n->[ _nc ]++ while exists $nm->{ $n->[ _nc ] };
+	    $id = $n->[ _nc ];
 	}
+	$nm->{ $id } = { };
 	return (\@p, \@k, $id);
     }
     $m->[ _i ][ my $i = $m->[ _n ]++ ] = \@path;
-    if ($is_multi) {
-	$id = 0 if $id eq _GEN_ID;
-	$p[-1]->{ $l } = [ $i, 0, undef, { $id => { } } ];
-    } elsif (($f & _COUNT)) {
-	$p[-1]->{ $l } = [ $i, 1 ];
-    } else {
-	$p[-1]->{ $l } = $i;
-    }
+    return (\@p, \@k, $p->{ $l } = $i) if !$is_countmulti;
+    $p->{ $l } = $is_multi
+	? [$i, 0, undef, { ($id = ($id eq _GEN_ID) ? 0 : $id) => {} }]
+	: [$i, 1];
     (\@p, \@k, $is_multi ? $id : $i);
 }
 
