@@ -195,6 +195,7 @@ sub set_path {
 }
 
 sub __set_path {
+    my $inc_if_exists = pop;
     my $f = $_[0]->[ _f ];
     my $id = pop if my $is_multi = $f & _MULTI;
     &__arg;
@@ -204,11 +205,17 @@ sub __set_path {
 	(( $m->[ _s ] )->[ @a ] ||= { }) :
 	(  $m->[ _s ]           ||= { });
     my @k;
+    my @path = @a;
     while (@a) {
 	push @k, my $q = __strval(my $k = shift @a, $f);
 	push @p, $p = $p->{ $q } ||= {} if @a;
     }
-    return (\@p, @k ? \@k : ['']);
+    @k = ('') if !@k;
+    my $l = $k[-1];
+    return (\@p, \@k, $inc_if_exists ? $m->_inc_node( \$p[-1]->{ $l }, $id ) : ()) if exists $p[-1]->{ $l };
+    my $i = $m->_new_node( \$p[-1]->{ $l }, $id );
+    $m->[ _i ][ $i ] = \@path;
+    (\@p, \@k, defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i);
 }
 
 sub _set_path_attr_common {
@@ -217,9 +224,9 @@ sub _set_path_attr_common {
     &__arg;
     push @_, $id if ($f & _MULTI);
     my ($m, @a) = @_;
+    push @_, 0;
     my ($p, $k) = &__set_path;
     my $l = $k->[-1];
-    $m->__set_path_node( $p, $l, @a ) unless exists $p->[-1]->{ $l };
     return \$p->[-1]->{ $l }->[ _nm ]->{ $id } if ($f & _MULTI);
     # Extend the node if it is a simple id node.
     $p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
@@ -227,21 +234,8 @@ sub _set_path_attr_common {
 }
 
 sub set_path_by_multi_id {
-    my ($m, @a) = @_;
-    my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @a );
-}
-
-sub __set_path_node {
-    my ($m, $p, $l, @args) = @_;
-    my $f = $m->[ _f ];
-    my $id = pop @args if $f & _MULTI;
-    my $arity = $m->[ _arity ];
-    return $m->_inc_node( \$p->[-1]->{ $l }, $id ) if exists $p->[-1]->{ $l };
-    my $i = $m->_new_node( \$p->[-1]->{ $l }, $id );
-    die "undefined index" if !defined $i;
-    $m->[ _i ][ $i ] = \@args;
-    defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i;
+    push @_, 1;
+    (&__set_path)[2];
 }
 
 sub paths_non_existing {
