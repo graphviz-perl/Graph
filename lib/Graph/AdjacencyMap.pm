@@ -231,12 +231,9 @@ sub has_path_by_multi_id {
     return exists $n->[ _na ]->{ $id };
 }
 
-sub del_path {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
-    return unless my ($n, $p, $k) = &__get_path_node;
-    return 1 if 0 != (($f & _COUNT) ? --$n->[ _nc ] : 0);
-    delete $m->[ _i ]->[ ref $n ? $n->[ _ni ] : $n ];
+sub _sequence_del {
+    my ($map_i, $id, $p, $k) = @_;
+    delete $map_i->[ $id ];
     delete $p->[-1]->{ $k->[-1] };
     while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
 	delete $p->[-1]->{ $k->[-1] };
@@ -246,20 +243,20 @@ sub del_path {
     return 1;
 }
 
+sub del_path {
+    my $m = $_[0];
+    return unless my ($n, $p, $k) = &__get_path_node;
+    return 1 if &_is_COUNT and --$n->[ _nc ] > 0;
+    _sequence_del($m->[ _i ], ref $n ? $n->[ _ni ] : $n, $p, $k);
+}
+
 sub del_path_by_multi_id {
     my $m = $_[0];
     my $id = pop;
     return unless my ($n, $p, $k) = &__get_path_node;
     delete $n->[ _na ]->{ $id };
     return 1 if keys %{ $n->[ _na ] };
-    delete $m->[ _i ]->[ $n->[ _ni ] ];
-    delete $p->[-1]->{ $k->[-1] };
-    while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
-	delete $p->[-1]->{ $k->[-1] };
-	pop @$p;
-	pop @$k;
-    }
-    return 1;
+    _sequence_del($m->[ _i ], $n->[ _ni ], $p, $k);
 }
 
 sub get_multi_ids {
