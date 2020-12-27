@@ -170,16 +170,11 @@ sub __set_path {
     &__arg;
     my ($m, @a) = @_;
     push @_, $id if $is_multi;
-    my @p = my $p = ($f & _HYPER) ?
-	(( $m->[ _s ] )->[ @a ] ||= { }) :
-	(  $m->[ _s ]           ||= { });
-    my @k;
     my @path = @a;
-    while (@a) {
-	push @k, my $q = __strval(my $k = shift @a, $f);
-	push @p, $p = $p->{ $q } ||= {} if @a;
-    }
-    @k = ('') if !@k;
+    @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
+    my $p = (($f & _HYPER) ? $m->[ _s ]->[ @a ] : $m->[ _s ]) ||= { };
+    my @p = ($p, map $p = $p->{ $_ } ||= {}, @a[0..$#a-1]);
+    my @k = @a ? @a : '';
     my $l = $k[-1];
     if (exists $p[-1]->{ $l }) {
 	if ($inc_if_exists and &_is_COUNTMULTI) {
