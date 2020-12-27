@@ -112,7 +112,7 @@ sub _stringify_fields {
 }
 
 sub _dumper {
-    my ($m, $got) = @_;
+    my (undef, $got) = @_;
     return $got if defined $got and !ref $got;
     require Data::Dumper;
     my $dumper = Data::Dumper->new([$got]);
@@ -127,8 +127,7 @@ sub _new {
 }
 
 sub _ids {
-    my $m = shift;
-    return $m->[ _i ];
+    $_[0]->[ _i ];
 }
 
 sub has_paths {
@@ -203,7 +202,6 @@ sub paths_non_existing {
 }
 
 sub has_path {
-    my $m = $_[0];
     return unless my ($p, $k) = &__has_path;
     return exists $p->[-1]->{ $k->[-1] };
 }
@@ -225,7 +223,6 @@ sub __get_path_node {
 }
 
 sub has_path_by_multi_id {
-    my $m = $_[0];
     my $id = pop;
     return undef unless my ($n) = &__get_path_node;
     return exists $n->[ _na ]->{ $id };
@@ -244,24 +241,21 @@ sub _sequence_del {
 }
 
 sub del_path {
-    my $m = $_[0];
     return unless my ($n, $p, $k) = &__get_path_node;
     return 1 if &_is_COUNT and --$n->[ _nc ] > 0;
-    _sequence_del($m->[ _i ], ref $n ? $n->[ _ni ] : $n, $p, $k);
+    _sequence_del($_[0]->[ _i ], ref $n ? $n->[ _ni ] : $n, $p, $k);
 }
 
 sub del_path_by_multi_id {
-    my $m = $_[0];
     my $id = pop;
     return unless my ($n, $p, $k) = &__get_path_node;
     delete $n->[ _na ]->{ $id };
     return 1 if keys %{ $n->[ _na ] };
-    _sequence_del($m->[ _i ], $n->[ _ni ], $p, $k);
+    _sequence_del($_[0]->[ _i ], $n->[ _ni ], $p, $k);
 }
 
 sub get_multi_ids {
-    my $f = $_[0]->[ _f ];
-    return unless ($f & _MULTI);
+    return unless ($_[0]->[ _f ] & _MULTI);
     return unless my ($n) = &__get_path_node;
     keys %{ $n->[ _na ] };
 }
@@ -276,11 +270,9 @@ sub rename_path {
 }
 
 sub _get_path_attrs {
-    my $f = $_[0]->[ _f ];
-    my $id = pop if ($f & _MULTI);
+    my $id = pop if my $is_multi = ((my $f = $_[0]->[ _f ]) & _MULTI);
     &__arg;
-    my ($m) = @_;
-    if (($f & _MULTI)) {
+    if ($is_multi) {
 	return unless my ($p, $k) = &__has_path;
 	push @_, $id;
 	$p->[-1]->{ $k->[-1] }->[ _na ]->{ $id };
@@ -292,8 +284,7 @@ sub _get_path_attrs {
 }
 
 sub _get_path_node {
-    my $m = $_[0];
-    my $f = $m->[ _f ];
+    my $f = (my $m = $_[0])->[ _f ];
     goto &__get_path_node # Slow path
 	if !($m->[ _arity ] == 2 && @_ == 3 && !($f & (_HYPER|_REF|_UNIQ)));
     &__arg;
@@ -304,12 +295,10 @@ sub _get_path_node {
 }
 
 sub _del_path_attrs {
-    my $f = $_[0]->[ _f ];
-    my $id = pop if ($f & _MULTI);
+    my $id = pop if my $is_multi = ((my $f = $_[0]->[ _f ]) & _MULTI);
     &__arg;
-    my ($m) = @_;
     return unless my ($n) = &__get_path_node;
-    if ($f & _MULTI) {
+    if ($is_multi) {
 	push @_, $id;
 	$n->[ _na ]->{ $id } = undef;
 	return 1;
