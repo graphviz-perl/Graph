@@ -182,15 +182,15 @@ sub __set_path {
     @k = ('') if !@k;
     my $l = $k[-1];
     if (exists $p[-1]->{ $l }) {
-	if ($inc_if_exists) {
-	    my $n = $p[-1]->{ $l };
+	if ($inc_if_exists and &_is_COUNTMULTI) {
+	    my $nm = (my $n = $p[-1]->{ $l })->[ _nm ];
 	    if ($is_multi) {
 		if ($id eq _GEN_ID) {
-		    $n->[ _nc ]++ while exists $n->[ _nm ]->{ $n->[ _nc ] };
+		    $n->[ _nc ]++ while exists $nm->{ $n->[ _nc ] };
 		    $id = $n->[ _nc ];
 		}
-		$n->[ _nm ]->{ $id } = { };
-	    } elsif (($f & _COUNT)) {
+		$nm->{ $id } = { };
+	    } else {
 		$n->[ _nc ]++;
 	    }
 	}
