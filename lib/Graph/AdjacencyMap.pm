@@ -138,23 +138,10 @@ sub has_paths {
 
 sub __has_path {
     &__arg;
-    my ($m, @a) = @_;
-    my $f = $m->[ _f ];
-    return if !defined(my $p = $m->[ _s ]);
-    return if ($f & _HYPER) and !defined($p = $p->[ @_ - 1 ]);
-    my @p = $p;
-    return (\@p, ['']) if !@a;
-    my @k;
-    @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
-    while (@a) {
-	my $k = shift @a;
-	if (@a) {
-	    return unless defined($p = $p->{ $k });
-	    push @p, $p;
-	}
-	push @k, $k;
-    }
-    return (\@p, \@k);
+    my ($f, $s, @k) = (@{ $_[0] }[ _f, _s ], @_[1..$#_]);
+    @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
+    return if !defined($s = ($f & _HYPER) ? $s->[ @k ] : $s);
+    ([$s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]], [@k?@k:'']);
 }
 
 sub set_path {
