@@ -45,9 +45,9 @@ sub test_adjmap {
     ];
     my $label = "$class(" . Graph::AdjacencyMap::_stringify_fields($args->[0]) . ", $args->[1])";
     my $got = [ $m->paths_non_existing([ $path_expected ]) ];
+    is_deeply $got, [ $path_expected ], $label or diag explain $got;
     ok( !$m->has_paths, $label );
     ok( !$m->${ \$map->{has} }(@$path), $label );
-    is_deeply $got, [ $path_expected ], $label or diag explain $got;
     $got = [ $m->${ \$map->{set} }(@$path) ];
     is_deeply( $got, [ $is_multi ? $path->[-1] : 0 ], $label ) or diag explain $got;
     ok( $m->has_paths, $label );
@@ -70,14 +70,12 @@ sub test_adjmap {
     eval { $m->stringify }; # here so Light still exercise
     is $@, '', $label;
     if (@$path_expected == 1) {
-	my @new_path = @$path_expected;
-	$new_path[0] = 'newname';
-	ok $m->rename_path(@$path_expected, @new_path, $label);
+	ok $m->rename_path(@$path_expected, 'newname', $label);
 	ok( !$m->${ \$map->{has} }(@$path), $label );
-	ok( $m->${ \$map->{has} }(@new_path, $is_multi ? $path->[-1] : ()), $label );
-	ok $m->rename_path(@new_path, @$path_expected), $label;
+	ok( $m->${ \$map->{has} }('newname', $is_multi ? $path->[-1] : ()), $label );
+	ok $m->rename_path('newname', @$path_expected), $label;
 	ok( $m->${ \$map->{has} }(@$path), $label );
-	ok( !$m->${ \$map->{has} }(@new_path, $is_multi ? $path->[-1] : ()), $label );
+	ok( !$m->${ \$map->{has} }('newname', $is_multi ? $path->[-1] : ()), $label );
     }
     ok( !$m->_has_path_attrs(@$path), $label );
     is( $m->_set_path_attr(@$path, 'say', 'hi'), 'hi', $label );
@@ -86,12 +84,11 @@ sub test_adjmap {
     is_deeply [ $m->_get_path_attr_names(@$path) ], [ 'say' ], $label;
     is_deeply [ $m->_get_path_attr_values(@$path) ], [ 'hi' ], $label;
     if (@$path_expected == 1) {
-	my @new_path = @$path_expected;
 	my @new_path_full = @$path;
-	$new_path_full[0] = $new_path[0] = 'newname';
-	ok $m->rename_path(@$path_expected, @new_path), $label;
+	$new_path_full[0] = 'newname';
+	ok $m->rename_path(@$path_expected, 'newname'), $label;
 	is_deeply [ $m->_get_path_attr_names(@new_path_full) ], [ 'say' ], $label;
-	ok $m->rename_path(@new_path, @$path_expected), $label;
+	ok $m->rename_path('newname', @$path_expected), $label;
 	is_deeply [ $m->_get_path_attr_names(@$path) ], [ 'say' ], $label;
     }
     $got = $m->_get_path_attrs(@$path);
