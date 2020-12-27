@@ -311,13 +311,12 @@ sub _del_path_attrs {
     my $id = pop if ($f & _MULTI);
     &__arg;
     my ($m) = @_;
+    return unless my ($n) = &__get_path_node;
     if ($f & _MULTI) {
-	return unless my ($p, $k) = &__has_path;
 	push @_, $id;
-	$p->[-1]->{ $k->[-1] }->[ _na ]->{ $id } = undef;
+	$n->[ _na ]->{ $id } = undef;
 	return 1;
     } else {
-	return undef unless my ($n) = &__get_path_node;
 	return 0 if !ref $n;
 	my $e = _na == $#$n && keys %{ $n->[ _na ] } ? 1 : 0;
 	$#$n = _na - 1;
