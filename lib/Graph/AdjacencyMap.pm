@@ -190,11 +190,8 @@ sub __has_path {
 
 sub set_path {
     &__arg;
-    my ($m, @a) = @_;
-    my $f = $m->[ _f ];
-    return if !@a && !($f & _HYPER);
-    my ($p, $k) = &__set_path;
-    $m->__set_path_node( $p, $k->[-1], @a );
+    return if @_ < 2 && !($_[0]->[ _f ] & _HYPER);
+    goto &set_path_by_multi_id;
 }
 
 sub __set_path {
