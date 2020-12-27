@@ -272,12 +272,11 @@ sub rename_path {
 sub _get_path_attrs {
     my $id = pop if my $is_multi = ((my $f = $_[0]->[ _f ]) & _MULTI);
     &__arg;
+    return unless my ($n) = &__get_path_node;
     if ($is_multi) {
-	return unless my ($p, $k) = &__has_path;
 	push @_, $id;
-	$p->[-1]->{ $k->[-1] }->[ _na ]->{ $id };
+	$n->[ _na ]->{ $id };
     } else {
-	return unless my ($n) = &__get_path_node;
 	return $n->[ _na ] if ref $n && $#$n == _na;
 	return;
     }
