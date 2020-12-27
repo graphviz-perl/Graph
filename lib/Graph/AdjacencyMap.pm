@@ -136,21 +136,6 @@ sub has_paths {
     @{ $_[0]->[ _i ] || [] };
 }
 
-sub _new_node {
-    my ($m, $n, $id) = @_;
-    my $f = $m->[ _f ];
-    my $i = $m->[ _n ]++;
-    if (($f & _MULTI)) {
-	$id = 0 if $id eq _GEN_ID;
-	$$n = [ $i, 0, undef, { $id => { } } ];
-    } elsif (($f & _COUNT)) {
-	$$n = [ $i, 1 ];
-    } else {
-	$$n = $i;
-    }
-    return $i;
-}
-
 sub __has_path {
     &__arg;
     my ($m, @a) = @_;
@@ -211,9 +196,16 @@ sub __set_path {
 	}
 	return (\@p, \@k, $id);
     }
-    my $i = $m->_new_node( \$p[-1]->{ $l }, $id );
-    $m->[ _i ][ $i ] = \@path;
-    (\@p, \@k, defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i);
+    $m->[ _i ][ my $i = $m->[ _n ]++ ] = \@path;
+    if ($is_multi) {
+	$id = 0 if $id eq _GEN_ID;
+	$p[-1]->{ $l } = [ $i, 0, undef, { $id => { } } ];
+    } elsif (($f & _COUNT)) {
+	$p[-1]->{ $l } = [ $i, 1 ];
+    } else {
+	$p[-1]->{ $l } = $i;
+    }
+    (\@p, \@k, $is_multi ? $id : $i);
 }
 
 sub _set_path_attr_common {
