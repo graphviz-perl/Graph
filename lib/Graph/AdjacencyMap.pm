@@ -160,25 +160,25 @@ sub __set_path {
     my @path = @a;
     @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
     my $p = (($f & _HYPER) ? $m->[ _s ]->[ @a ] : $m->[ _s ]) ||= { };
-    my @p = ($p, map $p = $p->{ $_ } ||= {}, @a[0..$#a-1]);
-    my $l = ( my @k = @a ? @a : '' )[-1];
+    $p = $p->{ $_ } ||= {} for @a[0..$#a-1];
+    my $l = ( @a ? @a : '' )[-1];
     if (exists $p->{ $l }) {
-	return (\@p, \@k) if !($inc_if_exists and $is_countmulti);
+	return ($p, $l) if !($inc_if_exists and $is_countmulti);
 	my $nm = (my $n = $p->{ $l })->[ _nm ];
-	$n->[ _nc ]++, return (\@p, \@k) if !$is_multi;
+	$n->[ _nc ]++, return ($p, $l) if !$is_multi;
 	if ($id eq _GEN_ID) {
 	    $n->[ _nc ]++ while exists $nm->{ $n->[ _nc ] };
 	    $id = $n->[ _nc ];
 	}
 	$nm->{ $id } = { };
-	return (\@p, \@k, $id);
+	return ($p, $l, $id);
     }
     $m->[ _i ][ my $i = $m->[ _n ]++ ] = \@path;
-    return (\@p, \@k, $p->{ $l } = $i) if !$is_countmulti;
+    return ($p, $l, $p->{ $l } = $i) if !$is_countmulti;
     $p->{ $l } = $is_multi
 	? [$i, 0, undef, { ($id = ($id eq _GEN_ID) ? 0 : $id) => {} }]
 	: [$i, 1];
-    (\@p, \@k, $is_multi ? $id : $i);
+    ($p, $l, $is_multi ? $id : $i);
 }
 
 sub _set_path_attr_common {
@@ -186,14 +186,11 @@ sub _set_path_attr_common {
     my $id   = pop if ($f & _MULTI);
     &__arg;
     push @_, $id if ($f & _MULTI);
-    my ($m, @a) = @_;
     push @_, 0;
-    my ($p, $k) = &__set_path;
-    my $l = $k->[-1];
-    return \$p->[-1]->{ $l }->[ _nm ]->{ $id } if ($f & _MULTI);
-    # Extend the node if it is a simple id node.
-    $p->[-1]->{ $l } = [ $p->[-1]->{ $l }, 1 ] unless ref $p->[-1]->{ $l };
-    return \$p->[-1]->{ $l }->[ _na ];
+    my ($p, $l) = &__set_path;
+    return \$p->{ $l }->[ _nm ]->{ $id } if ($f & _MULTI);
+    $p->{ $l } = [$p->{ $l }, 1] if !ref $p->{ $l }; # Extend if simple id node
+    return \$p->{ $l }->[ _na ];
 }
 
 sub set_path_by_multi_id {
