@@ -151,22 +151,6 @@ sub _new_node {
     return $i;
 }
 
-sub _inc_node {
-    my ($m, $n, $id) = @_;
-    my $f = $m->[ _f ];
-    if (($f & _MULTI)) {
-	if ($id eq _GEN_ID) {
-	    $$n->[ _nc ]++
-		while exists $$n->[ _nm ]->{ $$n->[ _nc ] };
-	    $id = $$n->[ _nc ];
-	}
-	$$n->[ _nm ]->{ $id } = { };
-    } elsif (($f & _COUNT)) {
-	$$n->[ _nc ]++;
-    }
-    return $id;
-}
-
 sub __has_path {
     &__arg;
     my ($m, @a) = @_;
@@ -212,7 +196,21 @@ sub __set_path {
     }
     @k = ('') if !@k;
     my $l = $k[-1];
-    return (\@p, \@k, $inc_if_exists ? $m->_inc_node( \$p[-1]->{ $l }, $id ) : ()) if exists $p[-1]->{ $l };
+    if (exists $p[-1]->{ $l }) {
+	if ($inc_if_exists) {
+	    my $n = $p[-1]->{ $l };
+	    if ($is_multi) {
+		if ($id eq _GEN_ID) {
+		    $n->[ _nc ]++ while exists $n->[ _nm ]->{ $n->[ _nc ] };
+		    $id = $n->[ _nc ];
+		}
+		$n->[ _nm ]->{ $id } = { };
+	    } elsif (($f & _COUNT)) {
+		$n->[ _nc ]++;
+	    }
+	}
+	return (\@p, \@k, $id);
+    }
     my $i = $m->_new_node( \$p[-1]->{ $l }, $id );
     $m->[ _i ][ $i ] = \@path;
     (\@p, \@k, defined $id ? ($id eq _GEN_ID ? $$id : $id) : $i);
