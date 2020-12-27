@@ -25,7 +25,7 @@ sub _new {
 }
 
 sub set_path {
-    my ($m, @args) = @_;
+    my ($m, @args) = ($_[0], @{ $_[1] });
     return if @args == 0;
     my ($n, $f, $a, $i, $s) = @$m;
     my $e0 = shift @args;
@@ -58,9 +58,8 @@ sub _paths_lookup {
 }
 
 sub has_path {
-    my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @_[1..$#_] );
+    my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @{ $_[1] } );
     return 0 unless $a == @args;
-    my $e;
     $s = $s->{ shift @args } while defined $s and @args;
     defined $s ? 1 : 0;
 }
@@ -77,13 +76,11 @@ sub _get_path_count {
 sub has_paths { keys %{ $_[0]->[ _s ] } }
 
 sub del_path {
-    my $m = shift;
-    my ($n, $i, $s, $attr) = @$m[ _n, _i, _s, _attr ];
-    my $e0 = shift;
-    return 0 if !defined($n = $s->{ $e0 });
-    if (@_ == 1) {
-	my $e1 = shift;
-	return 0 if !defined($n = $n->{ $e1 }); # "actual" n ie id
+    my ($i, $s, $attr, @args) = ( @{ my $m = $_[0] }[ _i, _s, _attr ], @{ $_[1] } );
+    return 0 if !defined(my $n = $s->{ my $e0 = shift @args });
+    if (@args == 1) {
+	my $e1 = shift @args;
+	return 0 if !defined($n = $n->{ $e1 });
 	delete $s->{ $e0 }->{ $e1 };
 	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
 	delete $attr->{ $e0 }->{ $e1 };
@@ -108,28 +105,21 @@ sub rename_path {
 }
 
 sub _set_path_attr_common {
-    &Graph::AdjacencyMap::__arg;
     &set_path;
-    my ($m, @e) = @_;
-    my $attr = $m->[ _attr ];
+    my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
     $attr = $attr->{ shift @e } ||= {} while $attr and @e > 1;
     \$attr->{ $e[0] };
 }
 
 sub _get_path_attrs {
-    &Graph::AdjacencyMap::__arg;
-    my ($m, @e) = @_;
-    my $attr = $m->[ _attr ];
+    my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
     $attr = $attr->{ shift @e } while $attr and @e > 0;
-    return $attr if $attr;
-    return;
+    $attr ? $attr : ();
 }
 
 sub _del_path_attrs {
-    &Graph::AdjacencyMap::__arg;
     return undef unless &has_path;
-    my ($m, @e) = @_;
-    my $attr = $m->[ _attr ];
+    my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
     $attr = $attr->{ shift @e } while $attr and @e > 1;
     return 0 unless $attr and exists $attr->{ $e[0] };
     delete $attr->{ $e[0] };

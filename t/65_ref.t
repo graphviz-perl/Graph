@@ -6,25 +6,26 @@ use Graph::AdjacencyMap qw(:flags);
 use Graph::AdjacencyMap::Light;
 
 use Math::Complex;
+use List::Util qw(uniq);
 
 my $t = [1, 2];
 my $u = bless { 3, 4 }, "Ubu";
 my $v = cplx(3, 4);
 my $z = cplx(4, 5);
 my @MAP_TESTS = (
-    [ 'Graph::AdjacencyMap::Light', [0, 1], ['a'] ],
-    [ 'Graph::AdjacencyMap::Light', [0, 2], [qw(a b)] ],
-    [ 'Graph::AdjacencyMap', [_REF, 1], [$t] ],
-    [ 'Graph::AdjacencyMap', [_REF, 2], [$u, $v] ],
-    [ 'Graph::AdjacencyMap', [_UNIQ, 2], [qw(a b)] ],
-    [ 'Graph::AdjacencyMap', [_UNIQ|_HYPER, 2], [qw(a a b)] ],
-    [ 'Graph::AdjacencyMap', [_HYPER, 2], [qw()] ],
-    [ 'Graph::AdjacencyMap', [_HYPER, 2], [qw(a b c d)] ],
-    [ 'Graph::AdjacencyMap', [0, 2], [qw(a b)] ],
-    [ 'Graph::AdjacencyMap', [_MULTI, 1], [qw(a b)] ],
-    [ 'Graph::AdjacencyMap', [_MULTI, 2], [qw(a b c)] ],
-    [ 'Graph::AdjacencyMap', [_COUNT, 1], [qw(a)] ],
-    [ 'Graph::AdjacencyMap', [_COUNT, 2], [qw(a b)] ],
+    [ 'Graph::AdjacencyMap::Light', [0, 1], [['a']] ],
+    [ 'Graph::AdjacencyMap::Light', [0, 2], [[qw(a b)]] ],
+    [ 'Graph::AdjacencyMap', [_REF, 1], [[$t]] ],
+    [ 'Graph::AdjacencyMap', [_REF, 2], [[$u, $v]] ],
+    [ 'Graph::AdjacencyMap', [_UNIQ, 2], [[qw(a b)]] ],
+    [ 'Graph::AdjacencyMap', [_UNIQ|_HYPER, 2], [[qw(a a b)]] ],
+    [ 'Graph::AdjacencyMap', [_HYPER, 2], [[qw()]] ],
+    [ 'Graph::AdjacencyMap', [_HYPER, 2], [[qw(a b c d)]] ],
+    [ 'Graph::AdjacencyMap', [0, 2], [[qw(a b)]] ],
+    [ 'Graph::AdjacencyMap', [_MULTI, 1], [['a'], 'b'] ],
+    [ 'Graph::AdjacencyMap', [_MULTI, 2], [[qw(a b)], 'c'] ],
+    [ 'Graph::AdjacencyMap', [_COUNT, 1], [[qw(a)]] ],
+    [ 'Graph::AdjacencyMap', [_COUNT, 2], [[qw(a b)]] ],
 );
 my @METHOD_MAP = (
     { has => 'has_path', del => 'del_path', set => 'set_path' },
@@ -32,91 +33,87 @@ my @METHOD_MAP = (
 );
 
 sub test_adjmap {
-    my ($class, $args, $path) = @_;
+    my ($class, $args, $path_maybe_id) = @_;
+    my ($path, $maybe_id) = @$path_maybe_id;
     my $m = $class->_new(@$args);
     my $is_multi = $m->_is_MULTI ? 1 : 0;
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
-    my %u;
-    my $path_expected = [
-	$is_multi ? @$path[0..$#$path-1] :
-	$m->_is_UNIQ ? grep !$u{$_}++, @$path :
-	@$path
-    ];
+    my $path_expected = [ $m->_is_UNIQ ? uniq @$path : @$path ];
     my $label = "$class(" . Graph::AdjacencyMap::_stringify_fields($args->[0]) . ", $args->[1])";
     my $got = [ $m->paths_non_existing([ $path_expected ]) ];
     is_deeply $got, [ $path_expected ], $label or diag explain $got;
     ok( !$m->has_paths, $label );
-    ok( !$m->${ \$map->{has} }(@$path), $label );
-    $got = [ $m->${ \$map->{set} }(@$path) ];
-    is_deeply( $got, [ $is_multi ? $path->[-1] : 0 ], $label ) or diag explain $got;
+    ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
+    $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
+    is_deeply( $got, [ $is_multi ? $maybe_id : 0 ], $label ) or diag explain $got;
     ok( $m->has_paths, $label );
-    ok( $m->${ \$map->{has} }(@$path), $label );
-    $m->${ \$map->{set} }(@$path); # second time
-    is( $m->_get_path_count(@$path_expected), $maybe_count, $label );
-    ok( $m->${ \$map->{del} }(@$path), $label ) for 1..$maybe_count;
-    ok( !$m->${ \$map->{has} }(@$path), $label );
-    is( $m->_get_path_count(@$path_expected), undef, $label );
-    $got = [ $m->${ \$map->{set} }(@$path) ];
-    is_deeply( $got, [ $is_multi ? $path->[-1] : 1 ], $label ) or diag explain $got;
-    is( $m->_get_path_count(@$path_expected), 1, $label );
+    ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
+    $m->${ \$map->{set} }(@$path_maybe_id); # second time
+    is( $m->_get_path_count($path_expected), $maybe_count, $label );
+    ok( $m->${ \$map->{del} }(@$path_maybe_id), $label ) for 1..$maybe_count;
+    ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
+    is( $m->_get_path_count($path_expected), undef, $label );
+    $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
+    is_deeply( $got, [ $is_multi ? $maybe_id : 1 ], $label ) or diag explain $got;
+    is( $m->_get_path_count($path_expected), 1, $label );
     $got = [ $m->paths ];
     is_deeply $got, [ $path_expected ], $label or diag explain $got;
-    ok( $m->${ \$map->{has} }(@$path), $label );
+    ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
     $got = [ $m->get_ids_by_paths([ $path_expected ]) ];
     is_deeply $got, [ 1 ], $label or diag explain $got;
     my @path_back = $m->get_paths_by_ids([ map [$_], @$got ]);
     is_deeply( $path_back[0][0], $path_expected, $label ) or diag explain \@path_back;
-    eval { $m->stringify }; # here so Light still exercise
+    eval { $m->stringify };
     is $@, '', $label;
     if (@$path_expected == 1) {
 	ok $m->rename_path(@$path_expected, 'newname', $label);
-	ok( !$m->${ \$map->{has} }(@$path), $label );
-	ok( $m->${ \$map->{has} }('newname', $is_multi ? $path->[-1] : ()), $label );
+	ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
+	ok( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), $label );
 	ok $m->rename_path('newname', @$path_expected), $label;
-	ok( $m->${ \$map->{has} }(@$path), $label );
-	ok( !$m->${ \$map->{has} }('newname', $is_multi ? $path->[-1] : ()), $label );
+	ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
+	ok( !$m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), $label );
     }
-    ok( !$m->_has_path_attrs(@$path), $label );
-    is( $m->_set_path_attr(@$path, 'say', 'hi'), 'hi', $label );
-    ok( $m->_has_path_attr(@$path, 'say'), $label );
-    ok( $m->_has_path_attrs(@$path), $label );
-    is_deeply [ $m->_get_path_attr_names(@$path) ], [ 'say' ], $label;
-    is_deeply [ $m->_get_path_attr_values(@$path) ], [ 'hi' ], $label;
+    ok( !$m->_has_path_attrs(@$path_maybe_id), $label );
+    is( $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label );
+    ok( $m->_has_path_attr(@$path_maybe_id, 'say'), $label );
+    ok( $m->_has_path_attrs(@$path_maybe_id), $label );
+    is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ 'say' ], $label;
+    is_deeply [ $m->_get_path_attr_values(@$path_maybe_id) ], [ 'hi' ], $label;
     if (@$path_expected == 1) {
-	my @new_path_full = @$path;
-	$new_path_full[0] = 'newname';
+	my @new_path_full = @$path_maybe_id;
+	$new_path_full[0] = ['newname'];
 	ok $m->rename_path(@$path_expected, 'newname'), $label;
 	is_deeply [ $m->_get_path_attr_names(@new_path_full) ], [ 'say' ], $label;
 	ok $m->rename_path('newname', @$path_expected), $label;
-	is_deeply [ $m->_get_path_attr_names(@$path) ], [ 'say' ], $label;
+	is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ 'say' ], $label;
     }
-    $got = $m->_get_path_attrs(@$path);
+    $got = $m->_get_path_attrs(@$path_maybe_id);
     is_deeply $got, { say => 'hi' }, $label or diag explain $got;
     $got = { %$got, extra => 'hello' };
-    $got = $m->_set_path_attrs(@$path, $got);
-    is_deeply [ sort $m->_get_path_attr_names(@$path) ], [ qw(extra say) ], $label;
-    is_deeply [ $m->_get_path_attr(@$path, 'extra') ], [ qw(hello) ], $label;
-    $m->_del_path_attr(@$path, 'extra');
-    is_deeply [ $m->_get_path_attr_names(@$path) ], [ qw(say) ], $label;
-    $got = [ $m->_get_path_attrs(@$path) ];
+    $got = $m->_set_path_attrs(@$path_maybe_id, $got);
+    is_deeply [ sort $m->_get_path_attr_names(@$path_maybe_id) ], [ qw(extra say) ], $label;
+    is_deeply [ $m->_get_path_attr(@$path_maybe_id, 'extra') ], [ qw(hello) ], $label;
+    $m->_del_path_attr(@$path_maybe_id, 'extra');
+    is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ qw(say) ], $label;
+    $got = [ $m->_get_path_attrs(@$path_maybe_id) ];
     is_deeply( $got, [ { say => 'hi' } ] ), $label or diag explain $got;
-    $m->_del_path_attr(@$path, 'say');
-    is_deeply [ $m->_get_path_attr_names(@$path) ], [ ], $label;
-    is( $m->_get_path_count(@$path_expected), 1, $label );
-    $m->_set_path_attr(@$path, 'say', 'hi');
-    $m->_del_path_attrs(@$path);
-    ok( !$m->_has_path_attr(@$path, 'say'), $label );
-    is( $m->_get_path_count(@$path_expected), 1, $label );
+    $m->_del_path_attr(@$path_maybe_id, 'say');
+    is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ ], $label;
+    is( $m->_get_path_count($path_expected), 1, $label );
+    $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
+    $m->_del_path_attrs(@$path_maybe_id);
+    ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );
+    is( $m->_get_path_count($path_expected), 1, $label );
     if ($is_multi) {
-	is $m->${ \$map->{set} }(@$path_expected, _GEN_ID), 0, $label;
-	ok( $m->set_path_by_multi_id(@$path_expected, 'hello'), $label );
-	$got = [ sort $m->get_multi_ids(@$path_expected) ];
-	is_deeply $got, [ sort $path->[-1], qw(0 hello) ], $label or diag explain $got;
+	is $m->${ \$map->{set} }($path_expected, _GEN_ID), 0, $label;
+	ok( $m->set_path_by_multi_id($path_expected, 'hello'), $label );
+	$got = [ sort $m->get_multi_ids($path_expected) ];
+	is_deeply $got, [ sort $path_maybe_id->[-1], qw(0 hello) ], $label or diag explain $got;
     }
-    $m->_set_path_attr(@$path, 'say', 'hi');
-    $m->${ \$map->{del} }(@$path);
-    ok( !$m->_has_path_attr(@$path, 'say'), $label );
+    $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
+    $m->${ \$map->{del} }(@$path_maybe_id);
+    ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );
 }
 
 test_adjmap(@$_) for @MAP_TESTS;

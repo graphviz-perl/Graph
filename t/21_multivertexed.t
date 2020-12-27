@@ -35,7 +35,7 @@ ok( $g->delete_vertex_by_id('a', 'blue') );
 ok(!$g->has_vertex_by_id('a', 'blue') );
 ok( $g->has_vertex_by_id('a', 'red') );
 
-ok(!$g->delete_vertex_by_id('a', 'green') );
+ok( $g->delete_vertex_by_id('a', 'green') );
 ok(!$g->has_vertex_by_id('a', $_)) for qw(blue green);
 
 ok( $g->has_vertex_by_id('a', 'red') );
