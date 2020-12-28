@@ -1125,8 +1125,11 @@ sub as_hashes {
             }
         }
     } else {
-        $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {}
-            for $g->edges;
+	for ($g->edges) {
+	    $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {};
+	    $e{ $_->[1] }{ $_->[0] } = $g->get_edge_attributes(@$_) || {}
+		if !$is_directed;
+	}
     }
     ( \%n, $is_hyper ? \@e : \%e );
 }
