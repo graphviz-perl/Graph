@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 36;
+use Test::More tests => 62;
 
 use Graph::Undirected;
 use Graph::Directed;
@@ -17,6 +17,44 @@ my @EDGES = (
 );
 $g0->add_edge(@$_) for @EDGES;
 $g1->add_edge(@$_) for @EDGES;
+
+# undirected, directed
+my %SUCCESSORS = (
+    a => [ [qw(b c d e f)], [qw(b c d e f)] ],
+    b => [ [qw(a c d e f)], [qw(c d e f)] ],
+    c => [ [qw(a b d e f)], [qw(b)] ],
+    d => [ [qw(a b c e f)], [qw(b c e f)] ],
+    e => [ [qw(a b c d f)], [qw(b c f)] ],
+    f => [ [qw(a b c d e)], [qw(b c)] ],
+);
+for my $v (sort keys %SUCCESSORS) {
+    my ($u, $d) = @{ $SUCCESSORS{$v} };
+    is("@{[sort $g0->successors($v)]}", "@$u", "successors u $v");
+    is("@{[sort $g1->successors($v)]}", "@$d", "successors d $v");
+}
+
+my %PREDECESSORS = (
+    a => [ [qw(b c d e f)], [qw()] ],
+    b => [ [qw(a c d e f)], [qw(a c d e f)] ],
+    c => [ [qw(a b d e f)], [qw(a b d e f)] ],
+    d => [ [qw(a b c e f)], [qw(a b)] ],
+    e => [ [qw(a b c d f)], [qw(a b d)] ],
+    f => [ [qw(a b c d e)], [qw(a b d e)] ],
+);
+for my $v (sort keys %PREDECESSORS) {
+    my ($u, $d) = @{ $PREDECESSORS{$v} };
+    is("@{[sort $g0->predecessors($v)]}", "@$u", "predecessors u $v");
+    is("@{[sort $g1->predecessors($v)]}", "@$d", "predecessors d $v");
+}
+
+is_deeply [ $g0->as_hashes ], [
+    { map +($_ => {}), keys %SUCCESSORS },
+    { map +($_ => { map +($_ => {}), @{ $SUCCESSORS{$_}[0] } }), keys %SUCCESSORS },
+], "undirected as_hashes" or diag explain [ $g0->as_hashes ];
+is_deeply [ $g1->as_hashes ], [
+    { map +($_ => {}), keys %SUCCESSORS },
+    { map +($_ => { map +($_ => {}), @{ $SUCCESSORS{$_}[1] } }), keys %SUCCESSORS },
+], "directed as_hashes" or diag explain [ $g1->as_hashes ];
 
 is($g0, 'a=b,a=c,a=d,a=e,a=f,b=c,b=d,b=e,b=f,c=d,c=e,c=f,d=e,d=f,e=f')
     for 1..10;
