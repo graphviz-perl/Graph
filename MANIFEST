@@ -115,7 +115,6 @@ t/u_cd_rv.t
 t/u_dl_uf.t
 t/u_jh_va.t
 t/u_mn_va.t
-t/u_mo_rv.t
 t/u_ng_mst.t
 t/u_ng_path.t
 t/u_ng_scc.t
@@ -123,8 +122,6 @@ t/u_rb_cc.t
 t/u_re_sd.t
 t/u_ro_ra.t
 t/u_sc_me.t
-t/u_sn_sva.t
-t/u_te_ae.t
 t/u_te_ea.t
 t/u_te_me.t
 TODO
