@@ -142,8 +142,6 @@ sub __has_path {
 }
 
 sub set_path {
-    &__arg;
-    return if !@{ $_[1] } && !($_[0]->[ _f ] & _HYPER);
     push @_, 1;
     (&__set_path)[0];
 }
@@ -177,7 +175,6 @@ sub __set_path {
 }
 
 sub _set_path_attr_common {
-    &__arg;
     push @_, 0;
     my ($i) = &__set_path;
     my $attr = (my $m = $_[0])->[ _attr ];
@@ -247,23 +244,20 @@ sub rename_path {
 }
 
 sub _get_path_attrs {
-    &__arg;
     return unless my ($i) = &__has_path;
     my $attrs = (my $m = $_[0])->[ _attr ][ $i ];
     ($m->[ _f ] & _MULTI) ? $attrs->{ $_[2] } : $attrs;
 }
 
 sub _del_path_attrs {
-    my $is_multi = ((my $m = $_[0])->[ _f ] & _MULTI);
-    &__arg;
     return unless my ($i) = &__has_path;
-    my $attr = $m->[ _attr ];
-    return $attr->[ $i ]{ $_[2] } = undef, 1 if $is_multi;
+    my $attr = (my $m = $_[0])->[ _attr ];
+    return $attr->[ $i ]{ $_[2] } = undef, 1 if ($m->[ _f ] & _MULTI);
     delete $attr->[ $i ];
 }
 
 sub get_paths_by_ids {
-    my ($i, $m, $list) = ( @{ $_[0] }[ _i ], @_ );
+    my ($i, undef, $list) = ( @{ $_[0] }[ _i ], @_ );
     map [ map $i->[ $_ ], @$_ ], @$list;
 }
 
