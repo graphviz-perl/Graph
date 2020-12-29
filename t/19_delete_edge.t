@@ -54,7 +54,7 @@ ok(   $h->has_edge("b", "y") );
 $h->delete_edge('a', 'x');
 ok(   $h->has_edge("a", "x") );
 $h->delete_edge('a', 'x');
-ok( ! $h->has_edge("a", "x") );
+is $h, "b-y,a,x";
 
 $h->delete_edges('b', 'y');
 ok(   $h->has_edges("b", "y") );

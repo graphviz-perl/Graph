@@ -128,7 +128,7 @@ sub _ids {
 }
 
 sub has_paths {
-    @{ $_[0]->[ _i ] || [] };
+    grep defined, @{ $_[0]->[ _i ] || [] };
 }
 
 sub __has_path {
