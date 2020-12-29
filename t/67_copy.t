@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 23;
+use Test::More tests => 42;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -37,6 +37,44 @@ is $g2->transpose, "a-c,b-a,c-b,d-c";
 is $g3->transpose, "a=b,a=c,b=c,c=d";
 is $g4->transpose, "a-b,b-a,c-b";
 is $g5->transpose, "a=b,b=c";
+
+my $g6 = Graph->new;
+is($g6->complete->edges, 0);
+is($g6->complement->edges, 0);
+
+my $g7 = Graph::Directed->new();
+$g7->add_edge(qw(a b));
+$g7->add_edge(qw(a c));
+is($g7, "a-b,a-c");
+is($g7->complete, "a-b,a-c,b-a,b-c,c-a,c-b");
+is($g7->complement, "b-a,b-c,c-a,c-b");
+
+my $g8 = Graph::Undirected->new();
+$g8->add_edge(qw(a b));
+$g8->add_edge(qw(a c));
+is($g8, "a=b,a=c");
+is($g8->complete, "a=b,a=c,b=c");
+is($g8->complement, "b=c,a");
+
+my $g9 = Graph::Directed->new(countedged => 1);
+$g9->add_edge(qw(a b));
+$g9->add_edge(qw(a c));
+my $c9 = $g9->complete_graph;
+is $c9, "a-b,a-c,b-a,b-c,c-a,c-b";
+for my $u (qw(a b c)) {
+    for my $v (qw(a b c)) {
+	next if $u eq $v;
+	is($c9->get_edge_count($u, $v), 1);
+    }
+}
+is $g9->complement_graph, "b-a,b-c,c-a,c-b";
+
+my $g10 = Graph::Undirected->new();
+$g10->add_edge(qw(a b));
+is scalar($g10->vertices), 2;
+my $c10 = $g10->complement_graph;
+is scalar($c10->vertices), 2;
+is scalar($c10->edges), 0;
 
 {
     my $g = Graph->new;
