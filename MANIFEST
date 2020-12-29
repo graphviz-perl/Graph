@@ -38,11 +38,7 @@ t/11_vertices.t
 t/12_has_vertex.t
 t/13_add_vertex.t
 t/14_delete_vertex.t
-t/15_has_edges.t
 t/16_edges.t
-t/17_has_edge.t
-t/18_add_edge.t
-t/19_delete_edge.t
 t/20_countvertexed.t
 t/21_multivertexed.t
 t/22_refvertexed.t
