@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 51;
+use Test::More tests => 49;
 
 use Graph;
 
@@ -54,15 +54,13 @@ sub test_prop {
 
 {
     my $g = Graph->new(edges => [[0, 1], [2, 3]]);
-    ok($g->has_edge(0, 1));
-    ok($g->has_edge(2, 3));
+    is $g, "0-1,2-3";
 }
 
 {
     my $g = Graph->new(vertices => [0], edges => [[1, 2], [2, 3]]);
     ok($g->has_vertex(0));
-    ok($g->has_edge(1, 2));
-    ok($g->has_edge(2, 3));
+    is $g, "1-2,2-3,0";
 }
 
 {

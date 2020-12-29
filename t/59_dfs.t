@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 272;
+use Test::More tests => 265;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -495,14 +495,6 @@ is($gb[10], "non_tree_edge a c", "non_tree_edge");
 is($gb[11], "down_edge a c",    "down_edge");
 is( @gb, 12 );
 
-ok( $tb->tree->has_edge('a', 'b'), "tree edge");
-ok( $tb->tree->has_edge('b', 'c'), "tree edge");
-ok( $tb->tree->has_edge('a', 'd'), "tree edge");
-
-ok(!$tb->tree->has_edge('c', 'a'), "non_tree edge");
-ok(!$tb->tree->has_edge('d', 'b'), "non_tree edge");
-ok(!$tb->tree->has_edge('a', 'c'), "non_tree edge");
-
 is( $tb->tree, "a-b,a-d,b-c", "tree" );
 
 is( $tb->preorder_by_vertex('a'), 0, "preorder of a" );
@@ -607,9 +599,8 @@ is($td1->get_state('zot'), undef, "get_state");
     use Graph::Directed;
     my $g = new Graph::Directed;
     ok($g = $g->add_edge('a','b'), "rt.cpan.org 4420");
-    ok($g->has_edge('a','b'));
     ok($g = $g->add_edge('b','a'));
-    ok($g->has_edge('b','a'));
+    is $g, "a-b,b-a";
     my @toposort;
     eval { @toposort = $g->toposort };
     like($@, qr/Graph::topological_sort: expected directed acyclic graph, got cyclic/);

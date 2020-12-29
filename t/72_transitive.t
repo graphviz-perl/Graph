@@ -1,110 +1,48 @@
 use strict; use warnings;
-use Test::More tests => 295;
+use Test::More tests => 235;
 
 use Graph::Directed;
 use Graph::Undirected;
 
 my $g0 = Graph::Directed->new;
-
 $g0->add_edge(qw(a b));
 $g0->add_edge(qw(a c));
 $g0->add_edge(qw(c d));
-
 ok(!$g0->is_transitive);
 
 my $t0 = Graph::TransitiveClosure->new($g0->deep_copy);
-
-ok( $t0->has_edge(qw(a a)));
-ok( $t0->has_edge(qw(a b)));
-ok( $t0->has_edge(qw(a c)));
-ok(!$t0->has_edge(qw(d c)));
-ok(!$t0->has_edge(qw(b a)));
-ok( $t0->has_edge(qw(b b)));
-ok(!$t0->has_edge(qw(b c)));
-ok(!$t0->has_edge(qw(b d)));
-ok(!$t0->has_edge(qw(c a)));
-ok(!$t0->has_edge(qw(c b)));
-ok( $t0->has_edge(qw(c c)));
-ok( $t0->has_edge(qw(c d)));
-ok(!$t0->has_edge(qw(d a)));
-ok(!$t0->has_edge(qw(d b)));
-ok(!$t0->has_edge(qw(d c)));
-ok( $t0->has_edge(qw(d d)));
-
+is $t0, "a-a,a-b,a-c,a-d,b-b,c-c,c-d,d-d";
 ok( $t0->is_transitive);
 
 my $r0 = Graph::TransitiveClosure->new($g0->deep_copy, reflexive => 0);
-
-ok(!$r0->has_edge(qw(a a)));
-ok( $r0->has_edge(qw(a b)));
-ok( $r0->has_edge(qw(a c)));
+is $r0, "a-b,a-c,a-d,c-d";
 ok !$r0->transitive_closure_matrix->is_transitive(qw(a a)), 'r0 !is_transitive a a';
 ok $r0->transitive_closure_matrix->is_transitive(qw(a c)), 'r0 is_transitive a c';
 ok !$r0->transitive_closure_matrix->is_transitive(qw(d a)), 'r0 !is_transitive d a';
-ok(!$r0->has_edge(qw(d c)));
-ok(!$r0->has_edge(qw(b a)));
-ok(!$r0->has_edge(qw(b b)));
-ok(!$r0->has_edge(qw(b c)));
-ok(!$r0->has_edge(qw(b d)));
-ok(!$r0->has_edge(qw(c a)));
-ok(!$r0->has_edge(qw(c b)));
-ok(!$r0->has_edge(qw(c c)));
-ok( $r0->has_edge(qw(c d)));
-ok(!$r0->has_edge(qw(d a)));
-ok(!$r0->has_edge(qw(d b)));
-ok(!$r0->has_edge(qw(d c)));
-ok(!$r0->has_edge(qw(d d)));
-
 ok( $r0->is_transitive);
 
 my $r1 = Graph::TransitiveClosure->new($g0->deep_copy, reflexive => 1);
-
-ok( $r1->has_edge(qw(a a)));
-ok( $r1->has_edge(qw(a b)));
-ok( $r1->has_edge(qw(a c)));
+is $r1, "a-a,a-b,a-c,a-d,b-b,c-c,c-d,d-d";
 ok $r1->transitive_closure_matrix->is_transitive(qw(a a)), 'r1 is_transitive a a';
 ok $r1->transitive_closure_matrix->is_transitive(qw(a c)), 'r1 is_transitive a c';
 ok !$r1->transitive_closure_matrix->is_transitive(qw(d a)), 'r1 !is_transitive d a';
-ok(!$r1->has_edge(qw(d c)));
-ok(!$r1->has_edge(qw(b a)));
-ok( $r1->has_edge(qw(b b)));
-ok(!$r1->has_edge(qw(b c)));
-ok(!$r1->has_edge(qw(b d)));
-ok(!$r1->has_edge(qw(c a)));
-ok(!$r1->has_edge(qw(c b)));
-ok( $r1->has_edge(qw(c c)));
-ok( $r1->has_edge(qw(c d)));
-ok(!$r1->has_edge(qw(d a)));
-ok(!$r1->has_edge(qw(d b)));
-ok(!$r1->has_edge(qw(d c)));
-ok( $r1->has_edge(qw(d d)));
-
 ok( $r1->is_transitive);
 
 my $g1 = Graph::Undirected->new;
-
 $g1->add_edge(qw(a b));
 $g1->add_edge(qw(a c));
 $g1->add_edge(qw(c d));
-
 ok(!$g1->is_transitive);
 
 my $t1 = Graph::TransitiveClosure->new($g1->deep_copy);
-
-ok $t1->has_edge(@$_) for (
-    [qw(a a)], [qw(a b)], [qw(a c)], [qw(d c)], [qw(b a)], [qw(b b)],
-    [qw(b c)], [qw(b d)], [qw(c a)], [qw(c b)], [qw(c c)], [qw(c d)],
-    [qw(d a)], [qw(d b)], [qw(d c)], [qw(d d)],
-);
+is $t1, "a=a,a=b,a=c,a=d,b=b,b=c,b=d,c=c,c=d,d=d";
 is("@{[$t1->path_vertices(qw(a d))]}", "a c d");
 is($t1->path_length(qw(a b)), 1);
-
 ok( $t1->is_transitive);
 
 my $g2 = Graph->new;
 $g2->add_weighted_edge(qw(a b 3));
 $g2->add_weighted_edge(qw(b c 1));
-
 ok(!$g2->is_transitive);
 
 my $t2 = Graph::TransitiveClosure->new($g2->deep_copy, path => 1);

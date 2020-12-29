@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 86;
+use Test::More tests => 83;
 
 use Graph;
 my $g = Graph->new;
@@ -92,9 +92,9 @@ is( scalar @name,       0 );
 is( scalar @val,        0 );
 
 ok( $g->delete_edge("c", "d") );
-ok(!$g->has_edge("c", "d"));
+is $g, "a-b";
 $g->add_weighted_edge("c", "d", 42);
-ok( $g->has_edge("c", "d") );
+is $g, "a-b,c-d";
 
 is( $g->get_edge_attribute("c", "d", "weight"),  42 );
 
@@ -102,11 +102,9 @@ is( $g->edges, 2 );
 
 ok( $g->delete_edge("c", "d") );
 ok( $g->delete_edge("e", "f") );
-ok(!$g->has_edge("c", "d"));
-ok(!$g->has_edge("e", "f"));
+is $g, "a-b,c,d";
 $g->add_weighted_edges("c", "d", 43, "e", "f", 44);
-ok( $g->has_edge("c", "d") );
-ok( $g->has_edge("e", "f") );
+is $g, "a-b,c-d,e-f";
 is( $g->get_edge_weight("c", "d"),  43 );
 is( $g->get_edge_weight("e", "f"),  44 );
 
@@ -115,8 +113,7 @@ is( $g->edges, 3 );
 ok( $g->delete_edge("c", "d") );
 ok( $g->delete_edge("d", "e") );
 $g->add_weighted_path("c", 45, "d", 46, "e");
-ok( $g->has_edge("c", "d") );
-ok( $g->has_edge("d", "e") );
+is $g, "a-b,c-d,d-e,e-f";
 is( $g->get_edge_weight("c", "d"),  45 );
 is( $g->get_edge_weight("d", "e"),  46 );
 

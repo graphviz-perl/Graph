@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 35;
+use Test::More tests => 28;
 
 use Graph;
 
@@ -30,10 +30,8 @@ use Graph;
     is($g->get_edge_weight('x', 'y'), undef);
     ok($g->has_vertex('b'));
     ok($g->has_vertex('c'));
-    ok($g->has_edge('b', 'c'));
     ok($g->has_vertex('x'));
     ok($g->has_vertex('y'));
-    ok($g->has_edge('x', 'y'));
 }
 
 {
@@ -43,7 +41,6 @@ use Graph;
     is($g->get_edge_weight('b', 'c'), 4);
     ok($g->has_vertex('b'));
     ok($g->has_vertex('c'));
-    ok($g->has_edge('b', 'c'));
 }
 
 {
@@ -69,10 +66,6 @@ use Graph;
     ok($g->has_vertex('a'));
     ok($g->has_vertex('b'));
     ok($g->has_vertex('c'));
-    ok($g->has_edge('a', 'b'));
-    ok($g->has_edge('b', 'c'));
-    ok($g->has_edge('c', 'a'));
-    ok($g->has_edge('c', 'b'));
 }
 
 {

@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 68;
+use Test::More tests => 63;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -10,11 +10,7 @@ ok( $g->add_edge_by_id('a', 'b', 'red') );
 
 is( $g->get_edge_count('a', 'b'), 1 );
 
-ok( $g->has_edge('a', 'b') );
-ok(!$g->has_edge('b', 'c') );
-
-ok( $g->has_edge('a', 'b') );
-ok(!$g->has_edge('b', 'c') );
+is $g, "a-b";
 
 ok( $g->has_edge_by_id('a', 'b', 'red') );
 ok(!$g->has_edge_by_id('a', 'b', 'blue') );
@@ -30,8 +26,7 @@ ok( $g->has_edge_by_id('a', 'b', 'blue') );
 ok( $g->has_edge_by_id('a', 'b', 'red') );
 
 $g->add_edge('a', 'b');
-ok( $g->has_edge('a', 'b') );
-ok(!$g->has_edge('b', 'c') );
+is $g, "a-b";
 
 is( $g->get_edge_count('a', 'b'), 3 );
 
@@ -148,7 +143,6 @@ like ( $@, qr/both countedged and multiedged/ );
     $graph->add_edge(1,0);
     is($graph, "0=1");
     my @edges = $graph->edges;
-    is(scalar @edges, 1);
     is_deeply(@edges, [0, 1]) or diag explain \@edges;
     is($graph->edges, 1);
 }

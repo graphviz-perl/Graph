@@ -1,11 +1,14 @@
 use strict; use warnings;
-use Test::More tests => 62;
+use Test::More tests => 194;
 
 use Graph::Undirected;
 use Graph::Directed;
 
 my $g0 = Graph::Undirected->new;
 my $g1 = Graph::Directed->new;
+is $_, "" for $g0, $g1;
+ok !$_->has_edge('a') for $g0, $g1;
+ok !$_->has_edge('a', 'a') for $g0, $g1;
 
 my @EDGES = (
     [qw(a b)], [qw(a c)], [qw(a d)], [qw(a e)], [qw(a f)],
@@ -18,6 +21,10 @@ my @EDGES = (
 $g0->add_edge(@$_) for @EDGES;
 $g1->add_edge(@$_) for @EDGES;
 
+ok !$_->has_edge('a') for $g0, $g1;
+ok !$_->has_edge('a', 'a') for $g0, $g1;
+ok !$_->has_edge('a', 'x') for $g0, $g1;
+
 # undirected, directed
 my %SUCCESSORS = (
     a => [ [qw(b c d e f)], [qw(b c d e f)] ],
@@ -29,8 +36,15 @@ my %SUCCESSORS = (
 );
 for my $v (sort keys %SUCCESSORS) {
     my ($u, $d) = @{ $SUCCESSORS{$v} };
-    is("@{[sort $g0->successors($v)]}", "@$u", "successors u $v");
-    is("@{[sort $g1->successors($v)]}", "@$d", "successors d $v");
+    for my $t ([$g0, $u], [$g1, $d]) {
+	my ($g, $r) = @$t;
+	is("@{[sort $g->successors($v)]}", "@$r", "successors u $v");
+	my %expected_edges; @expected_edges{ @$r } = ();
+	my %not_edges; @not_edges{ grep $_ ne $v, $g->vertices } = ();
+	delete @not_edges{ keys %expected_edges };
+	ok $g->has_edge($v, $_) for keys %expected_edges;
+	ok !$g->has_edge($v, $_) for keys %not_edges;
+    }
 }
 
 my %PREDECESSORS = (
@@ -43,8 +57,15 @@ my %PREDECESSORS = (
 );
 for my $v (sort keys %PREDECESSORS) {
     my ($u, $d) = @{ $PREDECESSORS{$v} };
-    is("@{[sort $g0->predecessors($v)]}", "@$u", "predecessors u $v");
-    is("@{[sort $g1->predecessors($v)]}", "@$d", "predecessors d $v");
+    for my $t ([$g0, $u], [$g1, $d]) {
+	my ($g, $r) = @$t;
+	is("@{[sort $g->predecessors($v)]}", "@$r", "predecessors u $v");
+	my %expected_edges; @expected_edges{ @$r } = ();
+	my %not_edges; @not_edges{ grep $_ ne $v, $g->vertices } = ();
+	delete @not_edges{ keys %expected_edges };
+	ok $g->has_edge($_, $v) for keys %expected_edges;
+	ok !$g->has_edge($_, $v) for keys %not_edges;
+    }
 }
 
 is_deeply [ $g0->as_hashes ], [

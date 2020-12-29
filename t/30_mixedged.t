@@ -1,7 +1,14 @@
 use strict; use warnings;
-use Test::More tests => 48;
+use Test::More tests => 36;
 	
 use Graph;
+
+my %EXPECT = (
+    "0 0" => "a=b",
+    "0 1" => "a=b,c=d=e",
+    "1 0" => "a=b",
+    "1 1" => "a=b,c=d=e",
+);
 
 for my $m (0, 1) {
     for my $h (0, 1) {
@@ -16,11 +23,7 @@ for my $m (0, 1) {
 	}
 	for (1, 2) {
 	    ok(  $g->has_vertices( ) );
-	    ok(  $g->has_edge("a", "b") );
-	    if ($g->hyperedged) {
-		ok(  $g->has_edge("c", "d", "e") );
-	    }
-	    ok( !$g->has_edge("e", "f") );
+	    is $g, $EXPECT{"$m $h"};
 	}
 	for (1, 2) {
 	    is( $g->get_edge_count("a", "b"),      $m ? 2 : 1 );

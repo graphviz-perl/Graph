@@ -1,26 +1,12 @@
 use strict; use warnings;
-use Test::More tests => 12;
+use Test::More tests => 2;
 
 use Graph;
+
 my $g = Graph->new;
-
 $g->add_cycle("a", "b", "c");
-
-ok(   $g->has_edge("a", "b") );
-ok( ! $g->has_edge("a", "c") ); # @todo: hyperedges
-ok( ! $g->has_edge("b", "a") );
-ok(   $g->has_edge("b", "c") );
-ok(   $g->has_edge("c", "a") );
-ok( ! $g->has_edge("c", "b") );
+is $g, "a-b,b-c,c-a";
 
 my $h = Graph->new(undirected => 1);
-
 $h->add_cycle("a", "b", "c");
-
-ok(   $h->has_edge("a", "b") );
-ok(   $h->has_edge("a", "c") );
-ok(   $h->has_edge("b", "a") );
-ok(   $h->has_edge("b", "c") );
-ok(   $h->has_edge("c", "a") );
-ok(   $h->has_edge("c", "b") );
-
+is $h, "a=b,a=c,b=c";
