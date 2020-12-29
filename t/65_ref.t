@@ -18,9 +18,9 @@ my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap', [_REF, 1], [[$t]] ],
     [ 'Graph::AdjacencyMap', [_REF, 2], [[$u, $v]] ],
     [ 'Graph::AdjacencyMap', [_UNIQ, 2], [[qw(a b)]] ],
-    [ 'Graph::AdjacencyMap', [_UNIQ|_HYPER, 2], [[qw(a a b)]] ],
-    [ 'Graph::AdjacencyMap', [_HYPER, 2], [[qw()]] ],
-    [ 'Graph::AdjacencyMap', [_HYPER, 2], [[qw(a b c d)]] ],
+    [ 'Graph::AdjacencyMap', [_UNIQ, undef], [[qw(a a b)]] ],
+    [ 'Graph::AdjacencyMap', [0, undef], [[qw()]] ],
+    [ 'Graph::AdjacencyMap', [0, undef], [[qw(a b c d)]] ],
     [ 'Graph::AdjacencyMap', [0, 2], [[qw(a b)]] ],
     [ 'Graph::AdjacencyMap', [_MULTI, 1], [['a'], 'b'] ],
     [ 'Graph::AdjacencyMap', [_MULTI, 2], [[qw(a b)], 'c'] ],
@@ -40,7 +40,7 @@ sub test_adjmap {
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
     my $path_expected = [ $m->_is_UNIQ ? uniq @$path : @$path ];
-    my $label = "$class(" . Graph::AdjacencyMap::_stringify_fields($args->[0]) . ", $args->[1])";
+    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($args->[0])]}, @{[$m->_dumper($args->[1])]})";
     my $got = [ $m->paths_non_existing([ $path_expected ]) ];
     is_deeply $got, [ $path_expected ], $label or diag explain $got;
     ok( !$m->has_paths, $label );

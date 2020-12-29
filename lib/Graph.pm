@@ -68,7 +68,6 @@ sub Infinity () { $Inf }
 # The edges are always in a "map".
 # The defined flags for maps are:
 # - _COUNT for countedness: more than one instance
-# - _HYPER for hyperness: a different number of "coordinates" than usual;
 #   expects one for vertices and two for edges
 # - _UNORD for unordered coordinates (a set): if _UNORD is not set
 #   the coordinates are assumed to be meaningfully ordered
@@ -170,9 +169,9 @@ sub new {
     _opt(\%opt, \$eflags,
 	 countedged	=> _COUNT,
 	 multiedged	=> _MULTI,
-	 hyperedged	=> _HYPER,
 	 undirected	=> _UNORD,
 	);
+    my $is_hyper = delete $opt{hyperedged};
 
     _opt(\%opt, \$gflags,
 	 unionfind     => _UNIONFIND,
@@ -207,8 +206,8 @@ sub new {
     $g->[ _V ] = $vflags ?
 	_am_heavy($vflags, 1) :
 	    _am_light($vflags, 1);
-    $g->[ _E ] = ($eflags & ~_UNORD) ?
-	_am_heavy($eflags, 2) :
+    $g->[ _E ] = ($is_hyper or $eflags & ~_UNORD) ?
+	_am_heavy($eflags, $is_hyper ? undef : 2) :
 	    _am_light($eflags, 2);
 
     $g->add_vertices(@V) if @V;
@@ -242,7 +241,7 @@ sub __stringified { $_[0]->[ _V ]->_is_STR   }
 
 sub countedged    { $_[0]->[ _E ]->_is_COUNT }
 sub multiedged    { $_[0]->[ _E ]->_is_MULTI }
-sub hyperedged    { $_[0]->[ _E ]->_is_HYPER }
+sub hyperedged    { !defined $_[0]->[ _E ]->[ _arity ] }
 sub undirected    { $_[0]->[ _E ]->_is_UNORD }
 
 sub directed { ! $_[0]->[ _E ]->_is_UNORD }
@@ -375,11 +374,11 @@ sub _vertex_ids_maybe_ensure {
 sub has_edge {
     my $g = $_[0];
     my $E = $g->[ _E ];
-    my $Ef = $E->[ _f ];
-    return 0 if !($Ef & _HYPER) and @_ != 3;
+    my ($Ef, $Ea) = @$E[ _f, _arity ];
+    return 0 if defined($Ea) and @_ != $Ea + 1;
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
     @i = sort @i if &is_undirected;
-    return $E->get_ids_by_paths([ \@i ]) if !(@i == 2 && !($Ef & (_HYPER|_REF|_UNIQ))); # Slow path.
+    return $E->get_ids_by_paths([ \@i ]) if !(@i == 2 && !(!defined($Ea) or $Ef & (_REF|_UNIQ))); # Slow path.
     my $s = $E->[ _s ];
     return exists $s->{ $i[0] } &&
 	   exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;

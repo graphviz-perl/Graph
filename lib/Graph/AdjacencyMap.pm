@@ -8,7 +8,7 @@ use warnings;
 
 my (@FLAGS, %FLAG_COMBOS, %FLAG2I);
 BEGIN {
-    @FLAGS = qw(_COUNT _MULTI _HYPER _UNORD _UNIQ _REF _UNIONFIND _LIGHT _STR);
+    @FLAGS = qw(_COUNT _MULTI _UNORD _UNIQ _REF _UNIONFIND _LIGHT _STR);
     %FLAG_COMBOS = (
 	_COUNTMULTI => [qw(_COUNT _MULTI)],
 	_UNORDUNIQ => [qw(_UNORD _UNIQ)],
@@ -57,10 +57,9 @@ sub stringify {
     my $a = $m->[ _arity ];
     my $s = $m->[ _s ];
     my $f = $m->[ _f ];
-    my $hyper = $f & _HYPER;
     my $multi = $f & _MULTI;
     my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
-    if ($a == 2 and !$hyper) {
+    if (defined $a and $a == 2) {
 	my (%p, %s);
 	for my $t (@p) {
 	    my ($u, $v) = @$t;
@@ -83,7 +82,7 @@ sub stringify {
 	}
     } else {
 	for my $v (@p) {
-	    my @r = $a == 1 ? $v->[0] : '[' . join(' ', @$v) . ']';
+	    my @r = (defined $a and $a == 1) ? $v->[0] : '[' . join(' ', @$v) . ']';
 	    my ($text) = $m->get_ids_by_paths([ $v ]);
 	    my $attrs = $multi
 		? $m->[ _attr ][ ( $m->__has_path( $v ) )[0] ]
@@ -95,7 +94,7 @@ sub stringify {
     }
     join '',
 	map "$_\n",
-	"@{[ref $m]} arity=@{[$m->[ _arity ]]} flags: @{[_stringify_fields($m->[ _f ])]}",
+	"@{[ref $m]} arity=@{[$m->_dumper($a)]} flags: @{[_stringify_fields($m->[ _f ])]}",
 	map join(' ', map sprintf('%4s', $_), @$_),
 	@rows;
 }
@@ -120,7 +119,7 @@ sub _dumper {
 
 sub _new {
     my ($class, $flags, $arity) = @_;
-    bless [ 0, $flags, $arity, [], ($flags & _HYPER ? [] : {}), [], [] ], $class;
+    bless [ 0, $flags, $arity, [], (defined $arity ? {} : []), [], [] ], $class;
 }
 
 sub _ids {
@@ -133,9 +132,9 @@ sub has_paths {
 
 sub __has_path {
     &__arg;
-    my ($f, $s, @k) = (@{ $_[0] }[ _f, _s ], @{ $_[1] });
+    my ($f, $a, $s, @k) = (@{ $_[0] }[ _f, _arity, _s ], @{ $_[1] });
     @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
-    return if !defined($s = ($f & _HYPER) ? $s->[ @k ] : $s);
+    return if !defined($s = defined($a) ? $s : $s->[ @k ]);
     my @p = ($s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]);
     @k = '' if !@k;
     (exists $s->{$k[-1]} ? $s->{$k[-1]} : return, \@p, \@k);
@@ -149,11 +148,11 @@ sub set_path {
 sub __set_path {
     my $inc_if_exists = pop;
     &__arg;
-    my ($f, $map_i, $s, $m, $id, @a) = (@{ $_[0] }[ _f, _i, _s ], @_[0, 2], @{ $_[1] });
+    my ($f, $a, $map_i, $s, $m, $id, @a) = (@{ $_[0] }[ _f, _arity, _i, _s ], @_[0, 2], @{ $_[1] });
     my $is_multi = $f & _MULTI;
     my @path = @a;
     @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
-    my $p = (($f & _HYPER) ? $s->[ @a ] : $s) ||= { };
+    my $p = (defined($a) ? $s : $s->[ @a ]) ||= { };
     $p = $p->{ $_ } ||= {} for @a[0..$#a-1];
     my $l = ( @a ? @a : '' )[-1];
     if (exists $p->{ $l }) {
@@ -267,13 +266,13 @@ sub paths {
 
 sub get_ids_by_paths {
     my ($f, $a, $s, $m, $list) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
+    my $is_hyper = !defined $a;
     return map { # Fast path
 	my @p = @$_;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	defined $this_s ? $this_s : ();
-    } @$list if !($f & (_HYPER|_REF|_UNIQ));
-    my $is_hyper = $f & _HYPER;
+    } @$list if !($is_hyper or $f & (_REF|_UNIQ));
     map {
 	my @p = @$_;
 	my $this_s = $is_hyper ? $s->[ @p ] : $s;
@@ -339,11 +338,11 @@ sub _del_path_attr {
 }
 
 sub __arg {
-    my ($f, @a) = ((my $m = $_[0])->[ _f ], @{ $_[1] });
+    my ($f, $a, $m, @a) = (@{ $_[0] }[ _f, _arity ], $_[0], @{ $_[1] });
     return if @a < 2; # nothing to do if 1 or 0-length seq
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
-		  scalar @a, $m->[ _arity ])
-        if !($f & _HYPER) and @a != $m->[ _arity ];
+		  scalar @a, $a)
+        if defined($a) and @a != $a;
     return if !($f & _UNIQ);
     my %u;
     @a = grep !$u{$_}++, @a;

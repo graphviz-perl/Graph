@@ -15,7 +15,6 @@ use base 'Graph::AdjacencyMap';
 
 sub _is_COUNT    () { 0 }
 sub _is_MULTI    () { 0 }
-sub _is_HYPER    () { 0 }
 sub _is_UNIQ     () { 0 }
 sub _is_REF      () { 0 }
 
