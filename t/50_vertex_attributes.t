@@ -1,7 +1,9 @@
 use strict; use warnings;
-use Test::More tests => 86;
+use Test::More tests => 76;
 
 use Graph;
+use Graph::Directed;
+use Graph::Undirected;
 my $g = Graph->new;
 
 $g->add_vertex("a");
@@ -121,40 +123,22 @@ ok( $g->delete_vertex_weight("a"));
 ok(!$g->has_vertex_weight("a"));
 is( $g->get_vertex_weight("a"), undef);
 
-{
-    use Graph::Directed;
-    use Graph::Undirected;
 
+for my $t (
+    [qw(set_vertex_attribute b)],
+    [qw(set_edge_attribute b c)],
+    [qw(set_graph_attribute)],
+) {
+    my ($method, @args) = @$t;
     my $g1a = Graph::Directed->new;
     my $g1b = Graph::Undirected->new;
-
-    $g1a->add_edge(qw(a b));
-    $g1a->add_edge(qw(b c));
-    $g1a->add_edge(qw(b d));
-
-    $g1b->add_edge(qw(a b));
-    $g1b->add_edge(qw(b c));
-    $g1b->add_edge(qw(b d));
-
-    $g1a->set_vertex_attribute('b', 'color', 'electric blue');
-    $g1b->set_vertex_attribute('b', 'color', 'firetruck red');
-
-    is("@{[sort $g1a->successors('a')]}",   "b");
-    is("@{[sort $g1a->successors('b')]}",   "c d");
-    is("@{[sort $g1a->successors('c')]}",   "");
-    is("@{[sort $g1a->successors('d')]}",   "");
-    is("@{[sort $g1a->predecessors('a')]}", "");
-    is("@{[sort $g1a->predecessors('b')]}", "a");
-    is("@{[sort $g1a->predecessors('c')]}", "b");
-    is("@{[sort $g1a->predecessors('d')]}", "b");
-
-    is("@{[sort $g1b->successors('a')]}",   "b");
-    is("@{[sort $g1b->successors('b')]}",   "a c d");
-    is("@{[sort $g1b->successors('c')]}",   "b");
-    is("@{[sort $g1b->successors('d')]}",   "b");
-    is("@{[sort $g1b->predecessors('a')]}", "b");
-    is("@{[sort $g1b->predecessors('b')]}", "a c d");
-    is("@{[sort $g1b->predecessors('c')]}", "b");
-    is("@{[sort $g1b->predecessors('d')]}", "b");
+    my @EDGES = (
+	[qw(a b)], [qw(b c)], [qw(b d)],
+    );
+    $g1a->add_edge(@$_) for @EDGES;
+    $g1b->add_edge(@$_) for @EDGES;
+    $g1a->$method(@args, 'color', 'electric blue');
+    $g1b->$method(@args, 'color', 'firetruck red');
+    is "$g1a", "a-b,b-c,b-d";
+    is "$g1b", "a=b,b=c,b=d";
 }
-

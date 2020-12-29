@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 102;
+use Test::More tests => 86;
 
 use Graph;
 my $g = Graph->new;
@@ -153,40 +153,3 @@ $v->add_weighted_path("b", 1, "f",
 		           2, "g",
 		           2, "e");
 ok( $v, "b=f,c=d,c=f,d=f,e=g,f=g" );
-
-{
-    use Graph::Directed;
-    use Graph::Undirected;
-
-    my $g1a = Graph::Directed->new;
-    my $g1b = Graph::Undirected->new;
-
-    $g1a->add_edge(qw(a b));
-    $g1a->add_edge(qw(b c));
-    $g1a->add_edge(qw(b d));
-
-    $g1b->add_edge(qw(a b));
-    $g1b->add_edge(qw(b c));
-    $g1b->add_edge(qw(b d));
-    
-    $g1a->set_edge_attribute('b', 'c', 'color', 'electric blue');
-    $g1b->set_edge_attribute('b', 'c', 'color', 'firetruck red');
-
-    is("@{[sort $g1a->successors('a')]}",   "b");
-    is("@{[sort $g1a->successors('b')]}",   "c d");
-    is("@{[sort $g1a->successors('c')]}",   "");
-    is("@{[sort $g1a->successors('d')]}",   "");
-    is("@{[sort $g1a->predecessors('a')]}", "");
-    is("@{[sort $g1a->predecessors('b')]}", "a");
-    is("@{[sort $g1a->predecessors('c')]}", "b");
-    is("@{[sort $g1a->predecessors('d')]}", "b");
-
-    is("@{[sort $g1b->successors('a')]}",   "b");
-    is("@{[sort $g1b->successors('b')]}",   "a c d");
-    is("@{[sort $g1b->successors('c')]}",   "b");
-    is("@{[sort $g1b->successors('d')]}",   "b");
-    is("@{[sort $g1b->predecessors('a')]}", "b");
-    is("@{[sort $g1b->predecessors('b')]}", "a c d");
-    is("@{[sort $g1b->predecessors('c')]}", "b");
-    is("@{[sort $g1b->predecessors('d')]}", "b");
-}
