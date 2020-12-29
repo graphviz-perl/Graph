@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 63;
+use Test::More tests => 61;
 
 use Graph;
 my $g = Graph->new(multiedged => 1);
@@ -103,15 +103,7 @@ ok(!$h->has_edge() );
 ok( $h->has_edge_by_id('u', 'v', 'w', 'genghis') );
 ok( $h->has_edge_by_id('u', 'khan') );
 
-my $g1 = Graph->new;
-
-ok ( !$g1->multiedged );
-
-my $g2 = Graph->new( multiedged => 1 );
-
-ok (  $g2->multiedged );
-
-eval { my $g3 = Graph->new( multiedged => 1, countedged => 1 ) };
+eval { Graph->new( multiedged => 1, countedged => 1 ) };
 
 like ( $@, qr/both countedged and multiedged/ );
 
