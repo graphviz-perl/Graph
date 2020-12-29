@@ -56,10 +56,7 @@ t/48_get_vertex_count.t
 t/49_get_edge_count.t
 t/50_vertex_attributes.t
 t/51_multivertex_attributes.t
-t/52_edge_attributes.t
 t/53_multiedge_attributes.t
-t/54_graph_attributes.t
-t/55_attributes.t
 t/56_neighbourhood.t
 t/57_degree.t
 t/58_connections.t
