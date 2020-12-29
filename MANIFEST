@@ -58,8 +58,6 @@ t/42_add_path.t
 t/43_has_path.t
 t/44_delete_path.t
 t/45_add_cycle.t
-t/46_has_cycle.t
-t/47_delete_cycle.t
 t/48_get_vertex_count.t
 t/49_get_edge_count.t
 t/50_vertex_attributes.t
