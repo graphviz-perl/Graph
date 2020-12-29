@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 17;
+use Test::More tests => 23;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -30,6 +30,13 @@ is $g4->undirected_copy, $g5;
 is $g1->directed_copy, "a-b,b-a,b-c,b-d,b-e,c-b,d-b,e-b";
 is $g3->directed_copy, "a-b,a-c,b-a,b-c,c-a,c-b,c-d,d-c";
 is $g5->directed_copy, "a-b,b-a,b-c,c-b";
+
+is $g0->transpose, "b-a,b-d,c-b,e-b";
+is $g1->transpose, "a=b,b=c,b=d,b=e";
+is $g2->transpose, "a-c,b-a,c-b,d-c";
+is $g3->transpose, "a=b,a=c,b=c,c=d";
+is $g4->transpose, "a-b,b-a,c-b";
+is $g5->transpose, "a=b,b=c";
 
 {
     my $g = Graph->new;

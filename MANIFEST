@@ -80,7 +80,6 @@ t/64_mst.t
 t/65_ref.t
 t/66_simple.t
 t/67_copy.t
-t/68_transpose.t
 t/69_complete.t
 t/70_complement.t
 t/71_spt.t
