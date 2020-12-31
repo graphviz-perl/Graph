@@ -1,34 +1,11 @@
 use strict; use warnings;
 
-use Test::More tests => 36;
+use Test::More;
 
 use Graph::Directed;
 use Graph::Undirected;
 
-my $g0 = Graph::Directed->new;
-
 my @E = ([qw(a b)], [qw(a c)], [qw(b d)], [qw(b e)], [qw(c f)], [qw(c g)]);
-
-$g0->add_edge(@$_) for @E;
-
-is_deeply [ $g0->as_hashes ], [
-    { map +($_ => {}), qw(a b c d e f g) },
-    {
-      a => { map +($_ => {}), qw(b c) },
-      b => { map +($_ => {}), qw(d e) },
-      c => { map +($_ => {}), qw(f g) },
-    },
-];
-
-is($g0->subgraph_by_radius('a', 0)->stringify, "a");
-is($g0->subgraph_by_radius('a', 1)->stringify, "a-b,a-c");
-is($g0->subgraph_by_radius('a', 2)->stringify, "a-b,a-c,b-d,b-e,c-f,c-g");
-is($g0->subgraph_by_radius('a', 3)->stringify, "a-b,a-c,b-d,b-e,c-f,c-g");
-
-is($g0->subgraph_by_radius('b', 0)->stringify, "b");
-is($g0->subgraph_by_radius('b', 1)->stringify, "b-d,b-e");
-is($g0->subgraph_by_radius('b', 2)->stringify, "b-d,b-e");
-is($g0->subgraph_by_radius('b', 3)->stringify, "b-d,b-e");
 
 {
     my $gi0 = Graph->new;
@@ -47,23 +24,10 @@ for ({}, {countvertexed => 1}, {multivertexed => 1}) {
   $gr->add_edge(@$_) for @E;
   $gr->rename_vertex('b', 'b1');
   my $label = ref($gr->[ 2 ]) . ' {' . join('=>', %$_) . '}';
-  is $gr->subgraph_by_radius('a', 3), "a-b1,a-c,b1-d,b1-e,c-f,c-g", $label;
+  is $gr, "a-b1,a-c,b1-d,b1-e,c-f,c-g", $label;
   $gr->rename_vertices(sub { uc $_[0] });
-  is $gr->subgraph_by_radius('A', 3), "A-B1,A-C,B1-D,B1-E,C-F,C-G", $label;
+  is $gr, "A-B1,A-C,B1-D,B1-E,C-F,C-G", $label;
 }
-
-my $g1 = Graph::Undirected->new;
-$g1->add_edge(@$_) for @E;
-
-is($g1->subgraph_by_radius('a', 0)->stringify, "a");
-is($g1->subgraph_by_radius('a', 1)->stringify, "a=b,a=c");
-is($g1->subgraph_by_radius('a', 2)->stringify, "a=b,a=c,b=d,b=e,c=f,c=g");
-is($g1->subgraph_by_radius('a', 3)->stringify, "a=b,a=c,b=d,b=e,c=f,c=g");
-
-is($g1->subgraph_by_radius('b', 0)->stringify, "b");
-is($g1->subgraph_by_radius('b', 1)->stringify, "a=b,b=d,b=e");
-is($g1->subgraph_by_radius('b', 2)->stringify, "a=b,a=c,b=d,b=e");
-is($g1->subgraph_by_radius('b', 3)->stringify, "a=b,a=c,b=d,b=e,c=f,c=g");
 
 my $g2 = Graph->new;
 is_deeply [ $g2->clustering_coefficient ], [],
@@ -110,3 +74,5 @@ is $w, '';
 }
 
 is_deeply [ sort(Graph::__fisher_yates_shuffle(1..3)) ], [ 1..3 ];
+
+done_testing;
