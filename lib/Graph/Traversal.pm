@@ -72,38 +72,28 @@ sub configure {
     }
     my @found_known = grep exists $attr{$_}, @EXTRACT_CONFIG;
     @$self{@found_known} = delete @attr{@found_known};
-    if ($self->graph->multiedged || $self->graph->countedged) {
-	$self->{ seen_edge } = $attr{ seen_edge } if exists $attr{ seen_edge };
-    }
-    $self->{ pre_edge  } = $attr{ tree_edge } if exists $attr{ tree_edge };
-    $self->{ next_root } =
+    $self->{ seen_edge } = $attr{ seen_edge }
+	if exists $attr{ seen_edge } and ($self->graph->multiedged || $self->graph->countedged);
+    $self->{ pre_edge } = $attr{ tree_edge } if exists $attr{ tree_edge };
+    my $default_next =
 	$attr{ next_alphabetic } ? \&Graph::_next_alphabetic :
 	$attr{ next_numeric } ? \&Graph::_next_numeric :
-	\&Graph::_next_random
-	if !exists $self->{ next_root };
+	\&Graph::_next_random;
+    $self->{ next_root } = $default_next if !exists $self->{ next_root };
     $self->{ first_root } =
-	exists $self->{ next_root } ? $self->{ next_root } :
-	$attr{ next_alphabetic } ? \&Graph::_next_alphabetic :
-	$attr{ next_numeric } ? \&Graph::_next_numeric :
-	\&Graph::_next_random
+	exists $self->{ next_root } ? $self->{ next_root } : $default_next
 	if !exists $self->{ first_root };
-    $self->{ next_successor } =
-	$attr{ next_alphabetic } ? \&Graph::_next_alphabetic :
-	$attr{ next_numeric } ? \&Graph::_next_numeric :
-	\&Graph::_next_random
-	if !exists $self->{ next_successor };
+    $self->{ next_successor } = $default_next if !exists $self->{ next_successor };
     if (exists $attr{ has_a_cycle }) {
-	my $has_a_cycle =
+	$self->{ back_edge } = my $has_a_cycle =
 	    ref $attr{ has_a_cycle } eq 'CODE' ?
 		$attr{ has_a_cycle } : \&has_a_cycle;
-	$self->{ back_edge } = $has_a_cycle;
 	$self->{ down_edge } = $has_a_cycle if $self->{ graph }->is_undirected;
     }
     if (exists $attr{ find_a_cycle }) {
-	my $find_a_cycle =
+	$self->{ back_edge } = my $find_a_cycle =
 	    ref $attr{ find_a_cycle } eq 'CODE' ?
 		$attr{ find_a_cycle } : \&find_a_cycle;
-	$self->{ back_edge } = $find_a_cycle;
 	$self->{ down_edge } = $find_a_cycle if $self->{ graph }->is_undirected;
     }
     $self->{ add } = \&add_order;
