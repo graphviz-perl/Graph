@@ -1,3 +1,5 @@
+- use Set::Object
+
 0.9715 2020-12-31
 - fix AdjacencyMap::Light attributes so delete when path deleted
 - fix as_hashes undirected edges: now both directions

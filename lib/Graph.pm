@@ -527,14 +527,14 @@ sub get_multiedge_ids {
 
 sub _edges_at {
     goto &_edges_from if &is_undirected;
-    my %ev;
-    grep !$ev{$_}++, &_edges_from, &_edges_to;
+    require Set::Object;
+    Set::Object->new(&_edges_from, &_edges_to)->${ wantarray ? \'members' : \'size' };
 }
 
 sub _edge_cache {
     my $g = $_[0];
     return if $g->[ _S ] && $g->[ _S ][1] == $g->[ _G ];
-    my $directed = &is_directed;
+    require Set::Object unless my $directed = &is_directed;
     $g->[ _S ] = [ my $S0 = {}, $g->[ _G ] ];
     $g->[ _P ] = [ my $P0 = {} ]; # only store generation in _S
     my $Ei = $g->[ _E ]->_ids;
@@ -546,7 +546,7 @@ sub _edge_cache {
 	    push @{ $S0->{ $f } }, $ev;
 	    push @{ $P0->{ $t } }, $ev;
 	} else {
-	    my @e = values %{{ @$ev, reverse @$ev }};
+	    my @e = Set::Object->new(@$ev)->members;
 	    if (@e == 1) {
 		push @{ $S0->{ $e[0] } }, [ @e, @e ];
 		next;
@@ -615,21 +615,19 @@ sub predecessors {
 sub _all_cessors {
     my ($method, $self_only_if_loop) = splice @_, -2, 2;
     my ($g, @v) = @_;
-    my %init;
-    @init{@v} = @v;
-    my %self;
-    @self{ grep $g->has_edge($_, $_), @v } = () if $self_only_if_loop;
-    my (%new, %seen);
+    require Set::Object;
+    my ($init, $next) = map Set::Object->new(@v), 1..2;
+    my $self = Set::Object->new(grep $g->has_edge($_, $_), @v) if $self_only_if_loop;
+    my ($got, $found) = map Set::Object->new, 1..2;
     while (1) {
-	@v = $g->$method(@v);
-	@new{@v} = @v;
-	delete @new{keys %seen};
-	last if !keys %new;  # Leave if no new found.
-	@v = @seen{keys %new} = values %new;
-	%new = ();
+	$found->insert($g->$method($next->members));
+	$next = $found->difference($got);
+	last if $next->is_null;  # Leave if no new found.
+	$got->insert($next->members);
+	$found->clear;
     }
-    delete @seen{ grep !exists $self{$_}, keys %init } if $self_only_if_loop;
-    return values %seen;
+    $got->remove($init->difference($self)->members) if $self_only_if_loop;
+    $got->members;
 }
 
 sub all_successors {
@@ -645,14 +643,11 @@ sub all_predecessors {
 }
 
 sub neighbours {
-    my $g = $_[0];
-    my $V  = $g->[ _V ];
-    my @s = map { my @v = @$_; shift @v; @v } &_edges_from;
-    my @p = map { my @v = @$_; pop   @v; @v } &_edges_to if &is_directed;
-    my %n;
-    @n{ @s } = @s;
-    @n{ @p } = @p;
-    map @$_, map @$_, $V->get_paths_by_ids([ map [$_], keys %n ]);
+    require Set::Object;
+    my $s = Set::Object->new(map @$_[1..$#$_], &_edges_from);
+    $s->insert(map @$_[0..$#$_-1], &_edges_to) if &is_directed;
+    my $V = $_[0]->[ _V ];
+    map @$_, map @$_, $V->get_paths_by_ids([ map [$_], $s->members ]);
 }
 
 *neighbors = \&neighbours;
@@ -2112,10 +2107,8 @@ sub strongly_connected_component_by_index {
 sub same_strongly_connected_components {
     &expect_directed;
     my ($g, @args) = @_;
-    my $v2c = &_strongly_connected_components_v2c;
-    my @involved = map $v2c->{$_}, @args;
-    return 0 if values %{{ @involved, reverse @involved }} > 1;
-    1;
+    require Set::Object;
+    Set::Object->new(@{ &_strongly_connected_components_v2c }{@args})->size <= 1;
 }
 
 sub is_strongly_connected {
@@ -2328,15 +2321,16 @@ sub SP_Dijkstra {
     my ($g, $u, $v) = @_;
     my $sptg = $g->SPT_Dijkstra(first_root => $u);
     my @path = ($v);
-    my %seen;
+    require Set::Object;
+    my $seen = Set::Object->new;
     my $V = $g->vertices;
     my $p;
     while (defined($p = $sptg->get_vertex_attribute($v, 'p'))) {
-	last if exists $seen{$p};
+	last if $seen->contains($p);
 	push @path, $p;
 	$v = $p;
-	$seen{$p}++;
-	last if keys %seen == $V || $u eq $v;
+	$seen->insert($p);
+	last if $seen->size == $V || $u eq $v;
     }
     return if !@path or $path[-1] ne $u;
     return reverse @path;
@@ -2423,15 +2417,16 @@ sub SP_Bellman_Ford {
     my ($g, $u, $v) = @_;
     my $sptg = $g->SPT_Bellman_Ford(first_root => $u);
     my @path = ($v);
-    my %seen;
+    require Set::Object;
+    my $seen = Set::Object->new;
     my $V = $g->vertices;
     my $p;
     while (defined($p = $sptg->get_vertex_attribute($v, 'p'))) {
-	last if exists $seen{$p};
+	last if $seen->contains($p);
 	push @path, $p;
 	$v = $p;
-	$seen{$p}++;
-	last if keys %seen == $V;
+	$seen->insert($p);
+	last if $seen->size == $V;
     }
     # @path = () if @path && "$path[-1]" ne "$u";
     return reverse @path;
@@ -2747,20 +2742,20 @@ sub subgraph_by_radius {
     my ($g, @v) = @_;
     my $rad = pop @v;
     return unless defined $rad && $rad >= 0 && @v;
-    my %got;
-    my @next = @got{ @v } = @v;
+    require Set::Object;
+    my ($got, $next) = map Set::Object->new(@v), 1..2;
     while ($rad--) {
-	my @succ = $g->successors(@next);
-	my %notseen; @notseen{ @succ } = @succ;
-	delete @notseen{ keys %got };
-	@next = @got{ keys %notseen } = values %notseen;
+	my $succ = Set::Object->new($g->successors($next->members));
+	$next = $succ->difference($got);
+	$got->insert($succ->members);
     }
-    $g->subgraph([ values %got ]);
+    $g->subgraph([ $got->members ]);
 }
 
 sub clustering_coefficient {
     my ($g) = @_;
     return unless my @v = $g->vertices;
+    require Set::Object;
     my %clustering;
 
     my $gamma = 0;
@@ -2768,12 +2763,12 @@ sub clustering_coefficient {
     for my $n (@v) {
 	my $gamma_v = 0;
 	my @neigh = $g->successors($n);
-	my %c;
+	my $c = Set::Object->new;
 	for my $u (@neigh) {
-	    for my $v (grep +(!$c{"$u-$_"} && $g->has_edge($u, $_)), @neigh) {
+	    for my $v (grep +(!$c->contains("$u-$_") && $g->has_edge($u, $_)), @neigh) {
 		$gamma_v++;
-		$c{"$u-$v"} = 1;
-		$c{"$v-$u"} = 1;
+		$c->insert("$u-$v");
+		$c->insert("$v-$u");
 	    }
 	}
 	if (@neigh > 1) {

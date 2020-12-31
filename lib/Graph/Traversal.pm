@@ -6,12 +6,11 @@ use warnings;
 # $SIG{__DIE__ } = \&Graph::__carp_confess;
 # $SIG{__WARN__} = \&Graph::__carp_confess;
 
-sub DEBUG () { 0 }
-
 sub reset {
     my $self = shift;
-    $self->{ unseen } = { map { $_ => $_ } $self->{ graph }->vertices };
-    $self->{ seen   } = { };
+    require Set::Object;
+    $self->{ unseen } = Set::Object->new($self->{ graph }->vertices);
+    $self->{ seen   } = Set::Object->new;
     $self->{ order     } = [ ];
     $self->{ preorder  } = [ ];
     $self->{ postorder } = [ ];
@@ -113,12 +112,9 @@ sub add_order {
 
 sub visit {
     my ($self, @next) = @_;
-    delete @{ $self->{ unseen } }{ @next };
-    print "unseen = @{[sort keys %{$self->{unseen}}]}\n" if DEBUG;
-    @{ $self->{ seen } }{ @next } = @next;
-    print "seen = @{[sort keys %{$self->{seen}}]}\n" if DEBUG;
+    $self->{ unseen }->remove(@next);
+    $self->{ seen }->insert(@next);
     $self->{ add }->( $self, @next );
-    print "order = @{$self->{order}}\n" if DEBUG;
     return unless my $p = $self->{ pre };
     $p->( $_, $self ) for @next;
 }
@@ -127,7 +123,6 @@ sub visit_preorder {
     my ($self, @next) = @_;
     push @{ $self->{ preorder } }, @next;
     $self->{ preordern }->{ $_ } = $self->{ preorderi }++ for @next;
-    print "preorder = @{$self->{preorder}}\n" if DEBUG;
     $self->visit( @next );
 }
 
@@ -136,7 +131,6 @@ sub visit_postorder {
     my @post = reverse $self->{ see }->( $self );
     push @{ $self->{ postorder } }, @post;
     $self->{ postordern }->{ $_ } = $self->{ postorderi }++ for @post;
-    print "postorder = @{$self->{postorder}}\n" if DEBUG;
     if (my $p = $self->{ post }) {
 	$p->( $_, $self ) for @post;
     }
@@ -188,21 +182,12 @@ sub next {
     my @next;
     while ($self->seeing) {
 	my $current = $self->current;
-	print "current = $current\n" if DEBUG;
-	@next = $self->{ graph }->successors( $current );
-	print "next.0 - @next\n" if DEBUG;
-	my %next; @next{ @next } = @next;
-	print "next.1 - @next\n" if DEBUG;
-	@next = values %next;
-	my @all = @next;
-	print "all = @all\n" if DEBUG;
-	delete @next{ grep exists $self->{seen}{$_}, keys %next };
-	@next = values %next;
-	print "next.2 - @next\n" if DEBUG;
-	if (@next) {
-	    @next = $self->{ next_successor }->( $self, \%next );
-	    print "next.3 - @next\n" if DEBUG;
-	    $self->{ tree }->add_edge( $current, $_ ) for @next;
+	my $next = Set::Object->new($self->{ graph }->successors($current));
+	my @all = $next->members;
+	$next = $next->difference($self->{seen});
+	if ($next->size) {
+	    @next = $self->{ next_successor }->( $self, { map +($_=>$_), $next->members } );
+	    $self->{ tree }->add_edges(map [$current, $_], @next);
 	    last unless my $p = $self->{ pre_edge };
 	    $p->($current, $_, $self, $self->{ state }) for @next;
 	    last;
@@ -212,20 +197,17 @@ sub next {
 	return undef if $self->{ terminate };
 	$self->_callbacks($current, @all);
     }
-    print "next.4 - @next\n" if DEBUG;
     unless (@next) {
 	if (!@{ $self->{ roots } } and defined(my $first = $self->{ first_root })) {
 	    return unless @next = ref $first eq 'CODE'
-		? $first->( $self, $self->{ unseen } )
+		? $first->( $self, { map +($_=>$_), $self->unseen } )
 		: $first;
 	}
 	return if !@next and !$self->{ next_root };
-	return if !@next and !(@next = $self->{ next_root }->( $self, $self->{ unseen } ));
-	return if exists $self->{ seen }->{ $next[0] }; # Sanity check.
-	print "next.5 - @next\n" if DEBUG;
+	return if !@next and !(@next = $self->{ next_root }->( $self, { map +($_=>$_), $self->unseen } ));
+	return if $self->{ seen }->contains($next[0]); # Sanity check.
 	push @{ $self->{ roots } }, $next[0];
     }
-    print "next.6 - @next\n" if DEBUG;
     $self->visit_preorder( @next ) if @next;
     return $next[0];
 }
@@ -248,12 +230,12 @@ sub postorder {
 
 sub unseen {
     my $self = shift;
-    values %{ $self->{ unseen } };
+    $self->{ unseen }->${ wantarray ? \'members' : \'size' };
 }
 
 sub seen {
     my $self = shift;
-    values %{ $self->{ seen } };
+    $self->{ seen }->${ wantarray ? \'members' : \'size' };
 }
 
 sub seeing {
