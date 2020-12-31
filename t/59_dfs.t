@@ -572,7 +572,7 @@ my $td1 = Graph::Traversal::DFS->new($gd, next_alphabetic => 1, pre => sub { pus
 $td1->dfs;
 is( "@gd1", "0 1 10 9", "next_alphabetic" );
 
-eval { Graph::Traversal::DFS->new(next_alphabetic => 1) };
+eval { Graph::Traversal::DFS->new('next_alphabetic') };
 like($@, qr/Graph::Traversal: first argument is not a Graph/, "sane args");
 
 eval { Graph::Traversal::DFS->new($gd, next_alphazetic => 1) };

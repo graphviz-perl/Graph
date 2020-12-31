@@ -64,8 +64,12 @@ my @EXTRACT_CONFIG = qw(
     first_root next_root next_successor
 );
 
-sub configure {
-    my ($self, %attr) = @_;
+sub new {
+    my ($class, $g, %attr) = @_;
+    Graph::__carp_confess("Graph::Traversal: first argument is not a Graph")
+	unless ref $g && $g->isa('Graph');
+    my $self = bless { graph => $g, state => { } }, $class;
+    $self->reset;
     if (exists $attr{ start }) {
 	$attr{ first_root } = delete $attr{ start };
 	$attr{ next_root  } = undef;
@@ -73,7 +77,7 @@ sub configure {
     my @found_known = grep exists $attr{$_}, @EXTRACT_CONFIG;
     @$self{@found_known} = delete @attr{@found_known};
     $self->{ seen_edge } = $attr{ seen_edge }
-	if exists $attr{ seen_edge } and ($self->graph->multiedged || $self->graph->countedged);
+	if exists $attr{ seen_edge } and ($g->multiedged || $g->countedged);
     $self->{ pre_edge } = $attr{ tree_edge } if exists $attr{ tree_edge };
     my $default_next =
 	$attr{ next_alphabetic } ? \&Graph::_next_alphabetic :
@@ -88,29 +92,18 @@ sub configure {
 	$self->{ back_edge } = my $has_a_cycle =
 	    ref $attr{ has_a_cycle } eq 'CODE' ?
 		$attr{ has_a_cycle } : \&has_a_cycle;
-	$self->{ down_edge } = $has_a_cycle if $self->{ graph }->is_undirected;
+	$self->{ down_edge } = $has_a_cycle if $g->is_undirected;
     }
     if (exists $attr{ find_a_cycle }) {
 	$self->{ back_edge } = my $find_a_cycle =
 	    ref $attr{ find_a_cycle } eq 'CODE' ?
 		$attr{ find_a_cycle } : \&find_a_cycle;
-	$self->{ down_edge } = $find_a_cycle if $self->{ graph }->is_undirected;
+	$self->{ down_edge } = $find_a_cycle if $g->is_undirected;
     }
     $self->{ add } = \&add_order;
     $self->{ see } = $see;
     delete @attr{@KNOWN_CONFIG};
     Graph::_opt_unknown(\%attr);
-}
-
-sub new {
-    my $class = shift;
-    my $g = shift;
-    Graph::__carp_confess("Graph::Traversal: first argument is not a Graph")
-	unless ref $g && $g->isa('Graph');
-    my $self = { graph => $g, state => { } };
-    bless $self, $class;
-    $self->reset;
-    $self->configure( @_ );
     return $self;
 }
 
