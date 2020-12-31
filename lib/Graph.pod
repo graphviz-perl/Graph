@@ -2641,9 +2641,9 @@ the graph has no vertices.
 
 =item subgraph_by_radius
 
-    $s = $g->subgraph_by_radius($n, $radius);
+    $s = $g->subgraph_by_radius(@v, $radius);
 
-Returns a subgraph representing the ball of $radius around node $n
+Returns a subgraph representing the ball of $radius around the given vertices
 (breadth-first search).
 
 =back

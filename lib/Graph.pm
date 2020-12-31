@@ -2743,30 +2743,19 @@ sub could_be_isomorphic {
 ###
 # Analysis functions.
 
-sub subgraph_by_radius
-{
-    my ($g, $n, $rad) = @_;
-
-    return unless defined $n && defined $rad && $rad >= 0;
-
-    my $r = (ref $g)->new;
-
-    return $r->add_vertex($n) if $rad == 0;
-
-    my %h;
-    $h{1} = [ [ $n, $g->successors($n) ] ];
-    for my $i (1..$rad) {
-	$h{$i+1} = [];
-	for my $arr (@{ $h{$i} }) {
-	    my ($p, @succ) = @{ $arr };
-	    for my $s (@succ) {
-		$r->add_edge($p, $s);
-		push(@{ $h{$i+1} }, [$s, $g->successors($s)]) if $i < $rad;
-	    }
-	}
+sub subgraph_by_radius {
+    my ($g, @v) = @_;
+    my $rad = pop @v;
+    return unless defined $rad && $rad >= 0 && @v;
+    my %got;
+    my @next = @got{ @v } = @v;
+    while ($rad--) {
+	my @succ = $g->successors(@next);
+	my %notseen; @notseen{ @succ } = @succ;
+	delete @notseen{ keys %got };
+	@next = @got{ keys %notseen } = values %notseen;
     }
-
-    return $r;
+    $g->subgraph([ values %got ]);
 }
 
 sub clustering_coefficient {

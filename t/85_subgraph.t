@@ -29,6 +29,8 @@ is($g0->subgraph_by_radius('b', 1)->stringify, "b-d,b-e");
 is($g0->subgraph_by_radius('b', 2)->stringify, "b-d,b-e");
 is($g0->subgraph_by_radius('b', 3)->stringify, "b-d,b-e");
 
+is($g0->subgraph_by_radius('a', 'b', 1)->stringify, "a-b,a-c,b-d,b-e");
+
 my $g1 = Graph::Undirected->new;
 $g1->add_edge(@$_) for @E;
 
