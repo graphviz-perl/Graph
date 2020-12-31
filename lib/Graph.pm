@@ -271,7 +271,7 @@ sub add_vertex {
 	push @_, _GEN_ID;
 	goto &add_vertex_by_id;
     }
-    return $g if !&is_countvertexed and $V->has_path([$_[1]]);
+    return $g if !&is_countvertexed and defined $V->has_path([$_[1]]);
     $V->set_path([@_[1..$#_]]);
     $g->[ _G ]++;
     &_union_find_add_vertex if &has_union_find;
@@ -282,7 +282,7 @@ sub has_vertex {
     my $g = $_[0];
     my $V = $g->[ _V ];
     return exists $V->[ _s ]->{ $_[1] } if ($V->[ _f ] & _LIGHT);
-    $V->has_path([$_[1]]);
+    defined $V->has_path([$_[1]]);
 }
 
 sub _vertices05 {
@@ -697,7 +697,7 @@ sub delete_vertex {
     my $g = $_[0];
     return $g if @_ != 2;
     my $V = $g->[ _V ];
-    return $g unless $V->has_path([$_[1]]);
+    return $g unless defined $V->has_path([$_[1]]);
     # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
     my $E = $g->[ _E ];
     $E->del_path( $_ ) for &_edges_at;
@@ -708,7 +708,7 @@ sub delete_vertex {
 
 sub get_vertex_count {
     my $g = shift;
-    $g->[ _V ]->_get_path_count( \@_ ) || 0;
+    $g->[ _V ]->_get_path_count( \@_ );
 }
 
 sub get_edge_count {
@@ -716,7 +716,7 @@ sub get_edge_count {
     my @i = &_vertex_ids;
     return 0 unless @i;
     @i = sort @i if &is_undirected;
-    $g->[ _E ]->_get_path_count( \@i ) || 0;
+    $g->[ _E ]->_get_path_count( \@i );
 }
 
 sub delete_vertices {

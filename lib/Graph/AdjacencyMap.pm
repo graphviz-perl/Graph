@@ -70,7 +70,7 @@ sub stringify {
 	for my $u (sort keys %p) {
 	    my @r = $u;
 	    for my $v (@s) {
-		my $text = $m->has_path([$u, $v]) ? 1 : '';
+		my $text = defined $m->has_path([$u, $v]) ? 1 : '';
 		my $attrs = $multi
 		    ? $m->[ _attr ][ ( $m->__has_path( [$u, $v] ) )[0] ]
 		    : $m->_get_path_attrs([$u, $v])
@@ -187,11 +187,11 @@ sub set_path_by_multi_id {
 
 sub paths_non_existing {
     my ($m, $list) = @_;
-    grep !$m->has_path($_), @$list;
+    grep !defined $m->has_path($_), @$list;
 }
 
 sub has_path {
-    defined( ( &__has_path )[0] );
+    ( &__has_path )[0];
 }
 
 sub has_path_by_multi_id {
@@ -321,7 +321,7 @@ sub _get_path_attr_values {
 }
 
 sub _get_path_count {
-    return undef unless my ($i) = &__has_path;
+    return 0 unless my ($i) = &__has_path;
     my $f = (my $m = $_[0])->[ _f ];
     return
         ($f & _COUNT) ? $m->[ _count ][ $i ] :
@@ -381,7 +381,7 @@ Return the multi ids.
 
 =head2 has_path(\@seq)
 
-Return true if the Map has the path, false if not.
+Returns the integer ID of the path, or undef if Map doesn't have it.
 
 =head2 has_paths
 
@@ -397,7 +397,7 @@ Return all the paths of the Map.
 
 =head2 set_path(\@seq)
 
-Set the path by @ids.
+Set the path by @ids. Returns the integer ID of the path.
 
 =head2 set_path_by_multi_id(\@seq, $id)
 

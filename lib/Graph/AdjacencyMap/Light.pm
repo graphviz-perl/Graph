@@ -58,10 +58,10 @@ sub _paths_lookup {
 }
 
 sub has_path {
-    my ($f, $a, $s, @args) = ( @{ $_[0] }[ _f, _arity, _s ], @{ $_[1] } );
-    return 0 unless $a == @args;
+    my ($a, $s, @args) = ( @{ $_[0] }[ _arity, _s ], @{ $_[1] } );
+    return undef unless $a == @args;
     $s = $s->{ shift @args } while defined $s and @args;
-    defined $s ? 1 : 0;
+    $s;
 }
 
 sub get_ids_by_paths {
@@ -70,7 +70,7 @@ sub get_ids_by_paths {
 }
 
 sub _get_path_count {
-    &has_path ? 1 : undef;
+    defined(my $dummy = &has_path) ? 1 : 0; # defined &x asks if func defined
 }
 
 sub has_paths { keys %{ $_[0]->[ _s ] } }
@@ -118,7 +118,7 @@ sub _get_path_attrs {
 }
 
 sub _del_path_attrs {
-    return undef unless &has_path;
+    return undef unless defined &has_path;
     my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
     $attr = $attr->{ shift @e } while $attr and @e > 1;
     return 0 unless $attr and exists $attr->{ $e[0] };

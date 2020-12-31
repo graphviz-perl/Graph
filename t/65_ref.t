@@ -44,25 +44,25 @@ sub test_adjmap {
     my $got = [ $m->paths_non_existing([ $path_expected ]) ];
     is_deeply $got, [ $path_expected ], $label or diag explain $got;
     ok( !$m->has_paths, $label );
-    ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
+    is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
     is_deeply( $got, [ $is_multi ? $maybe_id : 0 ], $label ) or diag explain $got;
     is $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label;
     ok $m->_has_path_attrs(@$path_maybe_id), $label;
     ok $m->_del_path_attrs(@$path_maybe_id);
     ok( $m->has_paths, $label );
-    ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
+    isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $m->${ \$map->{set} }(@$path_maybe_id); # second time
     is( $m->_get_path_count($path_expected), $maybe_count, $label );
     ok( $m->${ \$map->{del} }(@$path_maybe_id), $label ) for 1..$maybe_count;
-    ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
-    is( $m->_get_path_count($path_expected), undef, $label );
+    is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
+    is( $m->_get_path_count($path_expected), 0, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
     is_deeply( $got, [ $is_multi ? $maybe_id : 1 ], $label ) or diag explain $got;
     is( $m->_get_path_count($path_expected), 1, $label );
     $got = [ $m->paths ];
     is_deeply $got, [ $path_expected ], $label or diag explain $got;
-    ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
+    isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->get_ids_by_paths([ $path_expected ]) ];
     is_deeply $got, [ 1 ], $label or diag explain $got;
     my @path_back = $m->get_paths_by_ids([ map [$_], @$got ]);
@@ -71,11 +71,11 @@ sub test_adjmap {
     is $@, '', $label;
     if (@$path_expected == 1) {
 	ok $m->rename_path(@$path_expected, 'newname', $label);
-	ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
-	ok( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), $label );
+	is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
+	isnt( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), undef, $label );
 	ok $m->rename_path('newname', @$path_expected), $label;
-	ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
-	ok( !$m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), $label );
+	isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
+	is( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), undef, $label );
     }
     ok( !$m->_has_path_attrs(@$path_maybe_id), $label );
     is( $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label );
