@@ -1273,13 +1273,12 @@ sub subgraph {
   my ($g, $src, $dst) = @_;
   __carp_confess "Graph::subgraph: need src and dst array references"
     unless ref $src eq 'ARRAY' && (!defined($dst) or ref $dst eq 'ARRAY');
+  require Set::Object;
   my $s = $g->new;
   my @u = grep $g->has_vertex($_), @$src;
-  my @v = defined($dst) ? grep $g->has_vertex($_), @$dst : @u;
-  $s->add_vertices(@u, defined($dst) ? @v : ());
-  for my $u (@u) {
-    $s->add_edges( map [$u, $_], grep $g->has_edge($u, $_), @v );
-  }
+  my $v = Set::Object->new($dst ? grep $g->has_vertex($_), @$dst : @u);
+  $s->add_vertices(@u, $dst ? $v->members : ());
+  $s->add_edges(grep $v->contains($_->[1]), $g->edges_from(@u));
   return $s;
 }
 
