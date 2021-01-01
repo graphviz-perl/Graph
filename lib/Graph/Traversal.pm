@@ -16,8 +16,7 @@ sub reset {
     $self->{ preorder  } = [ ];
     $self->{ postorder } = [ ];
     $self->{ roots     } = [ ];
-    $self->{ tree      } =
-	Graph->new( directed => $self->{ graph }->directed );
+    $self->{ tree      } = Graph->new(directed => $self->{ graph }->directed);
     delete $self->{ terminate };
 }
 
@@ -120,20 +119,14 @@ sub visit {
     print "seen = @{[sort keys %{$self->{seen}}]}\n" if DEBUG;
     $self->{ add }->( $self, @next );
     print "order = @{$self->{order}}\n" if DEBUG;
-    if (exists $self->{ pre }) {
-	my $p = $self->{ pre };
-	for my $v (@next) {
-	    $p->( $v, $self );
-	}
-    }
+    return unless my $p = $self->{ pre };
+    $p->( $_, $self ) for @next;
 }
 
 sub visit_preorder {
     my ($self, @next) = @_;
     push @{ $self->{ preorder } }, @next;
-    for my $v (@next) {
-	$self->{ preordern }->{ $v } = $self->{ preorderi }++;
-    }
+    $self->{ preordern }->{ $_ } = $self->{ preorderi }++ for @next;
     print "preorder = @{$self->{preorder}}\n" if DEBUG;
     $self->visit( @next );
 }
@@ -142,25 +135,13 @@ sub visit_postorder {
     my ($self) = @_;
     my @post = reverse $self->{ see }->( $self );
     push @{ $self->{ postorder } }, @post;
-    for my $v (@post) {
-	$self->{ postordern }->{ $v } = $self->{ postorderi }++;
-    }
+    $self->{ postordern }->{ $_ } = $self->{ postorderi }++ for @post;
     print "postorder = @{$self->{postorder}}\n" if DEBUG;
-    if (exists $self->{ post }) {
-	my $p = $self->{ post };
-	for my $v (@post) {
-	    $p->( $v, $self ) ;
-	}
+    if (my $p = $self->{ post }) {
+	$p->( $_, $self ) for @post;
     }
-    if (exists $self->{ post_edge }) {
-	my $p = $self->{ post_edge };
-	my $u = $self->current;
-	if (defined $u) {
-	    for my $v (@post) {
-		$p->( $u, $v, $self, $self->{ state });
-	    }
-	}
-    }
+    return unless (my $p = $self->{ post_edge }) and defined(my $u = $self->current);
+    $p->( $u, $_, $self, $self->{ state }) for @post;
 }
 
 sub _callbacks {
@@ -172,39 +153,32 @@ sub _callbacks {
     my $cross    = $self->{ cross_edge };
     my $seen     = $self->{ seen_edge };
     my $bdc = defined $back || defined $down || defined $cross;
-    if (defined $nontree || $bdc || defined $seen) {
-	my $u = $current;
-	my $preu  = $self->{ preordern  }->{ $u };
-	my $postu = $self->{ postordern }->{ $u };
-	for my $v ( @all ) {
-	    my $e = $self->{ tree }->has_edge( $u, $v );
-	    if ( !$e && (defined $nontree || $bdc) ) {
-		if ( exists $self->{ seen }->{ $v }) {
-		    $nontree->( $u, $v, $self, $self->{ state })
-			if $nontree;
-		    if ($bdc) {
-			my $postv = $self->{ postordern }->{ $v };
-			if ($back &&
-			    (!defined $postv || $postv >= $postu)) {
-			    $back ->( $u, $v, $self, $self->{ state });
-			} else {
-			    my $prev = $self->{ preordern }->{ $v };
-			    if ($down && $prev > $preu) {
-				$down ->( $u, $v, $self, $self->{ state });
-			    } elsif ($cross && $prev < $preu) {
-				$cross->( $u, $v, $self, $self->{ state });
-			    }
-			}
+    return unless (defined $nontree || $bdc || defined $seen);
+    my $u = $current;
+    my $preu  = $self->{ preordern  }->{ $u };
+    my $postu = $self->{ postordern }->{ $u };
+    for my $v ( @all ) {
+	if (!$self->{tree}->has_edge($u, $v) && (defined $nontree || $bdc) &&
+		exists $self->{ seen }->{ $v }) {
+	    $nontree->( $u, $v, $self, $self->{ state }) if $nontree;
+	    if ($bdc) {
+		my $postv = $self->{ postordern }->{ $v };
+		if ($back &&
+		    (!defined $postv || $postv >= $postu)) {
+		    $back ->( $u, $v, $self, $self->{ state });
+		} else {
+		    my $prev = $self->{ preordern }->{ $v };
+		    if ($down && $prev > $preu) {
+			$down ->( $u, $v, $self, $self->{ state });
+		    } elsif ($cross && $prev < $preu) {
+			$cross->( $u, $v, $self, $self->{ state });
 		    }
 		}
 	    }
-	    if ($seen) {
-		my $c = $self->graph->get_edge_count($u, $v);
-		while ($c-- > 1) {
-		    $seen->( $u, $v, $self, $self->{ state } );
-		}
-	    }
 	}
+	next if !$seen;
+	my $c = $self->graph->get_edge_count($u, $v);
+	$seen->( $u, $v, $self, $self->{ state } ) while $c-- > 1;
     }
 }
 
@@ -228,16 +202,9 @@ sub next {
 	if (@next) {
 	    @next = $self->{ next_successor }->( $self, \%next );
 	    print "next.3 - @next\n" if DEBUG;
-	    for my $v (@next) {
-		$self->{ tree }->add_edge( $current, $v );
-	    }
-	    if (exists $self->{ pre_edge }) {
-		my $p = $self->{ pre_edge };
-		my $u = $self->current;
-		for my $v (@next) {
-		    $p->( $u, $v, $self, $self->{ state });
-		}
-	    }
+	    $self->{ tree }->add_edge( $current, $_ ) for @next;
+	    last unless my $p = $self->{ pre_edge };
+	    $p->($current, $_, $self, $self->{ state }) for @next;
 	    last;
 	} else {
 	    $self->visit_postorder;
@@ -247,29 +214,19 @@ sub next {
     }
     print "next.4 - @next\n" if DEBUG;
     unless (@next) {
-	unless ( @{ $self->{ roots } } ) {
-	    my $first = $self->{ first_root };
-	    if (defined $first) {
-		@next =
-		    ref $first eq 'CODE' ? 
-			$self->{ first_root }->( $self, $self->{ unseen } ) :
-			$first;
-		return unless @next;
-	    }
+	if (!@{ $self->{ roots } } and defined(my $first = $self->{ first_root })) {
+	    return unless @next = ref $first eq 'CODE'
+		? $first->( $self, $self->{ unseen } )
+		: $first;
 	}
-	unless (@next) {
-	    return unless defined $self->{ next_root };
-	    return unless @next =
-		$self->{ next_root }->( $self, $self->{ unseen } );
-	}
+	return if !@next and !$self->{ next_root };
+	return if !@next and !(@next = $self->{ next_root }->( $self, $self->{ unseen } ));
 	return if exists $self->{ seen }->{ $next[0] }; # Sanity check.
 	print "next.5 - @next\n" if DEBUG;
 	push @{ $self->{ roots } }, $next[0];
     }
     print "next.6 - @next\n" if DEBUG;
-    if (@next) {
-	$self->visit_preorder( @next );
-    }
+    $self->visit_preorder( @next ) if @next;
     return $next[0];
 }
 
