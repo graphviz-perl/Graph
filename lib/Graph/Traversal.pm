@@ -21,15 +21,10 @@ sub reset {
     delete $self->{ terminate };
 }
 
-my $see = sub {
+sub _see {
     my $self = shift;
     $self->see;
-};
-
-my $see_active = sub {
-    my $self = shift;
-    delete @{ $self->{ active } }{ $self->see };
-};
+}
 
 sub has_a_cycle {
     my ($u, $v, $t, $s) = @_;
@@ -101,7 +96,7 @@ sub new {
 	$self->{ down_edge } = $find_a_cycle if $g->is_undirected;
     }
     $self->{ add } = \&add_order;
-    $self->{ see } = $see;
+    $self->{ see } = \&_see;
     delete @attr{@KNOWN_CONFIG};
     Graph::_opt_unknown(\%attr);
     return $self;
