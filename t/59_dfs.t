@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 265;
+use Test::More;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -48,9 +48,10 @@ $ga->add_edge(qw(d f));
 sub simple {
     my $g = shift;
     my @v = $g->vertices;
-    is(@_, @v, "vertices");
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    is(@_, @v, "vertices") or diag explain \@_;
     my %v; $v{$_}++ for @_;
-    is_deeply [ grep { ($v{$_} || 0) != 1 } @v ], [], "... once";
+    is_deeply [ grep { ($v{$_} || 0) != 1 } @v ], [], "... once" or diag explain \%v;
 }
 
 {
@@ -364,13 +365,9 @@ sub simple {
     is($t->seen,   0);
     is($t->seeing, 0);
 
-    my @t0 = $t->preorder;
-    my @t1 = $t->postorder;
-    my @t2 = $t->dfs;
-
-    simple($g7, @t0);
-    simple($g7, @t1);
-    simple($g7, @t2);
+    simple($g7, $t->preorder);
+    simple($g7, $t->postorder);
+    simple($g7, $t->dfs);
 }
 
 {
@@ -382,13 +379,11 @@ sub simple {
     is($t->seen,   0);
     is($t->seeing, 0);
 
-    my @t0 = $t->preorder;
-    my @t1 = $t->postorder;
-    my @t2 = $t->dfs;
+    simple($g8, $t->preorder);
+    simple($g8, $t->postorder);
+    simple($g8, $t->dfs);
 
-    simple($g8, @t0);
-    simple($g8, @t1);
-    simple($g8, @t2);
+    is_deeply [ sort $t->seen ], [ $g8->vertices ] or diag explain [ $t->seen ];
 }
 
 {
@@ -646,3 +641,5 @@ is($td1->get_state('zot'), undef, "get_state");
     ok(!$t->is_root('b') );
     ok(!$t->is_root('c') );
 }
+
+done_testing;
