@@ -1200,7 +1200,18 @@ vertices, recursively.
 
 For undirected graphs, see L</all_neighbours> and L</all_reachable>.
 
-See also L</successors>.
+See also L</successors>, L</successors_by_radius>.
+
+=item successors_by_radius
+
+    @s = $g->successors_by_radius(@v, $radius)
+
+For a directed graph, returns all successor vertices of the argument
+vertices, recursively.
+
+For undirected graphs, see L</all_neighbours> and L</all_reachable>.
+
+See also L</successors>, L</successors_by_radius>.
 
 =item neighbors
 
@@ -1211,7 +1222,7 @@ See also L</successors>.
 Return the neighboring/neighbouring vertices.  Also known as the
 I<adjacent vertices>.
 
-See also L</all_neighbours> and L</all_reachable>.
+See also L</all_neighbours> L</all_reachable>, and L</neighbours_by_radius>.
 
 =item all_neighbors
 
@@ -1224,19 +1235,36 @@ recursively.  For a directed graph, recurses up predecessors and down
 successors.  For an undirected graph, returns all the vertices
 reachable from the argument vertices: equivalent to C<all_reachable>.
 
-See also L</neighbours> and L</all_reachable>.
+See also L</neighbours>, L</all_reachable>, and L</neighbours_by_radius>.
+
+=item neighbors_by_radius
+
+=item neighbours_by_radius
+
+   @n = $g->neighbours_by_radius(@v, $radius)
+
+Return the neighboring/neighbouring vertices of the argument vertices,
+recursively, out to the given radius.
 
 =item all_reachable
 
     @r = $g->all_reachable(@v)
 
-Return all the vertices reachable from of the argument vertices,
-recursively.  For a directed graph, equivalent to C<all_successors>.
+Return all the vertices reachable from the argument vertices,
+recursively. For a directed graph, equivalent to C<all_successors>.
 For an undirected graph, equivalent to C<all_neighbours>.  The argument
 vertices are not included in the results unless there are explicit
 self-loops.
 
-See also L</neighbours>, L</all_neighbours>, and L</all_successors>.
+See also L</neighbours>, L</all_neighbours>, L</all_successors>, and
+L</reachable_by_radius>.
+
+=item reachable_by_radius
+
+    @r = $g->reachable_by_radius(@v, $radius)
+
+Return all the vertices reachable from the argument vertices,
+recursively, out to the given radius.
 
 =item predecessorful_vertices
 
@@ -1269,7 +1297,14 @@ vertices, recursively.
 
 For undirected graphs, see L</all_neighbours> and L</all_reachable>.
 
-See also L</predecessors>.
+See also L</predecessors>, L</predecessors_by_radius>.
+
+=item predecessors_by_radius
+
+    @p = $g->predecessors_by_radius(@v, $radius)
+
+For a directed graph, returns all predecessor vertices of the argument
+vertices, recursively, out to the given radius.
 
 =item isolated_vertices
 

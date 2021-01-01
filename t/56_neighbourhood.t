@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 70;
+use Test::More;
 
 use Graph;
 my $g0 = Graph->new;
@@ -21,6 +21,14 @@ my %methods = (
     [ [4], "2 5", "2 5" ],
     [ [5], "4", "4" ],
     [ [6], "", "" ],
+  ],
+  neighbours_by_radius => [
+    [ [1, 1], "1 2 3", "1 2 3" ],
+    [ [2, 1], "1 4", "1 4" ],
+    [ [3, 1], "1", "1" ],
+    [ [4, 1], "2 5", "2 5" ],
+    [ [5, 2], "2 4", "2 4" ],
+    [ [6, 1], "", "" ],
   ],
   is_successorless_vertex => [
     [ [1], "", "" ],
@@ -74,3 +82,5 @@ for my $m (sort keys %methods) {
     is( "@{[sort $g1->$m(@$args)]}", $expected1, "undirected $m (@$args)" );
   }
 }
+
+done_testing;

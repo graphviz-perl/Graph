@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 125;
+use Test::More;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -13,7 +13,8 @@ sub test_graphs {
       my $gs = $g->stringify;
       for my $call ( @{ $this_m->{$k} } ) {
 	my ($arg, $expected) = @$call;
-	is "@{[sort $g->$m($arg)]}", $expected, "$label $k($gs) $m ($arg)";
+        my @args = split ' ', $arg;
+	is "@{[sort $g->$m(@args)]}", $expected, "$label $k($gs) $m (@args)";
       }
     }
   }
@@ -73,6 +74,16 @@ my %V_E = (
 	    d3 => [ ['a', ""], ['b', "a"], ['c', "a"], ['d', "a b"], ['e', "a b"], ['f', "a c"], ['g', "a c"] ],
 	    d4 => [ ['a', "a b"], ['b', "a b"] ],
 	    d5 => [ ['a', "a"] ],
+	},
+	predecessors_by_radius => {
+	    d0 => [ ['a 1', ""] ],
+	    d1 => [ ['a 1', ""] ],
+	    d2a => [ ['a 1', ""], ['b 1', ""] ],
+	    d2b => [ ['a 1', ""], ['b 1', "a"], ['b 2', "a"] ],
+	    d2c => [ ['a 0', ""], ['b 1', "a"], ['b 2', "a b"] ],
+	    d3 => [ ['a 1', ""], ['b 1', "a"], ['c 2', "a"], ['d 1', "b"], ['d 2', "a b"], ['e 1', "b"], ['f 1', "c"], ['g 1', "c"], ['g 2', "a c"] ],
+	    d4 => [ ['a 1', "a b"], ['b 1', "a"] ],
+	    d5 => [ ['a 1', "a"] ],
 	},
 	all_neighbors => {
 	    d0 => [ ['a', ""] ],
@@ -141,3 +152,5 @@ my %V_E = (
     is_deeply \@g, [ 0, 1 ],
       'all_successors works on false names' or diag explain \@g;
 }
+
+done_testing;

@@ -612,14 +612,14 @@ sub predecessors {
     map @$_, map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
 }
 
-sub _all_cessors {
-    my ($method, $self_only_if_loop) = splice @_, -2, 2;
+sub _cessors_by_radius {
+    my ($radius, $method, $self_only_if_loop) = splice @_, -3, 3;
     my ($g, @v) = @_;
     require Set::Object;
     my ($init, $next) = map Set::Object->new(@v), 1..2;
     my $self = Set::Object->new(grep $g->has_edge($_, $_), @v) if $self_only_if_loop;
     my ($got, $found) = map Set::Object->new, 1..2;
-    while (1) {
+    while (!defined $radius or $radius-- > 0) {
 	$found->insert($g->$method($next->members));
 	$next = $found->difference($got);
 	last if $next->is_null;  # Leave if no new found.
@@ -632,35 +632,54 @@ sub _all_cessors {
 
 sub all_successors {
     &expect_directed;
+    push @_, undef, 'successors', 0;
+    goto &_cessors_by_radius;
+}
+
+sub successors_by_radius {
+    &expect_directed;
     push @_, 'successors', 0;
-    goto &_all_cessors;
+    goto &_cessors_by_radius;
 }
 
 sub all_predecessors {
     &expect_directed;
-    push @_, 'predecessors', 0;
-    goto &_all_cessors;
+    push @_, undef, 'predecessors', 0;
+    goto &_cessors_by_radius;
 }
+
+sub predecessors_by_radius {
+    &expect_directed;
+    push @_, 'predecessors', 0;
+    goto &_cessors_by_radius;
+}
+
+sub neighbours_by_radius {
+    push @_, 'neighbours', 1;
+    goto &_cessors_by_radius;
+}
+*neighbors_by_radius = \&neighbours_by_radius;
 
 sub neighbours {
     require Set::Object;
     my $s = Set::Object->new(map @$_[1..$#$_], &_edges_from);
     $s->insert(map @$_[0..$#$_-1], &_edges_to) if &is_directed;
-    my $V = $_[0]->[ _V ];
-    map @$_, map @$_, $V->get_paths_by_ids([ map [$_], $s->members ]);
+    map @$_, map @$_, $_[0]->[ _V ]->get_paths_by_ids([ map [$_], $s->members ]);
 }
-
 *neighbors = \&neighbours;
 
 sub all_neighbours {
-    push @_, 'neighbours', 1;
-    goto &_all_cessors;
+    push @_, undef, 'neighbours', 1;
+    goto &_cessors_by_radius;
 }
-
 *all_neighbors = \&all_neighbours;
 
 sub all_reachable {
     &directed ? goto &all_successors : goto &all_neighbors;
+}
+
+sub reachable_by_radius {
+    &directed ? goto &successors_by_radius : goto &neighbors_by_radius;
 }
 
 sub delete_edge {
@@ -2739,17 +2758,7 @@ sub could_be_isomorphic {
 # Analysis functions.
 
 sub subgraph_by_radius {
-    my ($g, @v) = @_;
-    my $rad = pop @v;
-    return unless defined $rad && $rad >= 0 && @v;
-    require Set::Object;
-    my ($got, $next) = map Set::Object->new(@v), 1..2;
-    while ($rad--) {
-	my $succ = Set::Object->new($g->successors($next->members));
-	$next = $succ->difference($got);
-	$got->insert($succ->members);
-    }
-    $g->subgraph([ $got->members ]);
+    $_[0]->subgraph([ @_[1..$#_-1], &reachable_by_radius ]);
 }
 
 sub clustering_coefficient {

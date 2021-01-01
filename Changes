@@ -1,4 +1,5 @@
 - use Set::Object
+- {neighbours,successors,predecessors,reachable}_by_radius
 
 0.9715 2020-12-31
 - fix AdjacencyMap::Light attributes so delete when path deleted
