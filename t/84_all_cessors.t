@@ -13,7 +13,7 @@ sub test_graphs {
       my $gs = $g->stringify;
       for my $call ( @{ $this_m->{$k} } ) {
 	my ($arg, $expected) = @$call;
-        my @args = split ' ', $arg;
+	my @args = split ' ', $arg;
 	is "@{[sort $g->$m(@args)]}", $expected, "$label $k($gs) $m (@args)";
       }
     }
