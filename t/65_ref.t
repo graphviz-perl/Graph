@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 1357;
+use Test::More;
 
 use Graph;
 use Graph::AdjacencyMap qw(:flags);
@@ -47,6 +47,9 @@ sub test_adjmap {
     ok( !$m->${ \$map->{has} }(@$path_maybe_id), $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
     is_deeply( $got, [ $is_multi ? $maybe_id : 0 ], $label ) or diag explain $got;
+    is $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label;
+    ok $m->_has_path_attrs(@$path_maybe_id), $label;
+    ok $m->_del_path_attrs(@$path_maybe_id);
     ok( $m->has_paths, $label );
     ok( $m->${ \$map->{has} }(@$path_maybe_id), $label );
     $m->${ \$map->{set} }(@$path_maybe_id); # second time
@@ -102,7 +105,7 @@ sub test_adjmap {
     is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ ], $label;
     is( $m->_get_path_count($path_expected), 1, $label );
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
-    $m->_del_path_attrs(@$path_maybe_id);
+    ok $m->_del_path_attrs(@$path_maybe_id);
     ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );
     is( $m->_get_path_count($path_expected), 1, $label );
     if ($is_multi) {
@@ -232,3 +235,4 @@ for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
     }
 }
 
+done_testing;
