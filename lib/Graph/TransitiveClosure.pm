@@ -17,11 +17,8 @@ sub new {
     Graph::__carp_confess(__PACKAGE__."->new given non-Graph '$g'")
 	if !(ref $g and $g->isa('Graph'));
     %opt = (path_vertices => 1) unless %opt;
-    my $attr = Graph::_defattr();
-    if (exists $opt{ attribute_name }) {
-	$attr = $opt{ attribute_name };
-	# No delete $opt{ attribute_name } since we need to pass it on.
-    }
+    # No delete $opt{ attribute_name } since we need to pass it on.
+    my $attr = exists $opt{ attribute_name } ? $opt{ attribute_name } : Graph::_defattr();
     $opt{ reflexive } = 1 unless exists $opt{ reflexive };
     my $tcg = $g->new(
 	multiedged => 0,
@@ -31,16 +28,18 @@ sub new {
 	\&_transitive_closure_matrix_compute, %opt);
     my $tcm00 = $tcm->[0][0]; # 0=am, 0=bitmatrix
     my $tcm01 = $tcm->[0][1]; #     , 1=hash mapping v-name to the offset into dm data structures (in retval of $g->vertices)
+    my @edges;
     for my $u ($tcm->vertices) {
 	my $tcm00i = $tcm00->[ $tcm01->{ $u } ];
 	for my $v ($tcm->vertices) {
 	    next if $u eq $v && ! $opt{ reflexive };
 	    my $j = $tcm01->{ $v };
-	    $tcg->add_edge($u, $v) if vec($tcm00i, $j, 1);
+	    push @edges, [$u, $v] if vec($tcm00i, $j, 1);
 				      # $tcm->is_transitive($u, $v)
 				      # $tcm->[0]->get($u, $v)
 	}
     }
+    $tcg->add_edges(@edges);
     $tcg->set_graph_attribute('_tcm', [ $g->[ _G ], $tcm ]);
     bless $tcg, $class;
 }
