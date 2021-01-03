@@ -131,19 +131,29 @@ sub has_any_paths {
 	: grep defined, @{ $_[0]->[ _i ] };
 }
 
-sub __has_path {
-    &__arg;
-    my ($f, $a, $s, @k) = (@{ $_[0] }[ _f, _arity, _s ], @{ $_[1] });
-    @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
-    return if !defined(my $orig_s = $s = defined($a) ? $s : $s->[ @k ]);
-    my @p = ($orig_s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]);
-    @k = '' if !@k;
-    (exists $s->{$k[-1]} ? $s->{$k[-1]} : return, \@p, \@k);
+sub _set_path_attr_common {
+    push @_, 0;
+    my ($i) = &__set_path;
+    my $attr = (my $m = $_[0])->[ _attr ];
+    ($m->[ _f ] & _MULTI) ? \$attr->[ $i ]{ $_[2] } : \$attr->[ $i ];
+}
+
+sub _set_path_attrs {
+    ${ &{ $_[0]->can('_set_path_attr_common') } } = $_[-1];
+}
+
+sub _set_path_attr {
+    ${ &{ $_[0]->can('_set_path_attr_common') } }->{ $_[-2] } = $_[-1];
 }
 
 sub set_path {
     push @_, 1;
     (&__set_path)[0];
+}
+
+sub set_path_by_multi_id {
+    push @_, 1;
+    (&__set_path)[1];
 }
 
 sub __set_path {
@@ -174,16 +184,12 @@ sub __set_path {
     ($i, $id);
 }
 
-sub _set_path_attr_common {
-    push @_, 0;
-    my ($i) = &__set_path;
-    my $attr = (my $m = $_[0])->[ _attr ];
-    ($m->[ _f ] & _MULTI) ? \$attr->[ $i ]{ $_[2] } : \$attr->[ $i ];
-}
-
-sub set_path_by_multi_id {
-    push @_, 1;
-    (&__set_path)[1];
+sub _get_path_count {
+    return 0 unless my ($i) = &__has_path;
+    my $f = (my $m = $_[0])->[ _f ];
+    return
+        ($f & _COUNT) ? $m->[ _count ][ $i ] :
+        ($f & _MULTI) ? scalar keys %{ $m->[ _attr ][ $i ] } : 1;
 }
 
 sub has_path {
@@ -193,18 +199,6 @@ sub has_path {
 sub has_path_by_multi_id {
     return undef unless my ($i) = &__has_path;
     return exists $_[0]->[ _attr ][ $i ]->{ $_[2] };
-}
-
-sub _sequence_del {
-    my ($map_i, $id, $p, $k) = @_;
-    delete $map_i->[ $id ];
-    delete $p->[-1]->{ $k->[-1] };
-    while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
-	delete $p->[-1]->{ $k->[-1] };
-	pop @$p;
-	pop @$k;
-    }
-    return 1;
 }
 
 sub del_path {
@@ -238,17 +232,68 @@ sub rename_path {
     return 1;
 }
 
+sub _del_path_attrs {
+    return unless my ($i) = &__has_path;
+    my $attr = (my $m = $_[0])->[ _attr ];
+    return $attr->[ $i ]{ $_[2] } = undef, 1 if ($m->[ _f ] & _MULTI);
+    delete $attr->[ $i ];
+}
+
+sub __has_path {
+    &__arg;
+    my ($f, $a, $s, @k) = (@{ $_[0] }[ _f, _arity, _s ], @{ $_[1] });
+    @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
+    return if !defined(my $orig_s = $s = defined($a) ? $s : $s->[ @k ]);
+    my @p = ($orig_s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]);
+    @k = '' if !@k;
+    (exists $s->{$k[-1]} ? $s->{$k[-1]} : return, \@p, \@k);
+}
+
 sub _get_path_attrs {
     return unless my ($i) = &__has_path;
     my $attrs = (my $m = $_[0])->[ _attr ][ $i ];
     ($m->[ _f ] & _MULTI) ? $attrs->{ $_[2] } : $attrs;
 }
 
-sub _del_path_attrs {
-    return unless my ($i) = &__has_path;
-    my $attr = (my $m = $_[0])->[ _attr ];
-    return $attr->[ $i ]{ $_[2] } = undef, 1 if ($m->[ _f ] & _MULTI);
-    delete $attr->[ $i ];
+sub _has_path_attrs {
+    keys %{ &{ $_[0]->can('_get_path_attrs') } || return undef } ? 1 : 0;
+}
+
+sub _has_path_attr {
+    exists(( &{ $_[0]->can('_get_path_attrs') } || return )->{ $_[-1] });
+}
+
+sub _get_path_attr {
+    ( &{ $_[0]->can('_get_path_attrs') } || return )->{ $_[-1] };
+}
+
+sub _get_path_attr_names {
+    keys %{ &{ $_[0]->can('_get_path_attrs') } || return };
+}
+
+sub _get_path_attr_values {
+    values %{ &{ $_[0]->can('_get_path_attrs') } || return };
+}
+
+sub _del_path_attr {
+    return unless my $attrs = &{ $_[0]->can('_get_path_attrs') };
+    return 0 unless exists $attrs->{ my $attr = $_[-1] };
+    delete $attrs->{$attr};
+    return 1 if keys %$attrs;
+    &{ $_[0]->can('_del_path_attrs') };
+    1;
+}
+
+sub _sequence_del {
+    my ($map_i, $id, $p, $k) = @_;
+    delete $map_i->[ $id ];
+    delete $p->[-1]->{ $k->[-1] };
+    while (@$p && @$k && keys %{ $p->[-1]->{ $k->[-1] } } == 0) {
+	delete $p->[-1]->{ $k->[-1] };
+	pop @$p;
+	pop @$k;
+    }
+    return 1;
 }
 
 sub get_paths_by_ids {
@@ -298,56 +343,11 @@ sub get_ids_by_paths {
     @id;
 }
 
-sub _has_path_attrs {
-    keys %{ &{ $_[0]->can('_get_path_attrs') } || return undef } ? 1 : 0;
-}
-
-sub _set_path_attrs {
-    ${ &{ $_[0]->can('_set_path_attr_common') } } = $_[-1];
-}
-
-sub _has_path_attr {
-    exists(( &{ $_[0]->can('_get_path_attrs') } || return )->{ $_[-1] });
-}
-
-sub _set_path_attr {
-    ${ &{ $_[0]->can('_set_path_attr_common') } }->{ $_[-2] } = $_[-1];
-}
-
 sub __strval {
     my ($k, $f) = @_;
     return $k unless ref $k && ($f & _REF);
     require overload;
     (($f & _STR) xor overload::Method($k, '""')) ? overload::StrVal($k) : $k;
-}
-
-sub _get_path_attr {
-    ( &{ $_[0]->can('_get_path_attrs') } || return )->{ $_[-1] };
-}
-
-sub _get_path_attr_names {
-    keys %{ &{ $_[0]->can('_get_path_attrs') } || return };
-}
-
-sub _get_path_attr_values {
-    values %{ &{ $_[0]->can('_get_path_attrs') } || return };
-}
-
-sub _get_path_count {
-    return 0 unless my ($i) = &__has_path;
-    my $f = (my $m = $_[0])->[ _f ];
-    return
-        ($f & _COUNT) ? $m->[ _count ][ $i ] :
-        ($f & _MULTI) ? scalar keys %{ $m->[ _attr ][ $i ] } : 1;
-}
-
-sub _del_path_attr {
-    return unless my $attrs = &{ $_[0]->can('_get_path_attrs') };
-    return 0 unless exists $attrs->{ my $attr = $_[-1] };
-    delete $attrs->{$attr};
-    return 1 if keys %$attrs;
-    &{ $_[0]->can('_del_path_attrs') };
-    1;
 }
 
 sub __arg {
