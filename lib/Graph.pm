@@ -304,18 +304,6 @@ sub has_vertices {
     scalar $g->[ _V ]->has_any_paths;
 }
 
-sub _vertex_ids_ensure {
-    push @_, 1;
-    goto &_vertex_ids_maybe_ensure;
-}
-
-sub _vertex_ids_ensure_multi {
-    my $id = pop;
-    my @i = &_vertex_ids_ensure;
-    push @_, $id;
-    @i ? (@i, $id) : ();
-}
-
 sub _union_find_add_edge {
     my ($g, $u, $v) = @_;
     $g->[ _U ]->union($u, $v);
@@ -336,9 +324,14 @@ sub add_edge {
     return $g;
 }
 
-sub _vertex_ids_multi {
+sub _vertex_ids_ensure {
+    push @_, 1;
+    goto &_vertex_ids_maybe_ensure;
+}
+
+sub _vertex_ids_ensure_multi {
     my $id = pop;
-    my @i = &_vertex_ids;
+    my @i = &_vertex_ids_ensure;
     push @_, $id;
     @i ? (@i, $id) : ();
 }
@@ -346,6 +339,13 @@ sub _vertex_ids_multi {
 sub _vertex_ids {
     push @_, 0;
     goto &_vertex_ids_maybe_ensure;
+}
+
+sub _vertex_ids_multi {
+    my $id = pop;
+    my @i = &_vertex_ids;
+    push @_, $id;
+    @i ? (@i, $id) : ();
 }
 
 sub _vertex_ids_maybe_ensure {
