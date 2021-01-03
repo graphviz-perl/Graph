@@ -17,6 +17,11 @@ our $VERSION = '0.9716';
 
 require 5.006; # Weak references are absolutely required.
 
+my @GRAPH_PROPS_COPIED = qw(
+    undirected refvertexed countvertexed multivertexed __stringified
+    hyperedged countedged multiedged
+);
+
 my $can_deep_copy_Storable;
 sub _can_deep_copy_Storable () {
     return $can_deep_copy_Storable if defined $can_deep_copy_Storable;
@@ -146,12 +151,7 @@ sub new {
     if (ref $class && $class->isa('Graph')) {
 	my %existing;
 	no strict 'refs';
-        for my $c (qw(undirected refvertexed
-                      countvertexed multivertexed
-                      hyperedged countedged multiedged
-		      __stringified)) {
-	    $existing{$c}++ if $class->$c;
-        }
+	$existing{$_}++ for grep $class->$_, @GRAPH_PROPS_COPIED;
 	$existing{unionfind}++ if $class->has_union_find;
 	%opt = (%existing, %opt) if %existing; # allow overrides
     }
@@ -1177,16 +1177,7 @@ sub copy {
     my ($g, @args) = @_;
     my %opt = _get_options( \@args );
     no strict 'refs';
-    my $c =
-	(ref $g)->new(map +($_ => &{$_} ? 1 : 0),
-		      qw(directed
-			 refvertexed
-			 countvertexed
-			 multivertexed
-			 hyperedged
-			 countedged
-			 multiedged
-		         __stringified));
+    my $c = (ref $g)->new(map +($_ => &$_ ? 1 : 0), @GRAPH_PROPS_COPIED);
     $c->add_vertices(&isolated_vertices);
     $c->add_edges(&_edges05);
     return $c;
