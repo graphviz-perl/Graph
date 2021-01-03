@@ -260,17 +260,7 @@ sub _union_find_add_vertex {
 sub add_vertex {
     __carp_confess "Graph::add_vertex: use add_vertices for more than one vertex" if @_ != 2;
     __carp_confess "Graph::add_vertex: undef vertex" if grep !defined, @_;
-    my $g = $_[0];
-    my $V = $g->[ _V ];
-    if (&is_multivertexed) {
-	push @_, _GEN_ID;
-	goto &add_vertex_by_id;
-    }
-    return $g if !&is_countvertexed and defined $V->has_path([$_[1]]);
-    $V->set_path([@_[1..$#_]]);
-    $g->[ _G ]++;
-    &_union_find_add_vertex if &has_union_find;
-    return $g;
+    goto &add_vertices;
 }
 
 sub has_vertex {
@@ -311,17 +301,7 @@ sub _union_find_add_edge {
 
 sub add_edge {
     &expect_hyperedged, &expect_undirected if @_ != 3;
-    my $g = $_[0];
-    if (&is_multiedged) {
-	push @_, _GEN_ID;
-	goto &add_edge_by_id;
-    }
-    my @i = &_vertex_ids_ensure;
-    @i = sort @i if &is_undirected;
-    $g->[ _E ]->set_path( \@i );
-    $g->[ _G ]++;
-    $g->_union_find_add_edge( @i ) if &has_union_find;
-    return $g;
+    $_[0]->add_edges([ @_[1..$#_] ]);
 }
 
 sub _vertex_ids_ensure {
@@ -1063,23 +1043,37 @@ sub _delete_attribute {
 }
 
 sub add_vertices {
-    my $g = $_[0];
-    $g->add_vertex( $_ ) for @_[1..$#_];
-    return $g;
+    my ($g, @v) = @_;
+    if (&is_multivertexed) {
+	$g->add_vertex_by_id($_, _GEN_ID) for @v;
+	return $g;
+    }
+    $g->[ _V ]->set_path([$_]) for @v;
+    $g->[ _G ]++;
+    return $g if !&has_union_find;
+    $g->_union_find_add_vertex($_) for @v;
+    $g;
 }
 
 sub add_edges {
-    my $g = shift;
-    while (@_) {
-	my $u = shift @_;
-	if (ref $u eq 'ARRAY') {
-	    $g->add_edge( @$u );
-	} else {
-	    __carp_confess "Graph::add_edges: missing end vertex" if !@_;
-	    my $v = shift @_;
-	    $g->add_edge( $u, $v );
-	}
+    my ($g, @args) = @_;
+    my @edges;
+    while (defined(my $u = shift @args)) {
+	push @edges, ref $u eq 'ARRAY' ? $u : @args ? [ $u, shift @args ]
+	    : __carp_confess "Graph::add_edges: missing end vertex";
     }
+    if (&is_multiedged) {
+	$g->add_edge_by_id(@$_, _GEN_ID) for @edges;
+	return $g;
+    }
+    my ($undirected, $uf) = (&is_undirected, &has_union_find);
+    for (@edges) {
+	my @i = $g->_vertex_ids_ensure(@$_);
+	@i = sort @i if $undirected;
+	$g->[ _E ]->set_path( \@i );
+	$g->_union_find_add_edge( @i ) if $uf;
+    }
+    $g->[ _G ]++;
     return $g;
 }
 
