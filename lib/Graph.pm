@@ -212,11 +212,9 @@ sub new {
 
     $g->add_vertices(@V) if @V;
 
-    for my $e (@E) {
-	__carp_confess "Graph: edges should be array refs"
-	    if ref $e ne 'ARRAY';
-	$g->add_edge(@$e);
-    }
+    __carp_confess "Graph: edges should be array refs"
+	if grep ref $_ ne 'ARRAY', @E;
+    $g->add_edges(@E);
 
     $g->[ _U ] = do { require Graph::UnionFind; Graph::UnionFind->new }
 	if $gflags & _UNIONFIND;
@@ -858,11 +856,13 @@ for my $p (qw(
 sub add_path {
     my $g = shift;
     my $u = shift;
+    my @edges;
     while (@_) {
 	my $v = shift;
-	$g->add_edge($u, $v);
+	push @edges, [ $u, $v ];
 	$u = $v;
     }
+    $g->add_edges(@edges);
     return $g;
 }
 
@@ -1187,8 +1187,8 @@ sub copy {
 			 countedged
 			 multiedged
 		         __stringified));
-    $c->add_vertex($_) for &isolated_vertices;
-    $c->add_edge(@$_) for &_edges05;
+    $c->add_vertices(&isolated_vertices);
+    $c->add_edges(&_edges05);
     return $c;
 }
 
@@ -1250,12 +1250,12 @@ sub complete_graph {
     my $directed = &is_directed;
     my $c = &new;
     my @v = &_vertices05;
+    my @edges;
     for (my $i = $#v; $i >= 0; $i-- ) {
-	for (my $j = $i - 1; $j >= 0; $j-- ) {
-	    $c->add_edge($v[$i], $v[$j]);
-	    $c->add_edge($v[$j], $v[$i]) if $directed;
-	}
+	push @edges, map +([$v[$i], $v[$_]], $directed ? [$v[$_], $v[$i]] : ()),
+	    0..$i - 1;
     }
+    $c->add_edges(@edges);
     return $c;
 }
 
@@ -1313,7 +1313,6 @@ sub add_weighted_vertices {
     my $g = shift;
     while (@_) {
 	my ($v, $w) = splice @_, 0, 2;
-	$g->add_vertex($v);
 	$g->set_vertex_attribute($v, $defattr, $w);
     }
 }
@@ -1717,12 +1716,14 @@ sub MST_Kruskal {
     my $UF  = Graph::UnionFind->new;
     $UF->add($_) for $g->_vertices05;
 
+    my @edges;
     for my $e ($g->_MST_edges(\%attr)) {
 	my ($u, $v) = @$e; # TODO: hyperedges
 	next if $UF->find( $u ) eq $UF->find( $v );
 	$UF->union($u, $v);
-	$MST->add_edge($u, $v);
+	push @edges, [ $u, $v ];
     }
+    $MST->add_edges(@edges);
 
     return $MST;
 }
@@ -1848,10 +1849,7 @@ sub topological_sort {
 *toposort = \&topological_sort;
 
 sub _undirected_copy_compute {
-  my $c = Graph->new(directed => 0);
-  $c->add_vertex($_) for &isolated_vertices; # TODO: if iv ...
-  $c->add_edge(@$_) for &_edges05;
-  return $c;
+  Graph->new(directed => 0, vertices => [&isolated_vertices], edges => [&_edges05]);
 }
 
 sub undirected_copy {
@@ -1863,14 +1861,9 @@ sub undirected_copy {
 
 sub directed_copy {
     &expect_undirected;
-    my $c = Graph::Directed->new;
-    $c->add_vertex($_) for &isolated_vertices; # TODO: if iv ...
-    for my $e (&_edges05) {
-	my @e = @$e;
-	$c->add_edge(@e);
-	$c->add_edge(reverse @e);
-    }
-    return $c;
+    my @edges = &_edges05;
+    Graph->new(directed => 1, vertices => [&isolated_vertices],
+	edges => [@edges, map [reverse @$_], @edges]);
 }
 
 *directed_copy_graph = \&directed_copy;
@@ -2146,8 +2139,7 @@ sub strongly_connected_graph {
     my @s = map $sc_cb->(@$_), @$c;
     $s->set_vertex_attribute($s[$_], 'subvertices', $c->[$_]) for 0..$#$c;
     require List::Util;
-    $s->add_edge( @s[ @$v2c{ @$_ } ] )
-	for grep List::Util::uniq( @$v2c{ @$_ } ) > 1, &_edges05;
+    $s->add_edges(map [@s[ @$v2c{ @$_ } ]], grep List::Util::uniq( @$v2c{ @$_ } ) > 1, &_edges05);
     return $s;
 }
 
@@ -2279,15 +2271,17 @@ sub biconnected_graph {
     my @s = map $sc_cb->(@$_), @$bc;
     $bcg->set_vertex_attribute($s[$_], 'subvertices', $bc->[$_]) for 0..$#$bc;
     my %k;
+    my @edges;
     for my $i (0..$#$bc) {
 	my @u = @{ $bc->[ $i ] };
 	for my $j (0..$i-1) {
 	    my %j; @j{ @{ $bc->[ $j ] } } = ();
 	    next if !grep exists $j{ $_ }, @u;
 	    next if $k{ $i }{ $j }++;
-	    $bcg->add_edge(@s[$i, $j]);
+	    push @edges, [ @s[$i, $j] ];
 	}
     }
+    $bcg->add_edges(@edges);
     return $bcg;
 }
 
