@@ -64,22 +64,27 @@ if ($OPT{fill} < 0.0 || $OPT{fill} > 1.0) {
 my $E = int(($OPT{V} * ($OPT{V} - 1) * $OPT{fill}) / ($OPT{directed} ? 1 : 2));
 my $g = $OPT{directed} ? Graph::Directed->new() : Graph::Undirected->new();
 my $e = $E;
+my (%v1_v2, @edges);
+#my $t0_edge = time();
 while (1) {
     my $u = int(rand($OPT{V}));
     my $v = int(rand($OPT{V}));
-    if ($u ne $v && !$g->has_edge($u, $v)) {
-	$g->add_edge($u, $v);
+    if ($u ne $v && !exists $v1_v2{$u}{$v}) {
+        push @edges, [$u, $v];
+        $v1_v2{$u}{$v} = undef;
 	last unless --$e;
     }
 }
 print "($OPT{V} vertices, $E edges)\n";
 
 if (exists $WTEST{$OPT{test}}) {
-    for my $e ($g->edges) {
-	my ($u, $v) = @$e;
-	$g->set_edge_weight($u, $v, rand());
-    }
+    push @$_, rand() for @edges;
+    $g->add_weighted_edges(map @$_, @edges);
+} else {
+    $g->add_edges(@edges);
 }
+#my $t1_edge = time();
+#printf "EDGE TIME real %.2f\n", $t1_edge - $t0_edge;
 
 my $t0 = time();
 my ($u0, $s0) = times();
