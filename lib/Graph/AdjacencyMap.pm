@@ -51,45 +51,29 @@ sub _attr () { 5 } # attributes - two-level for MULTI
 sub _count () { 6 }
 
 sub stringify {
-    my $m = shift;
-    my @rows;
-    my $a = $m->[ _arity ];
-    my $s = $m->[ _s ];
-    my $f = $m->[ _f ];
-    my $multi = $f & _MULTI;
+    my ($f, $a, $s, $m) = (@{ $_[0] }[ _f, _arity, _s ], $_[0]);
+    my ($multi, @rows) = $f & _MULTI;
     my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
     if (defined $a and $a == 2) {
-	my (%p, %s);
-	for my $t (@p) {
-	    my ($u, $v) = @$t;
-	    $p{$u} = $s{$v} = 1;
-	}
-	my @s = sort keys %s;
-	@rows = [ 'to:', @s ];
-	for my $u (sort keys %p) {
-	    my @r = $u;
-	    for my $v (@s) {
-		my $text = defined $m->has_path([$u, $v]) ? 1 : '';
-		my $attrs = $multi
-		    ? $m->[ _attr ][ ( $m->__has_path( [$u, $v] ) )[0] ]
-		    : $m->_get_path_attrs([$u, $v])
-		    if $text;
-		$text = $m->_dumper($attrs) if defined $attrs;
-		push @r, $text;
-	    }
-	    push @rows, \@r;
-	}
+	my (%pre, %suc, @s);
+	$pre{$_->[0]} = $suc{$_->[1]} = 1 for @p;
+	@rows = ([ 'to:', @s = sort keys %suc ], map {
+	    my $p = $_;
+	    [ $p, map {
+		my $text = defined(my $id = $m->has_path([$p, $_])) ? 1 : '';
+		my $attrs = !$text ? undef :
+		    $multi ? $m->[ _attr ][$id] : $m->_get_path_attrs([$p, $_]);
+		defined $attrs ? $m->_dumper($attrs) : $text;
+	    } @s ];
+	} sort keys %pre);
     } else {
-	for my $v (@p) {
-	    my @r = (defined $a and $a == 1) ? $v->[0] : '[' . join(' ', @$v) . ']';
-	    my ($text) = $m->get_ids_by_paths([ $v ], 0);
+	@rows = map {
 	    my $attrs = $multi
-		? $m->[ _attr ][ ( $m->__has_path( $v ) )[0] ]
-		: $m->_get_path_attrs($v);
-	    $text .= ",".$m->_dumper($attrs) if defined $attrs;
-	    push @r, $text;
-	    push @rows, \@r;
-	}
+		? $m->[ _attr ][ $m->has_path($_) ] : $m->_get_path_attrs($_);
+	    [ (defined $a and $a == 1) ? $_->[0] : '[' . join(' ', @$_) . ']',
+		($m->get_ids_by_paths([ $_ ], 0))[0].
+		    (!defined $attrs ? '' : ",".$m->_dumper($attrs)) ];
+	} @p;
     }
     join '',
 	map "$_\n",
