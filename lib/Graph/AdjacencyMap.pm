@@ -83,7 +83,7 @@ sub stringify {
     } else {
 	for my $v (@p) {
 	    my @r = (defined $a and $a == 1) ? $v->[0] : '[' . join(' ', @$v) . ']';
-	    my ($text) = $m->get_ids_by_paths([ $v ]);
+	    my ($text) = $m->get_ids_by_paths([ $v ], 0);
 	    my $attrs = $multi
 		? $m->[ _attr ][ ( $m->__has_path( $v ) )[0] ]
 		: $m->_get_path_attrs($v);
@@ -261,23 +261,40 @@ sub paths {
 
 sub get_ids_by_paths {
     my ($f, $a, $s, $m, $list, $ensure) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
-    my $is_hyper = !defined $a;
-    return map { # Fast path
-	my @p = @$_;
-	my $this_s = $s;
-	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $this_s : $ensure ? return : ();
-    } @$list if !($is_hyper or $f & (_REF|_UNIQ));
-    map {
-	my @p = @$_;
-	my $this_s = $is_hyper ? $s->[ @p ] : $s;
+    my ($is_multi, $is_hyper) = (($f & _MULTI), !defined $a);
+    my (@id, @empty_indices, @non_exist);
+    if (!($is_hyper or $f & (_REF|_UNIQ))) { # Fast path
+	for (@$list) {
+	    my ($this_s, @p) = ($s, @$_);
+	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	    push @id,
+		defined $this_s ? $this_s :
+		!$ensure ? return :
+		(push(@empty_indices, 0+@id), push(@non_exist, $_), undef)[2];
+	}
+	$id[$empty_indices[$_]] = $is_multi
+	    ? $m->set_path_by_multi_id($non_exist[$_], _GEN_ID)
+	    : $m->set_path($non_exist[$_]) for 0..$#empty_indices;
+	return @id;
+    }
+    my ($is_ref, @dereffed) = (($f & _REF), ($f & _REF) ? map [ map ref() ? __strval($_, $f) : $_, @$_ ], @$list : ());
+    for (0..$#$list) {
+	my ($this_s, @p) = ($is_hyper ? $s->[ @{ $list->[$_] } ] : $s,
+	    $is_ref ? @{ $dereffed[$_] } : @{ $list->[$_] });
 	if (@p) {
 	    $this_s = $this_s->{ shift @p } while @p and defined $this_s;
 	} else {
 	    $this_s = $this_s->{''};
 	}
-	defined $this_s ? $this_s : $ensure ? () : return
-    } ($f & _REF) ? map [ map ref() ? __strval($_, $f) : $_, @$_ ], @$list : @$list;
+	push @id,
+	    defined $this_s ? $this_s :
+	    !$ensure ? return :
+	    (push(@empty_indices, 0+@id), push(@non_exist, $list->[$_]), undef)[2];
+    }
+    $id[$empty_indices[$_]] = $is_multi
+	? $m->set_path_by_multi_id($non_exist[$_], _GEN_ID)
+	: $m->set_path($non_exist[$_]) for 0..$#empty_indices;
+    @id;
 }
 
 sub _has_path_attrs {
@@ -405,10 +422,12 @@ array-refs of paths.
 
 =head2 get_ids_by_paths
 
-    @ids = $m->get_ids_by_paths([ \@seq1, \@seq2... ]);
+    @ids = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure);
 
 Given an array-ref of array-refs with paths, returns a list of IDs of
 existing paths (non-existing ones will not be represented).
+
+If C<$ensure> is true, will first create paths that do not already exist.
 
 =head2 rename_path($from, $to)
 

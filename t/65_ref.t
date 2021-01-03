@@ -40,6 +40,8 @@ sub test_adjmap {
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
     my $path_expected = [ $m->_is_UNIQ ? uniq @$path : @$path ];
+    my @paths_to_create = map [ ($_) x (defined $args->[1] ? @$path_expected : 1) ], qw(y z);
+    my @paths_to_create_maybe_id = map [ $_, $is_multi ? 0 : () ], @paths_to_create;
     my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($args->[0])]}, @{[$m->_dumper($args->[1])]})";
     my $got = [ $m->get_ids_by_paths([ $path_expected ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
@@ -114,6 +116,9 @@ sub test_adjmap {
 	$got = [ sort $m->get_multi_ids($path_expected) ];
 	is_deeply $got, [ sort $path_maybe_id->[-1], qw(0 hello) ], $label or diag explain $got;
     }
+    $got = [ $m->get_ids_by_paths([ $path_expected, @paths_to_create ], 1) ];
+    is_deeply $got, [ $is_multi ? (1, 0, 0) : 1..3 ], $label or diag explain $got;
+    ok $m->${ \$map->{has} }(@$_), $label for @paths_to_create_maybe_id;
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
     $m->${ \$map->{del} }(@$path_maybe_id);
     ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );

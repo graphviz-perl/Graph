@@ -42,15 +42,18 @@ sub set_path {
 }
 
 sub get_ids_by_paths {
-    my ($m, $list, $ensure) = @_;
-    my ($n, $f, $a, $i, $s) = @$m;
-    map {
-	my @p = @$_;
-	my $this_s = $s;
+    my ($s, $m, $list, $ensure) = ( @{ $_[0] }[ _s ], @_ );
+    my (@id, @empty_indices, @non_exist);
+    for (@$list) {
+	my ($this_s, @p) = ($s, @$_);
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	return if !defined $this_s and !$ensure;
-	$this_s;
-    } @$list;
+	push @id,
+	    defined $this_s ? $this_s :
+	    !$ensure ? return :
+	    (push(@empty_indices, 0+@id), push(@non_exist, $_), undef)[2];
+    }
+    $id[$empty_indices[$_]] = $m->set_path($non_exist[$_]) for 0..$#empty_indices;
+    @id;
 }
 
 sub has_path {
