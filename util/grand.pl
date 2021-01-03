@@ -20,18 +20,12 @@ my @DTEST = qw(scc);
 my %DTEST; @DTEST{@DTEST} = ();
 
 sub usage {
-    warn <<__EOF__;
+    die <<__EOF__;
 $0: Usage: $0 [--seed=n]
               [--test=@{[join('|', @TEST)]}]
               [--directed=d] [--fill=f] [V]
-Default values:
+Default values:@{[ map qq{\n$_ = $OPT{$_}}, sort keys %OPT ]}
 __EOF__
-    for my $o (sort keys %OPT) {
-	warn <<__EOF__;
-$o = $OPT{$o}
-__EOF__
-    }
-    exit(1);
 }
 
 usage()
