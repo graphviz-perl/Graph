@@ -41,19 +41,15 @@ sub set_path {
     $n;
 }
 
-sub paths_non_existing {
-    push @_, 0;
-    goto &_paths_lookup;
-}
-
-sub _paths_lookup {
-    my ($m, $list, $want_exist) = @_;
+sub get_ids_by_paths {
+    my ($m, $list, $ensure) = @_;
     my ($n, $f, $a, $i, $s) = @$m;
     map {
 	my @p = @$_;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	($want_exist xor !defined $this_s) ? ($want_exist ? $this_s : $_) : ();
+	return if !defined $this_s and !$ensure;
+	$this_s;
     } @$list;
 }
 
@@ -62,11 +58,6 @@ sub has_path {
     return undef unless $a == @args;
     $s = $s->{ shift @args } while defined $s and @args;
     $s;
-}
-
-sub get_ids_by_paths {
-    push @_, 1;
-    goto &_paths_lookup;
 }
 
 sub _get_path_count {

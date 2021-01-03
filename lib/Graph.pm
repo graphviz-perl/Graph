@@ -362,11 +362,9 @@ sub _vertex_ids_maybe_ensure {
 	$g->add_vertices(@non_exist) if @non_exist;
 	return map $s->{ $_ }, @args;
     }
-    @args = map [$_], @args;
-    my @non_exist = $V->paths_non_existing(\@args);
-    return if !$ensure and @non_exist;
-    $g->add_vertices(map @$_, @non_exist) if @non_exist;
-    $V->get_ids_by_paths(\@args);
+    return if !$ensure and !($V->get_ids_by_paths([ map [$_], @args ], 0));
+    $g->add_vertices(@args);
+    $V->get_ids_by_paths([ map [$_], @args ]);
 }
 
 sub has_edge {

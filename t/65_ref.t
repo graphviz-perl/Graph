@@ -41,8 +41,8 @@ sub test_adjmap {
     my $map = $METHOD_MAP[ $is_multi ];
     my $path_expected = [ $m->_is_UNIQ ? uniq @$path : @$path ];
     my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($args->[0])]}, @{[$m->_dumper($args->[1])]})";
-    my $got = [ $m->paths_non_existing([ $path_expected ]) ];
-    is_deeply $got, [ $path_expected ], $label or diag explain $got;
+    my $got = [ $m->get_ids_by_paths([ $path_expected ], 0) ];
+    is_deeply $got, [], $label or diag explain $got;
     ok( !$m->has_paths, $label );
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
@@ -63,7 +63,7 @@ sub test_adjmap {
     $got = [ $m->paths ];
     is_deeply $got, [ $path_expected ], $label or diag explain $got;
     isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
-    $got = [ $m->get_ids_by_paths([ $path_expected ]) ];
+    $got = [ $m->get_ids_by_paths([ $path_expected ], 0) ];
     is_deeply $got, [ 1 ], $label or diag explain $got;
     my @path_back = $m->get_paths_by_ids([ map [$_], @$got ]);
     is_deeply( $path_back[0][0], $path_expected, $label ) or diag explain \@path_back;
@@ -195,22 +195,22 @@ my $o6b = bless \*bar, 'G';
 
 for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
     for my $j ($o1b, $o2b, $o3b, $o4b, $o5b, $o6b) {
-	print "# i = $i, j = $j\n";
+	note "i = $i, j = $j";
 
 	my $g1 = Graph->new(refvertexed => 1, directed => 1);
 
 	ok( $g1->add_edge($i, $j));
-	print "# g1 = $g1\n";
+	note "g1 = $g1";
 	ok( $g1->has_vertex($i));
 	ok( $g1->has_vertex($j));
 	ok( $g1->has_edge($i, $j));
 	ok( $g1->delete_vertex($i));
-	print "# g1 = $g1\n";
+	note "g1 = $g1";
 	ok(!$g1->has_vertex($i));
 	ok( $g1->has_vertex($j));
 	ok(!$g1->has_edge($i, $j));
 	ok($g1->delete_vertex($j));
-	print "# g1 = $g1\n";
+	note "g1 = $g1, i=$i, j=$j";
 	ok(!$g1->has_vertex($i));
 	ok(!$g1->has_vertex($j));
 	ok(!$g1->has_edge($i, $j));
@@ -218,17 +218,17 @@ for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
 	my $g2 = Graph->new(refvertexed => 1, directed => 0);
 
 	ok( $g2->add_edge($i, $j));
-	print "# g2 = $g2\n";
+	note "g2 = $g2";
 	ok( $g2->has_vertex($i));
 	ok( $g2->has_vertex($j));
 	ok( $g2->has_edge($i, $j));
 	ok( $g2->delete_vertex($i));
-	print "# g2 = $g2\n";
+	note "g2 = $g2";
 	ok(!$g2->has_vertex($i));
 	ok( $g2->has_vertex($j));
 	ok(!$g2->has_edge($i, $j));
 	ok($g2->delete_vertex($j));
-	print "# g2 = $g2\n";
+	note "g2 = $g2, i=$i, j=$j";
 	ok(!$g2->has_vertex($i));
 	ok(!$g2->has_vertex($j));
 	ok(!$g2->has_edge($i, $j));

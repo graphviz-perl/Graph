@@ -185,11 +185,6 @@ sub set_path_by_multi_id {
     (&__set_path)[1];
 }
 
-sub paths_non_existing {
-    my ($m, $list) = @_;
-    grep !defined $m->has_path($_), @$list;
-}
-
 sub has_path {
     ( &__has_path )[0];
 }
@@ -265,13 +260,13 @@ sub paths {
 }
 
 sub get_ids_by_paths {
-    my ($f, $a, $s, $m, $list) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
+    my ($f, $a, $s, $m, $list, $ensure) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
     my $is_hyper = !defined $a;
     return map { # Fast path
 	my @p = @$_;
 	my $this_s = $s;
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $this_s : ();
+	defined $this_s ? $this_s : $ensure ? return : ();
     } @$list if !($is_hyper or $f & (_REF|_UNIQ));
     map {
 	my @p = @$_;
@@ -281,7 +276,7 @@ sub get_ids_by_paths {
 	} else {
 	    $this_s = $this_s->{''};
 	}
-	defined $this_s ? $this_s : ();
+	defined $this_s ? $this_s : $ensure ? () : return
     } ($f & _REF) ? map [ map ref() ? __strval($_, $f) : $_, @$_ ], @$list : @$list;
 }
 
@@ -407,13 +402,6 @@ Set the path in the Map by the multi id.
 
 Given an array-ref of array-refs of vertex IDs, returns a list of
 array-refs of paths.
-
-=head2 paths_non_existing
-
-    @non_existing = $m->paths_non_existing([ \@seq1, \@seq2... ]);
-
-Given an array-ref of array-refs with paths, returns a list of
-non-existing paths.
 
 =head2 get_ids_by_paths
 
