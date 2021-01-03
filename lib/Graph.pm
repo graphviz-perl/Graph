@@ -1216,7 +1216,7 @@ sub transpose_edge {
     my $a = &get_edge_attributes;
     my @e = reverse @_[1..$#_];
     &delete_edge unless $g->has_edge( @e );
-    $g->add_edge( @e ) for 1..$c;
+    $g->add_edges(map \@e, 1..$c);
     $g->set_edge_attributes(@e, $a) if $a;
     return $g;
 }
@@ -1612,7 +1612,7 @@ sub random_graph {
     my $g = $class->new(%opt);
     $g->add_vertices(@V);
     return $g if $V < 2;
-    $C *= 2 if $g->directed;
+    $C *= 2 if my $is_directed = $g->directed;
     $E = $C / 2 unless defined $E;
     $E = int($E + 0.5);
     my $p = $E / $C;
@@ -1620,12 +1620,11 @@ sub random_graph {
     # print "V = $V, E = $E, C = $C, p = $p\n";
     __carp_confess "Graph::random_graph: needs to be countedged or multiedged ($E > $C)"
 	if $p > 1.0 && !($g->countedged || $g->multiedged);
-    my @V1 = @V;
-    my @V2 = @V;
     # Shuffle the vertex lists so that the pairs at
     # the beginning of the lists are not more likely.
-    @V1 = _shuffle @V1;
-    @V2 = _shuffle @V2;
+    my (%v1_v2, @edges);
+    my @V1 = _shuffle @V;
+    my @V2 = _shuffle @V;
  LOOP:
     while ($E) {
 	for my $v1 (@V1) {
@@ -1633,15 +1632,17 @@ sub random_graph {
 		next if $v1 eq $v2; # TODO: allow self-loops?
 		my $q = $random_edge->($g, $v1, $v2, $p);
 		if ($q && ($q == 1 || rand() <= $q) &&
-		    !$g->has_edge($v1, $v2)) {
-		    $g->add_edge($v1, $v2);
+		    !exists $v1_v2{$v1}{$v2} &&
+		    ($is_directed ? 1 : !exists $v1_v2{$v2}{$v1})) {
+		    $v1_v2{$v1}{$v2} = undef;
+		    push @edges, [ $v1, $v2 ];
 		    $E--;
 		    last LOOP unless $E;
 		}
 	    }
 	}
     }
-    return $g;
+    $g->add_edges(@edges);
 }
 
 sub random_vertex {
