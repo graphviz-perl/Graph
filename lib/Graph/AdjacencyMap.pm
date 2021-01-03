@@ -8,10 +8,9 @@ use warnings;
 
 my (@FLAGS, %FLAG_COMBOS, %FLAG2I);
 BEGIN {
-    @FLAGS = qw(_COUNT _MULTI _UNORD _UNIQ _REF _UNIONFIND _LIGHT _STR);
+    @FLAGS = qw(_COUNT _MULTI _UNORD _REF _UNIONFIND _LIGHT _STR);
     %FLAG_COMBOS = (
 	_COUNTMULTI => [qw(_COUNT _MULTI)],
-	_UNORDUNIQ => [qw(_UNORD _UNIQ)],
 	_REFSTR => [qw(_REF _STR)],
     );
     for my $i (0..$#FLAGS) {
@@ -265,7 +264,7 @@ sub get_ids_by_paths {
     my ($f, $a, $s, $m, $list, $ensure) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
     my ($is_multi, $is_hyper) = (($f & _MULTI), !defined $a);
     my (@id, @empty_indices, @non_exist);
-    if (!($is_hyper or $f & (_REF|_UNIQ))) { # Fast path
+    if (!($is_hyper or $f & (_REF))) { # Fast path
 	for (@$list) {
 	    my ($this_s, @p) = ($s, @$_);
 	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
@@ -353,14 +352,9 @@ sub _del_path_attr {
 
 sub __arg {
     my ($f, $a, $m, @a) = (@{ $_[0] }[ _f, _arity ], $_[0], @{ $_[1] });
-    return if @a < 2; # nothing to do if 1 or 0-length seq
     Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
 		  scalar @a, $a)
         if defined($a) and @a != $a;
-    return if !($f & _UNIQ);
-    my %u;
-    @a = grep !$u{$_}++, @a;
-    splice @_, 1, 1, \@a;
 }
 
 1;

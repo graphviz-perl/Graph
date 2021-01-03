@@ -76,9 +76,6 @@ sub Infinity () { $Inf }
 #   expects one for vertices and two for edges
 # - _UNORD for unordered coordinates (a set): if _UNORD is not set
 #   the coordinates are assumed to be meaningfully ordered
-# - _UNIQ for unique coordinates: if set duplicates are removed,
-#   if not, duplicates are assumed to meaningful
-# - _UNORDUNIQ: just a union of _UNORD and UNIQ
 # Vertices and edges assume none of these flags.
 
 use Graph::Attribute array => _A, map => 'graph';
@@ -372,7 +369,7 @@ sub has_edge {
     return 0 if defined($Ea) and @_ != $Ea + 1;
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
     @i = sort @i if &is_undirected;
-    return $E->get_ids_by_paths([ \@i ], 0) if !(@i == 2 && !(!defined($Ea) or $Ef & (_REF|_UNIQ))); # Slow path.
+    return $E->get_ids_by_paths([ \@i ], 0) if !(@i == 2 && !(!defined($Ea) or $Ef & _REF)); # Slow path.
     my $s = $E->[ _s ];
     return exists $s->{ $i[0] } &&
 	   exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
