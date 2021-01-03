@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 194;
+use Test::More;
 
 use Graph::Undirected;
 use Graph::Directed;
@@ -20,6 +20,10 @@ my @EDGES = (
 );
 $g0->add_edge(@$_) for @EDGES;
 $g1->add_edge(@$_) for @EDGES;
+is(Graph::Undirected->new->add_edges(@EDGES), $g0, 'add_edges equivalence');
+is(Graph::Directed->new->add_edges(@EDGES), $g1, 'add_edges equivalence');
+is(Graph::Undirected->new(edges=>\@EDGES), $g0, 'new(edges) equivalence');
+is(Graph::Directed->new(edges=>\@EDGES), $g1, 'new(edges) equivalence');
 
 ok !$_->has_edge('a') for $g0, $g1;
 ok !$_->has_edge('a', 'a') for $g0, $g1;
@@ -177,3 +181,5 @@ EOF
   }
   is($null, "");
 }
+
+done_testing;
