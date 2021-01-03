@@ -282,7 +282,7 @@ sub _sequence_del {
 
 sub get_paths_by_ids {
     my ($i, undef, $list) = ( @{ $_[0] }[ _i ], @_ );
-    map [ map $i->[ $_ ], @$_ ], @$list;
+    map [ map @{ $i->[ $_ ] }, @$_ ], @$list;
 }
 
 sub paths {
@@ -398,7 +398,7 @@ Set the path in the Map by the multi id.
 =head2 get_paths_by_ids([ \@idlist1, \@idlist2... ])
 
 Given an array-ref of array-refs of vertex IDs, returns a list of
-array-refs of paths.
+array-refs of vertex-names.
 
 =head2 get_ids_by_paths
 

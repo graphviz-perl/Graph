@@ -371,7 +371,7 @@ sub _edges05 {
     my $g = $_[0];
     my @e = $g->[ _E ]->paths;
     return @e if !wantarray;
-    map [ map $_->[0], @$_ ], $g->[ _V ]->get_paths_by_ids(\@e);
+    $g->[ _V ]->get_paths_by_ids(\@e);
 }
 
 *unique_edges = \&_edges05;
@@ -556,31 +556,31 @@ sub _edges_to {
 
 sub edges_at {
     goto &_edges_at if !wantarray;
-    map [ map $_->[0], @$_ ], $_[0]->[ _V ]->get_paths_by_ids([ &_edges_at ]);
+    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_at ]);
 }
 
 sub edges_from {
     goto &_edges_from if !wantarray;
-    map [ map $_->[0], @$_ ], $_[0]->[ _V ]->get_paths_by_ids([ &_edges_from ]);
+    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_from ]);
 }
 
 sub edges_to {
     goto &edges_from if &is_undirected;
     goto &_edges_to if !wantarray;
-    map [ map $_->[0], @$_ ], $_[0]->[ _V ]->get_paths_by_ids([ &_edges_to ]);
+    $_[0]->[ _V ]->get_paths_by_ids([ &_edges_to ]);
 }
 
 sub successors {
     goto &_edges_from if !wantarray;
     my @v = map [ @$_[ 1 .. $#$_ ] ], &_edges_from;
-    map @$_, map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
+    map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
 }
 
 sub predecessors {
     goto &_edges_to if !wantarray;
     goto &successors if &is_undirected;
     my @v = map [ @$_[ 0 .. $#$_-1 ] ], &_edges_to;
-    map @$_, map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
+    map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
 }
 
 sub _cessors_by_radius {
@@ -635,7 +635,7 @@ sub neighbours {
     require Set::Object;
     my $s = Set::Object->new(map @$_[1..$#$_], &_edges_from);
     $s->insert(map @$_[0..$#$_-1], &_edges_to) if &is_directed;
-    map @$_, map @$_, $_[0]->[ _V ]->get_paths_by_ids([ map [$_], $s->members ]);
+    map @$_, $_[0]->[ _V ]->get_paths_by_ids([ map [$_], $s->members ]);
 }
 *neighbors = \&neighbours;
 

@@ -65,8 +65,8 @@ sub test_adjmap {
     isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [ 1 ], $label or diag explain $got;
-    my @path_back = $m->get_paths_by_ids([ map [$_], @$got ]);
-    is_deeply( $path_back[0][0], $path, $label ) or diag explain \@path_back;
+    $got = [ $m->get_paths_by_ids([ map [$_], @$got ]) ];
+    is_deeply( $got, [ $path ], $label ) or diag explain $got;
     eval { $m->stringify };
     is $@, '', $label;
     if (@$path == 1) {
