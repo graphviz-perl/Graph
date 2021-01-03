@@ -57,6 +57,7 @@ sub test_adjmap {
     $m->${ \$map->{set} }(@$path_maybe_id); # second time
     is( $m->_get_path_count($path_expected), $maybe_count, $label );
     ok( $m->${ \$map->{del} }(@$path_maybe_id), $label ) for 1..$maybe_count;
+    ok( !$m->has_paths, $label ) or diag explain $m;
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     is( $m->_get_path_count($path_expected), 0, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];

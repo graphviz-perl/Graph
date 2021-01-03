@@ -127,15 +127,17 @@ sub _ids {
 }
 
 sub has_paths {
-    grep defined, @{ $_[0]->[ _i ] || [] };
+    defined $_[0]->[ _arity ]
+	? keys %{ $_[0]->[ _s ] }
+	: grep defined, @{ $_[0]->[ _i ] };
 }
 
 sub __has_path {
     &__arg;
     my ($f, $a, $s, @k) = (@{ $_[0] }[ _f, _arity, _s ], @{ $_[1] });
     @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
-    return if !defined($s = defined($a) ? $s : $s->[ @k ]);
-    my @p = ($s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]);
+    return if !defined(my $orig_s = $s = defined($a) ? $s : $s->[ @k ]);
+    my @p = ($orig_s, map defined($s = $s->{$_}) ? $s : return, @k[0..$#k-1]);
     @k = '' if !@k;
     (exists $s->{$k[-1]} ? $s->{$k[-1]} : return, \@p, \@k);
 }
