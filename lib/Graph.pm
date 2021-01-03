@@ -301,7 +301,7 @@ sub vertices {
 
 sub has_vertices {
     my $g = shift;
-    scalar $g->[ _V ]->has_paths;
+    scalar $g->[ _V ]->has_any_paths;
 }
 
 sub _vertex_ids_ensure {
@@ -407,7 +407,7 @@ sub edges {
 }
 
 sub has_edges {
-    scalar $_[0]->[ _E ]->has_paths;
+    scalar $_[0]->[ _E ]->has_any_paths;
 }
 
 ###

@@ -67,7 +67,7 @@ sub _get_path_count {
     defined(my $dummy = &has_path) ? 1 : 0; # defined &x asks if func defined
 }
 
-sub has_paths { keys %{ $_[0]->[ _s ] } }
+sub has_any_paths { keys %{ $_[0]->[ _s ] } }
 
 sub del_path {
     my ($i, $s, $attr, @args) = ( @{ my $m = $_[0] }[ _i, _s, _attr ], @{ $_[1] } );

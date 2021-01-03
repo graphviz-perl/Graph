@@ -125,7 +125,7 @@ sub _ids {
     $_[0]->[ _i ];
 }
 
-sub has_paths {
+sub has_any_paths {
     defined $_[0]->[ _arity ]
 	? keys %{ $_[0]->[ _s ] }
 	: grep defined, @{ $_[0]->[ _i ] };
@@ -391,7 +391,7 @@ Return the multi ids.
 
 Returns the integer ID of the path, or undef if Map doesn't have it.
 
-=head2 has_paths
+=head2 has_any_paths
 
 Return true if the Map has any paths, false if not.
 

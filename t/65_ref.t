@@ -42,19 +42,19 @@ sub test_adjmap {
     my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($args->[0])]}, @{[$m->_dumper($args->[1])]})";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
-    ok( !$m->has_paths, $label );
+    ok( !$m->has_any_paths, $label );
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
     is_deeply( $got, [ $is_multi ? $maybe_id : 0 ], $label ) or diag explain $got;
     is $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label;
     ok $m->_has_path_attrs(@$path_maybe_id), $label;
     ok $m->_del_path_attrs(@$path_maybe_id);
-    ok( $m->has_paths, $label );
+    ok( $m->has_any_paths, $label );
     isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $m->${ \$map->{set} }(@$path_maybe_id); # second time
     is( $m->_get_path_count($path), $maybe_count, $label );
     ok( $m->${ \$map->{del} }(@$path_maybe_id), $label ) for 1..$maybe_count;
-    ok( !$m->has_paths, $label ) or diag explain $m;
+    ok( !$m->has_any_paths, $label ) or diag explain $m;
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     is( $m->_get_path_count($path), 0, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
