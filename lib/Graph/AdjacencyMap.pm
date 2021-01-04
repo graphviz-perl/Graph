@@ -130,9 +130,8 @@ sub _set_path_attr {
     ${ &{ $_[0]->can('_set_path_attr_common') } }->{ $_[-2] } = $_[-1];
 }
 
-sub set_path {
-    push @_, 1;
-    (&__set_path)[0];
+sub set_paths {
+    map +($_[0]->__set_path($_, 1))[0], @_[1..$#_];
 }
 
 sub set_path_by_multi_id {
@@ -298,7 +297,7 @@ sub get_ids_by_paths {
 	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	    defined $this_s ? $this_s :
 		!$ensure ? return :
-		$is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
+		($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
     } @$list if !($is_hyper or $is_ref);
@@ -313,7 +312,7 @@ sub get_ids_by_paths {
 	    }
 	    defined $this_s ? $this_s :
 		!$ensure ? return :
-		$is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
+		$is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : ($m->set_paths($_))[0];
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
     } @$list;
@@ -379,9 +378,11 @@ Return true if the Map has the path by a multi(vertex) id, false if not.
 
 Return all the paths of the Map.
 
-=head2 set_path(\@seq)
+=head2 set_paths(\@seq1, \@seq2, ...)
 
-Set the path by @ids. Returns the integer ID of the path.
+    @ids = set_paths(\@seq1, \@seq2, ...)
+
+Create/identify the path of C<@seq*>. Returns the integer ID of each path.
 
 =head2 set_path_by_multi_id(\@seq, $id)
 

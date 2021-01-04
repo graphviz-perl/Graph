@@ -1029,7 +1029,7 @@ sub add_vertices {
 	$g->add_vertex_by_id($_, _GEN_ID) for @v;
 	return $g;
     }
-    my @i = map $g->[ _V ]->set_path([$_]), @v;
+    my @i = $g->[ _V ]->set_paths(map [$_], @v);
     $g->[ _G ]++;
     return $g if !&has_union_find;
     $g->[ _U ]->add(@i);
@@ -1050,7 +1050,7 @@ sub add_edges {
     my $uf = &has_union_find;
     my @paths = $g->[ _V ]->get_ids_by_paths([ map [ map [$_], @$_ ], @edges ], 1, 1);
     @paths = map [ sort @$_ ], @paths if &is_undirected;
-    $g->[ _E ]->set_path( $_ ) for @paths;
+    $g->[ _E ]->set_paths( @paths );
     $uf->union(@paths) if $uf;
     $g->[ _G ]++;
     return $g;

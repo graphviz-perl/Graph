@@ -26,7 +26,7 @@ my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap', [_COUNT, 2], [[qw(a b)]] ],
 );
 my @METHOD_MAP = (
-    { has => 'has_path', del => 'del_path', set => 'set_path' },
+    { has => 'has_path', del => 'del_path', set => 'set_paths' },
     { has => 'has_path_by_multi_id', del => 'del_path_by_multi_id', set => 'set_path_by_multi_id' },
 );
 

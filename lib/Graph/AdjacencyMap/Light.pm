@@ -24,21 +24,24 @@ sub _new {
     $m;
 }
 
-sub set_path {
-    my ($m, @args) = ($_[0], @{ $_[1] });
-    return if @args == 0;
-    my ($n, $f, $a, $i, $s) = @$m;
-    my $e0 = shift @args;
-    return $n if exists $s->{ $e0 } && (($a == 1) or exists $s->{ $e0 }->{ $args[0] });
-    $n = $m->[ _n ]++;
-    $i->[ $n ] = [ $e0, @args ];
-    if ($a == 2) {
-	my $e1 = shift @args;
-	$s->{ $e0 }->{ $e1 } = $n;
-    } else {
-	$s->{ $e0 } = $n;
+sub set_paths {
+    my ($m, @paths) = @_;
+    my ($a, $i, $s, @ids) = (@$m[ _arity, _i, _s ]);
+    for (@paths) {
+	my @args = @$_;
+	Graph::__carp_confess("Wrong number of args: expected $a, got (@args)") if $a != @args;
+	my $e0 = shift @args;
+	push(@ids, $s->{ $e0 }), next if $a == 1 && exists $s->{ $e0 };
+	push(@ids, $s->{ $e0 }{ $args[0] }), next if $a == 2 && exists $s->{ $e0 } && defined $s->{ $e0 }{ $args[0] };
+	$i->[ my $n = $m->[ _n ]++ ] = [ $e0, @args ];
+	if ($a == 2) {
+	    $s->{ $e0 }{ shift @args } = $n;
+	} else {
+	    $s->{ $e0 } = $n;
+	}
+	push @ids, $n;
     }
-    $n;
+    @ids;
 }
 
 sub get_ids_by_paths {
@@ -47,7 +50,7 @@ sub get_ids_by_paths {
 	my @ret = map {
 	    my ($this_s, @p) = ($s, @$_);
 	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	    defined $this_s ? $this_s : $ensure ? $m->set_path($_) : return;
+	    defined $this_s ? $this_s : $ensure ? $m->set_paths($_) : return;
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
     } @$list;
@@ -96,8 +99,8 @@ sub rename_path {
 }
 
 sub _set_path_attr_common {
-    &set_path;
-    my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
+    (my $m = $_[0])->set_paths($_[1]);
+    my ($attr, @e) = ( @$m[ _attr ], @{ $_[1] } );
     $attr = $attr->{ shift @e } ||= {} while $attr and @e > 1;
     \$attr->{ $e[0] };
 }
