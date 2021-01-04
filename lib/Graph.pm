@@ -1049,13 +1049,11 @@ sub add_edges {
 	$g->add_edge_by_id(@$_, _GEN_ID) for @edges;
 	return $g;
     }
-    my ($undirected, $uf) = (&is_undirected, &has_union_find);
-    for (@edges) {
-	my @i = $g->_vertex_ids_ensure(@$_);
-	@i = sort @i if $undirected;
-	$g->[ _E ]->set_path( \@i );
-	$g->[ _U ]->union(\@i) if $uf;
-    }
+    my $uf = &has_union_find;
+    my @paths = $g->[ _V ]->get_ids_by_paths([ map [ map [$_], @$_ ], @edges ], 1, 1);
+    @paths = map [ sort @$_ ], @paths if &is_undirected;
+    $g->[ _E ]->set_path( $_ ) for @paths;
+    $uf->union(@paths) if $uf;
     $g->[ _G ]++;
     return $g;
 }
