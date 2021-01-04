@@ -6,39 +6,41 @@ use Time::HiRes qw(time);
 use Getopt::Long;
 
 my %OPT = (seed => 42, test => 'apsp', fill => 0.50, V => 20, directed => 1);
-
-my @TEST = qw(apsp mstp mstk sptd sptb cc bcc scc);
-my %TEST; @TEST{@TEST} = ();
-
-my @WTEST = qw(apsp mstp mstk sptd sptb bcc);
-my %WTEST; @WTEST{@WTEST} = ();
-
-my @UTEST = qw(mstk mstp cc);
-my %UTEST; @UTEST{@UTEST} = ();
-
-my @DTEST = qw(scc);
-my %DTEST; @DTEST{@DTEST} = ();
+my %TEST2METHOD = (
+    apsp => 'APSP_Floyd_Warshall',
+    mstk => 'MST_Kruskal',
+    mstp => 'MST_Prim',
+    sptd => 'SPT_Dijkstra',
+    sptb => 'SPT_Bellman_Ford',
+    cc => 'connected_components',
+    bcc => 'biconnected_components',
+    scc => 'strongly_connected_components',
+    succ => sub { my $g = shift; $g->successors($_) for $g->vertices },
+    ef => sub { my $g = shift; $g->edges_from($_) for $g->vertices },
+    ea => sub { my $g = shift; $g->edges_at($_) for $g->vertices },
+);
+my %WTEST; @WTEST{qw(apsp mstp mstk sptd sptb bcc)} = ();
+my %UTEST; @UTEST{qw(mstk mstp cc)} = ();
+my %DTEST; @DTEST{qw(scc)} = ();
 
 sub usage {
     die <<__EOF__;
 $0: Usage: $0 [--seed=n]
-              [--test=@{[join('|', @TEST)]}]
+              [--test=@{[join('|', sort keys %TEST2METHOD)]}]
               [--directed=d] [--fill=f] [V]
 Default values:@{[ map qq{\n$_ = $OPT{$_}}, sort keys %OPT ]}
 __EOF__
 }
 
-usage()
-  unless
-    GetOptions(
-	       'seed=n'		=> \$OPT{seed},
-	       'test=s'		=> \$OPT{test},
-	       'directed=n'	=> \$OPT{directed},
-	       'fill=f'		=> \$OPT{fill},
-	      );
+usage() unless GetOptions(
+    'seed=n'		=> \$OPT{seed},
+    'test=s'		=> \$OPT{test},
+    'directed=n'	=> \$OPT{directed},
+    'fill=f'		=> \$OPT{fill},
+);
 $OPT{V} = shift if @ARGV;
 usage() if @ARGV;
-usage() unless exists $TEST{$OPT{test}};
+usage() unless $TEST2METHOD{$OPT{test}};
 
 print "Running $OPT{test}...\n";
 
@@ -65,7 +67,7 @@ my $E = int(($OPT{V} * ($OPT{V} - 1) * $OPT{fill}) / ($OPT{directed} ? 1 : 2));
 my $g = $OPT{directed} ? Graph::Directed->new() : Graph::Undirected->new();
 my $e = $E;
 my (%v1_v2, @edges);
-#my $t0_edge = time();
+my $t0_edge = time();
 while (1) {
     my $u = int(rand($OPT{V}));
     my $v = int(rand($OPT{V}));
@@ -75,7 +77,6 @@ while (1) {
 	last unless --$e;
     }
 }
-print "($OPT{V} vertices, $E edges)\n";
 
 if (exists $WTEST{$OPT{test}}) {
     push @$_, rand() for @edges;
@@ -83,32 +84,12 @@ if (exists $WTEST{$OPT{test}}) {
 } else {
     $g->add_edges(@edges);
 }
-#my $t1_edge = time();
-#printf "EDGE TIME real %.2f\n", $t1_edge - $t0_edge;
+my $t1_edge = time();
+printf "%d vertices, %d edges - set up %.2f\n", $OPT{V}, $E, $t1_edge - $t0_edge;
 
 my $t0 = time();
 my ($u0, $s0) = times();
-
-if ($OPT{test} eq 'apsp') {
-    my $apsp = $g->APSP_Floyd_Warshall;
-} elsif ($OPT{test} eq 'mstk') {
-    my $mst = $g->MST_Kruskal;
-} elsif ($OPT{test} eq 'mstp') {
-    my $mst = $g->MST_Prim;
-} elsif ($OPT{test} eq 'sptd') {
-    my $mst = $g->SPT_Dijkstra;
-} elsif ($OPT{test} eq 'sptb') {
-    my $mst = $g->SPT_Bellman_Ford;
-} elsif ($OPT{test} eq 'cc') {
-    my @cc = $g->connected_components;
-} elsif ($OPT{test} eq 'bcc') {
-    my @bcc = $g->biconnected_components;
-} elsif ($OPT{test} eq 'scc') {
-    my @scc = $g->strongly_connected_components;
-} else {
-    die "$0: Unknown test '$OPT{test}'";
-}
-
+() = $g->${ \$TEST2METHOD{$OPT{test}} };
 my $t1 = time();
 my ($u1, $s1) = times();
 
