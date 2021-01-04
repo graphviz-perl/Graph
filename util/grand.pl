@@ -1,11 +1,9 @@
 use strict; use warnings;
 use Graph;
-use Graph::Directed;
-use Graph::Undirected;
 use Time::HiRes qw(time);
 use Getopt::Long;
 
-my %OPT = (seed => 42, test => 'apsp', fill => 0.50, V => 20, directed => 1);
+my %OPT = (seed => 42, test => 'apsp', fill => 0.50, V => 20, directed => 1, unionfind => 0);
 my %TEST2METHOD = (
     apsp => 'APSP_Floyd_Warshall',
     mstk => 'MST_Kruskal',
@@ -19,8 +17,8 @@ my %TEST2METHOD = (
     ef => sub { my $g = shift; $g->edges_from($_) for $g->vertices },
     ea => sub { my $g = shift; $g->edges_at($_) for $g->vertices },
 );
-my %WTEST; @WTEST{qw(apsp mstp mstk sptd sptb bcc)} = ();
-my %UTEST; @UTEST{qw(mstk mstp cc)} = ();
+my %WTEST; @WTEST{qw(apsp mstp mstk sptd sptb)} = ();
+my %UTEST; @UTEST{qw(mstk mstp cc bcc)} = ();
 my %DTEST; @DTEST{qw(scc)} = ();
 
 sub usage {
@@ -32,11 +30,13 @@ Default values:@{[ map qq{\n$_ = $OPT{$_}}, sort keys %OPT ]}
 __EOF__
 }
 
+$| = 1;
 usage() unless GetOptions(
     'seed=n'		=> \$OPT{seed},
     'test=s'		=> \$OPT{test},
     'directed=n'	=> \$OPT{directed},
     'fill=f'		=> \$OPT{fill},
+    'uf=n'		=> \$OPT{unionfind},
 );
 $OPT{V} = shift if @ARGV;
 usage() if @ARGV;
@@ -64,7 +64,7 @@ if ($OPT{fill} < 0.0 || $OPT{fill} > 1.0) {
 #                             directed   => $OPT{directed},
 #                             edges_fill => $OPT{fill});
 my $E = int(($OPT{V} * ($OPT{V} - 1) * $OPT{fill}) / ($OPT{directed} ? 1 : 2));
-my $g = $OPT{directed} ? Graph::Directed->new() : Graph::Undirected->new();
+my $g = Graph->new(map +($_ => $OPT{$_}), qw(directed unionfind));
 my $e = $E;
 my (%v1_v2, @edges);
 my $t0_edge = time();

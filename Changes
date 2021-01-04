@@ -1,4 +1,5 @@
 - bulk APIs for UnionFind
+- add unionfind config option for util/grand.pl (benchmark-ish script)
 
 0.9716 2021-01-01
 - use Set::Object
