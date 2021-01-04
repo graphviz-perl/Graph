@@ -315,14 +315,12 @@ sub _vertex_ids_maybe_ensure {
     my $ensure = pop;
     my ($g, @args) = @_;
     my $V = $g->[ _V ];
-    if (!&refvertexed) {
-	my $s = $V->[ _s ];
-	my @non_exist = grep !exists $s->{ $_ }, @args;
-	return if !$ensure and @non_exist;
-	$V->get_ids_by_paths([ map [$_], @non_exist ], 1) if @non_exist;
-	return map $s->{ $_ }, @args;
-    }
-    $V->get_ids_by_paths([ map [$_], @args ], $ensure);
+    return $V->get_ids_by_paths([ map [$_], @args ], $ensure) if &refvertexed;
+    my $s = $V->[ _s ];
+    my @non_exist = grep !exists $s->{ $_ }, @args;
+    return if !$ensure and @non_exist;
+    $V->get_ids_by_paths([ map [$_], @non_exist ], 1) if @non_exist;
+    return map $s->{ $_ }, @args;
 }
 
 sub has_edge {
