@@ -88,7 +88,6 @@ t/MyDGraph.pm
 t/MyGraph.pm
 t/MyUGraph.pm
 t/simple.pl
-t/u_an_uf.t
 t/u_at1.t
 t/u_at2.t
 t/u_at3.t

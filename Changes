@@ -1,3 +1,5 @@
+- bulk APIs for UnionFind
+
 0.9716 2021-01-01
 - use Set::Object
 - {neighbours,successors,predecessors,reachable}_by_radius

@@ -114,16 +114,6 @@ sub _opt {
     }
 }
 
-sub has_union_find {
-    my ($g) = @_;
-    ($g->[ _F ] & _UNIONFIND) && defined $g->[ _U ];
-}
-
-sub _get_union_find {
-    my ($g) = @_;
-    $g->[ _U ];
-}
-
 sub _opt_get {
     my ($opt, $key, $var) = @_;
     return if !exists $opt->{$key};
@@ -253,9 +243,7 @@ sub directed { ! $_[0]->[ _E ]->_is_UNORD }
 *is_multiedged    = \&multiedged;
 *is_hyperedged    = \&hyperedged;
 
-sub _union_find_add_vertex {
-    $_[0]->[ _U ]->add( &_vertex_ids );
-}
+sub has_union_find { $_[0]->[ _U ] }
 
 sub add_vertex {
     __carp_confess "Graph::add_vertex: use add_vertices for more than one vertex" if @_ != 2;
@@ -292,11 +280,6 @@ sub vertices {
 sub has_vertices {
     my $g = shift;
     scalar $g->[ _V ]->has_any_paths;
-}
-
-sub _union_find_add_edge {
-    my ($g, $u, $v) = @_;
-    $g->[ _U ]->union($u, $v);
 }
 
 sub add_edge {
@@ -399,19 +382,19 @@ sub add_vertex_by_id {
     my ($g, $v, $id) = @_;
     my $V = $g->[ _V ];
     return $g if $V->has_path_by_multi_id( my @args = ([$v], $id) );
-    $V->set_path_by_multi_id( @args );
+    my ($i) = $V->set_path_by_multi_id( @args );
+    $g->[ _U ]->add($i) if &has_union_find;
     $g->[ _G ]++;
-    &_union_find_add_vertex if &has_union_find;
     return $g;
 }
 
 sub add_vertex_get_id {
     &expect_multivertexed;
     my ($g, $v) = @_;
-    my (undef, $id) = $g->[ _V ]->set_path_by_multi_id( [$v], _GEN_ID );
+    my ($i, $multi_id) = $g->[ _V ]->set_path_by_multi_id( [$v], _GEN_ID );
+    $g->[ _U ]->add($i) if &has_union_find;
     $g->[ _G ]++;
-    &_union_find_add_vertex if &has_union_find;
-    return $id;
+    return $multi_id;
 }
 
 sub has_vertex_by_id {
@@ -446,7 +429,7 @@ sub add_edge_by_id {
     @i = sort @i if &is_undirected;
     $g->[ _E ]->set_path_by_multi_id( \@i, $id );
     $g->[ _G ]++;
-    $g->_union_find_add_edge( @i ) if &has_union_find;
+    $g->[ _U ]->union(\@i) if &has_union_find;
     return $g;
 }
 
@@ -457,7 +440,7 @@ sub add_edge_get_id {
     @i = sort @i if &is_undirected;
     my (undef, $id) = $g->[ _E ]->set_path_by_multi_id( \@i, _GEN_ID );
     $g->[ _G ]++;
-    $g->_union_find_add_edge( @i ) if &has_union_find;
+    $g->[ _U ]->union(\@i) if &has_union_find;
     return $id;
 }
 
@@ -1048,10 +1031,10 @@ sub add_vertices {
 	$g->add_vertex_by_id($_, _GEN_ID) for @v;
 	return $g;
     }
-    $g->[ _V ]->set_path([$_]) for @v;
+    my @i = map $g->[ _V ]->set_path([$_]), @v;
     $g->[ _G ]++;
     return $g if !&has_union_find;
-    $g->_union_find_add_vertex($_) for @v;
+    $g->[ _U ]->add(@i);
     $g;
 }
 
@@ -1071,7 +1054,7 @@ sub add_edges {
 	my @i = $g->_vertex_ids_ensure(@$_);
 	@i = sort @i if $undirected;
 	$g->[ _E ]->set_path( \@i );
-	$g->_union_find_add_edge( @i ) if $uf;
+	$g->[ _U ]->union(\@i) if $uf;
     }
     $g->[ _G ]++;
     return $g;
@@ -1693,13 +1676,13 @@ sub MST_Kruskal {
     my $MST = Graph->new(directed => 0);
 
     my $UF  = Graph::UnionFind->new;
-    $UF->add($_) for $g->_vertices05;
+    $UF->add(&_vertices05);
 
     my @edges;
     for my $e ($g->_MST_edges(\%attr)) {
 	my ($u, $v) = @$e; # TODO: hyperedges
-	next if $UF->find( $u ) eq $UF->find( $v );
-	$UF->union($u, $v);
+	next if $UF->same( @$e );
+	$UF->union([$u, $v]);
 	push @edges, [ $u, $v ];
     }
     $MST->add_edges(@edges);
@@ -1901,13 +1884,13 @@ sub _connected_components_compute {
     my %v2c;
     my @c;
     return [ [], {} ] unless my @v = $g->unique_vertices;
-    if (&has_union_find) {
-	my $UF = $g->_get_union_find();
+    if (my $UF = &has_union_find) {
 	my $V  = $g->[ _V ];
 	my @ids = $V->get_ids_by_paths([ map [$_], @v ], 0);
 	my ($counter, %cc2counter) = 0;
+	my @cc = $UF->find(@ids);
 	for (my $i = 0; $i <= $#v; $i++) {
-	    my $cc = $UF->find( $ids[$i] );
+	    my $cc = $cc[$i];
 	    __carp_confess "connected_component union-find did not have vertex '$v[$i]', please report"
 		if !defined $cc;
 	    $cc2counter{$cc} = $counter++ if !exists $cc2counter{$cc};
@@ -1962,11 +1945,10 @@ sub same_connected_components {
     &expect_undirected;
     my ($g, @args) = @_;
     my @components;
-    if (&has_union_find) {
-	my $UF = &_get_union_find;
+    if (my $UF = &has_union_find) {
 	my @ids = &_vertex_ids;
 	return 0 if @ids != @args;
-	@components = map $UF->find( $_ ), @ids;
+	@components = $UF->find(@ids);
     } else {
 	@components = @{ (&_connected_components)[1] }{ @args };
     }

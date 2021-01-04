@@ -12,13 +12,9 @@ sub new {
 }
 
 sub add {
-    my ($self, $elem) = @_;
-    $self->{ $elem } = [ $elem, 0 ] unless defined $self->{$elem};
-}
-
-sub has {
-    my ($self, $elem) = @_;
-    exists $self->{ $elem };
+    my ($self, @elems) = @_;
+    @elems = grep !defined $self->{$_}, @elems;
+    @$self{ @elems } = map [ $_, 0 ], @elems;
 }
 
 sub _parent {
@@ -42,37 +38,38 @@ sub _rank {
 }
 
 sub find {
-    my ($self, $x) = @_;
-    my $px = $self->_parent( $x );
-    return unless defined $px;
-    $self->_parent( $x, $self->find( $px ) ) if $px ne $x;
-    $self->_parent( $x );
+    my ($self, @v) = @_;
+    my @ret;
+    for my $x (@v) {
+	push(@ret, undef), next unless defined(my $px = $self->_parent($x));
+	$self->_parent( $x, $self->find( $px ) ) if $px ne $x;
+	push @ret, $self->_parent( $x );
+    }
+    @ret;
 }
 
 sub union {
-    my ($self, $x, $y) = @_;
-    $self->add($x) unless $self->has($x);
-    $self->add($y) unless $self->has($y);
-    my $px = $self->find( $x );
-    my $py = $self->find( $y );
-    return if $px eq $py;
-    my $rx = $self->_rank( $px );
-    my $ry = $self->_rank( $py );
-    # print "union($x, $y): px = $px, py = $py, rx = $rx, ry = $ry\n";
-    if ( $rx > $ry ) {
-	$self->_parent( $py, $px );
-    } else {
-	$self->_parent( $px, $py );
-	$self->_rank( $py, $ry + 1 ) if $rx == $ry;
+    my ($self, @edges) = @_;
+    $self->add(map @$_, @edges);
+    for my $e (@edges) {
+	my ($px, $py) = $self->find( @$e );
+	next if $px eq $py;
+	my $rx = $self->_rank( $px );
+	my $ry = $self->_rank( $py );
+	# print "union($x, $y): px = $px, py = $py, rx = $rx, ry = $ry\n";
+	if ( $rx > $ry ) {
+	    $self->_parent( $py, $px );
+	} else {
+	    $self->_parent( $px, $py );
+	    $self->_rank( $py, $ry + 1 ) if $rx == $ry;
+	}
     }
 }
 
 sub same {
     my ($uf, $u, $v) = @_;
-    my $fu = $uf->find($u);
-    return undef unless defined $fu;
-    my $fv = $uf->find($v);
-    return undef unless defined $fv;
+    my ($fu, $fv) = $uf->find($u, $v);
+    return undef if grep !defined, $fu, $fv;
     $fu eq $fv;
 }
 
@@ -111,18 +108,16 @@ Graph::UnionFind - union-find data structures
 =head1 DESCRIPTION
 
 I<Union-find> is a special data structure that can be used to track the
-partitioning of a set into subsets (a problem known also as I<disjoint sets>).
+partitioning of a set into subsets (a problem also known as I<disjoint sets>).
 
-Graph::UnionFind() is used for Graph::connected_components(),
-Graph::connected_component(), and Graph::same_connected_components()
-if you specify a true C<union_find> parameter when you create an undirected
+C<Graph::UnionFind> is used for L<Graph/connected_components>,
+L<Graph/connected_component>, and L<Graph/same_connected_components>
+if you specify a true C<unionfind> parameter when you create an undirected
 graph.
 
-Note that union-find is one way: you cannot (easily) 'ununion'
-vertices once you have 'unioned' them.  This means that if you
-delete edges from a C<union_find> graph, you will get wrong results
-from the Graph::connected_components(), Graph::connected_component(),
-and Graph::same_connected_components().
+Union-find is one way: you cannot (easily) 'ununion' vertices once you
+have 'unioned' them. This is why L<Graph> throws an exception if you
+try to delete edges from a union-find graph.
 
 =head2 API
 
@@ -130,27 +125,21 @@ and Graph::same_connected_components().
 
 =item add
 
-    $uf->add($v)
+    $uf->add(@v)
 
-Add the vertex v to the union-find.
+Add the vertices to the union-find.
 
 =item union
 
-    $uf->union($u, $v)
+    $uf->union([$u, $v], [$w, $x], ...)
 
 Add the edge u-v to the union-find.  Also implicitly adds the vertices.
 
-=item has
-
-    $uf->has($v)
-
-Return true if the vertex v has been added to the union-find, false otherwise.
-
 =item find
 
-    $uf->find($v)
+    @partitions = $uf->find(@v)
 
-Return the union-find partition the vertex v belongs to,
+For each given vertex, return the union-find partition it belongs to,
 or C<undef> if it has not been added.
 
 =item new
