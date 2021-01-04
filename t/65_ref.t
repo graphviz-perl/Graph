@@ -33,13 +33,13 @@ my @METHOD_MAP = (
 sub test_adjmap {
     my ($class, $args, $path_maybe_id) = @_;
     my ($path, $maybe_id) = @$path_maybe_id;
-    my $m = $class->_new(@$args);
+    my ($m, $flags, $arity) = ($class->_new(@$args), @$args);
     my $is_multi = $m->_is_MULTI ? 1 : 0;
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
-    my @paths_to_create = map [ ($_) x (defined $args->[1] ? @$path : 1) ], qw(y z);
+    my @paths_to_create = map [ ($_) x (defined $arity ? @$path : 1) ], qw(y z);
     my @paths_to_create_maybe_id = map [ $_, $is_multi ? 0 : () ], @paths_to_create;
-    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($args->[0])]}, @{[$m->_dumper($args->[1])]})";
+    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, @{[$m->_dumper($arity)]})";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
     $got = [ $m->get_ids_by_paths([ [$path] ], 0, 1) ];
@@ -80,6 +80,11 @@ sub test_adjmap {
 	ok $m->rename_path('newname', @$path), $label;
 	isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
 	is( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), undef, $label );
+    } elsif (defined $arity and $arity == 2) {
+	$got = [ $m->successors($path->[0]) ];
+	is_deeply $got, [ $path->[1] ], $label or diag explain $got;
+	$got = [ $m->paths_from($path->[0]) ];
+	is_deeply $got, [ $path ], $label or diag explain $got;
     }
     ok( !$m->_has_path_attrs(@$path_maybe_id), $label );
     is( $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label );

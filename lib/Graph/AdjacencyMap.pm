@@ -318,6 +318,15 @@ sub get_ids_by_paths {
     } @$list;
 }
 
+sub paths_from {
+    my ($i, $s, $v) = ( @{ $_[0] }[ _i, _s ], $_[1] );
+    map $i->[ $_ ], values %{ $s->{ $v } };
+}
+
+sub successors {
+    map $_->[1], $_[0]->paths_from($_[1]);
+}
+
 sub __strval {
     my ($k, $f) = @_;
     return $k unless ref $k && ($f & _REF);
@@ -417,6 +426,20 @@ Rename the path.
 =head2 stringify
 
 Return a string describing the object in a human-friendly(ish) way.
+
+=head2 successors
+
+    @successors = $m->successors($v)
+
+Only valid for a map of arity 2. Returns the second elements of all
+paths whose first element is the given entity. Ignores C<_REF>.
+
+=head2 paths_from
+
+    @paths = $m->paths_from($v)
+
+Only valid for a map of arity 2. Returns all paths whose first element
+is the given entity. Ignores C<_REF>.
 
 =head1 AUTHOR AND COPYRIGHT
 
