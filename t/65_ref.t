@@ -42,6 +42,8 @@ sub test_adjmap {
     my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($args->[0])]}, @{[$m->_dumper($args->[1])]})";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
+    $got = [ $m->get_ids_by_paths([ [$path] ], 0, 1) ];
+    is_deeply $got, [], $label or diag explain $got;
     ok( !$m->has_any_paths, $label );
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
@@ -67,6 +69,8 @@ sub test_adjmap {
     is_deeply $got, [ 1 ], $label or diag explain $got;
     $got = [ $m->get_paths_by_ids([ map [$_], @$got ]) ];
     is_deeply( $got, [ $path ], $label ) or diag explain $got;
+    $got = [ $m->get_ids_by_paths([ [$path, $path] ], 0, 1) ];
+    is_deeply $got, [ [1, 1] ], $label or diag explain $got;
     eval { $m->stringify };
     is $@, '', $label;
     if (@$path == 1) {
@@ -117,6 +121,11 @@ sub test_adjmap {
     $got = [ $m->get_ids_by_paths([ $path, @paths_to_create ], 1) ];
     is_deeply $got, [ 1..3 ], $label or diag explain $got;
     ok $m->${ \$map->{has} }(@$_), $label for @paths_to_create_maybe_id;
+    my @paths_to_create2 = map [ $_, [ map "X$_", @$_ ] ], @paths_to_create;
+    my @lookup2 = map [ [ map "X$_", @$_ ], $is_multi ? 0 : () ], @paths_to_create;
+    $got = [ $m->get_ids_by_paths(\@paths_to_create2, 1, 1) ];
+    is_deeply $got, [ [2, 4], [3, 5] ], $label or diag explain $got;
+    ok $m->${ \$map->{has} }(@$_), $label for @lookup2;
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
     $m->${ \$map->{del} }(@$path_maybe_id);
     ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );

@@ -290,26 +290,32 @@ sub paths {
 }
 
 sub get_ids_by_paths {
-    my ($f, $a, $s, $m, $list, $ensure) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
+    my ($f, $a, $s, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
     my ($is_hyper, $is_multi, $is_ref) = (!defined $a, map $f & $_, _MULTI, _REF);
     return map { # Fast path
-	my ($this_s, @p) = ($s, @$_);
-	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $this_s :
-	    !$ensure ? return :
-	    $is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
+	my @ret = map {
+	    my ($this_s, @p) = ($s, @$_);
+	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	    defined $this_s ? $this_s :
+		!$ensure ? return :
+		$is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
+	} $deep ? @$_ : $_;
+	$deep ? \@ret : @ret;
     } @$list if !($is_hyper or $is_ref);
     map {
-	my ($this_s, @p) = ($is_hyper ? $s->[ @$_ ] : $s,
-	    !$is_ref ? @$_ : map !ref() ? $_ : __strval($_, $f), @$_);
-	if (@p) {
-	    $this_s = $this_s->{ shift @p } while @p and defined $this_s;
-	} else {
-	    $this_s = $this_s->{''};
-	}
-	defined $this_s ? $this_s :
-	    !$ensure ? return :
-	    $is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
+	my @ret = map {
+	    my ($this_s, @p) = ($is_hyper ? $s->[ @$_ ] : $s,
+		!$is_ref ? @$_ : map !ref() ? $_ : __strval($_, $f), @$_);
+	    if (@p) {
+		$this_s = $this_s->{ shift @p } while @p and defined $this_s;
+	    } else {
+		$this_s = $this_s->{''};
+	    }
+	    defined $this_s ? $this_s :
+		!$ensure ? return :
+		$is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
+	} $deep ? @$_ : $_;
+	$deep ? \@ret : @ret;
     } @$list;
 }
 
@@ -390,13 +396,18 @@ array-refs of vertex-names.
 
 =head2 get_ids_by_paths
 
-    @ids = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure);
+    @ids = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure, 0);
+    @id_lists = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure, 1);
 
 Given an array-ref of array-refs with paths, returns a list of IDs of
 existing paths.
 
 If C<$ensure> is true, will first create paths that do not already exist.
 If it is not, any non-existing paths will cause an empty list to be returned.
+
+If $deep is true, each sequence will be treated as a list of paths,
+and IDs filled in for the return values. This is to look up vertex IDs
+for use in edges.
 
 =head2 rename_path($from, $to)
 

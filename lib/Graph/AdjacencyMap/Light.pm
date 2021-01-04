@@ -42,11 +42,14 @@ sub set_path {
 }
 
 sub get_ids_by_paths {
-    my ($s, $m, $list, $ensure) = ( @{ $_[0] }[ _s ], @_ );
+    my ($s, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _s ], @_ );
     map {
-	my ($this_s, @p) = ($s, @$_);
-	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	defined $this_s ? $this_s : $ensure ? $m->set_path($_) : return;
+	my @ret = map {
+	    my ($this_s, @p) = ($s, @$_);
+	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	    defined $this_s ? $this_s : $ensure ? $m->set_path($_) : return;
+	} $deep ? @$_ : $_;
+	$deep ? \@ret : @ret;
     } @$list;
 }
 
