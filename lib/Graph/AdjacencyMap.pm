@@ -291,18 +291,17 @@ sub paths {
 
 sub get_ids_by_paths {
     my ($f, $a, $s, $m, $list, $ensure) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
-    my ($is_multi, $is_hyper) = (($f & _MULTI), !defined $a);
+    my ($is_hyper, $is_multi, $is_ref) = (!defined $a, map $f & $_, _MULTI, _REF);
     return map { # Fast path
 	my ($this_s, @p) = ($s, @$_);
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	defined $this_s ? $this_s :
 	    !$ensure ? return :
 	    $is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_path($_);
-    } @$list if !($is_hyper or $f & (_REF));
-    my ($is_ref, @dereffed) = (($f & _REF), ($f & _REF) ? map [ map ref() ? __strval($_, $f) : $_, @$_ ], @$list : ());
+    } @$list if !($is_hyper or $is_ref);
     map {
-	my ($this_s, @p) = ($is_hyper ? $s->[ @{ $list->[$_] } ] : $s,
-	    $is_ref ? @{ $dereffed[$_] } : @{ $list->[$_] });
+	my ($this_s, @p) = ($is_hyper ? $s->[ @$_ ] : $s,
+	    !$is_ref ? @$_ : map !ref() ? $_ : __strval($_, $f), @$_);
 	if (@p) {
 	    $this_s = $this_s->{ shift @p } while @p and defined $this_s;
 	} else {
@@ -310,8 +309,8 @@ sub get_ids_by_paths {
 	}
 	defined $this_s ? $this_s :
 	    !$ensure ? return :
-	    $is_multi ? $m->set_path_by_multi_id($list->[$_], _GEN_ID) : $m->set_path($list->[$_]);
-    } 0..$#$list;
+	    $is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_path($_);
+    } @$list;
 }
 
 sub __strval {
@@ -392,9 +391,10 @@ array-refs of vertex-names.
     @ids = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure);
 
 Given an array-ref of array-refs with paths, returns a list of IDs of
-existing paths (non-existing ones will not be represented).
+existing paths.
 
 If C<$ensure> is true, will first create paths that do not already exist.
+If it is not, any non-existing paths will cause an empty list to be returned.
 
 =head2 rename_path($from, $to)
 
