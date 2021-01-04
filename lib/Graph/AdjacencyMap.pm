@@ -292,23 +292,15 @@ sub paths {
 sub get_ids_by_paths {
     my ($f, $a, $s, $m, $list, $ensure) = ( @{ $_[0] }[ _f, _arity, _s ], @_ );
     my ($is_multi, $is_hyper) = (($f & _MULTI), !defined $a);
-    my (@id, @empty_indices, @non_exist);
-    if (!($is_hyper or $f & (_REF))) { # Fast path
-	for (@$list) {
-	    my ($this_s, @p) = ($s, @$_);
-	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	    push @id,
-		defined $this_s ? $this_s :
-		!$ensure ? return :
-		(push(@empty_indices, 0+@id), push(@non_exist, $_), undef)[2];
-	}
-	$id[$empty_indices[$_]] = $is_multi
-	    ? $m->set_path_by_multi_id($non_exist[$_], _GEN_ID)
-	    : $m->set_path($non_exist[$_]) for 0..$#empty_indices;
-	return @id;
-    }
+    return map { # Fast path
+	my ($this_s, @p) = ($s, @$_);
+	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
+	defined $this_s ? $this_s :
+	    !$ensure ? return :
+	    $is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_path($_);
+    } @$list if !($is_hyper or $f & (_REF));
     my ($is_ref, @dereffed) = (($f & _REF), ($f & _REF) ? map [ map ref() ? __strval($_, $f) : $_, @$_ ], @$list : ());
-    for (0..$#$list) {
+    map {
 	my ($this_s, @p) = ($is_hyper ? $s->[ @{ $list->[$_] } ] : $s,
 	    $is_ref ? @{ $dereffed[$_] } : @{ $list->[$_] });
 	if (@p) {
@@ -316,15 +308,10 @@ sub get_ids_by_paths {
 	} else {
 	    $this_s = $this_s->{''};
 	}
-	push @id,
-	    defined $this_s ? $this_s :
+	defined $this_s ? $this_s :
 	    !$ensure ? return :
-	    (push(@empty_indices, 0+@id), push(@non_exist, $list->[$_]), undef)[2];
-    }
-    $id[$empty_indices[$_]] = $is_multi
-	? $m->set_path_by_multi_id($non_exist[$_], _GEN_ID)
-	: $m->set_path($non_exist[$_]) for 0..$#empty_indices;
-    @id;
+	    $is_multi ? $m->set_path_by_multi_id($list->[$_], _GEN_ID) : $m->set_path($list->[$_]);
+    } 0..$#$list;
 }
 
 sub __strval {
