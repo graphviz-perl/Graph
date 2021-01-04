@@ -54,9 +54,9 @@ sub stringify {
     my ($multi, @rows) = $f & _MULTI;
     my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
     if (defined $a and $a == 2) {
-	my (%pre, %suc, @s);
-	$pre{$_->[0]} = $suc{$_->[1]} = 1 for @p;
-	@rows = ([ 'to:', @s = sort keys %suc ], map {
+	require Set::Object;
+	my ($pre, $suc, @s) = (Set::Object->new(map $_->[0], @p), Set::Object->new(map $_->[1], @p));
+	@rows = ([ 'to:', @s = sort $suc->members ], map {
 	    my $p = $_;
 	    [ $p, map {
 		my $text = defined(my $id = $m->has_path([$p, $_])) ? 1 : '';
@@ -64,7 +64,7 @@ sub stringify {
 		    $multi ? $m->[ _attr ][$id] : $m->_get_path_attrs([$p, $_]);
 		defined $attrs ? $m->_dumper($attrs) : $text;
 	    } @s ];
-	} sort keys %pre);
+	} sort $pre->members);
     } else {
 	@rows = map {
 	    my $attrs = $multi
