@@ -137,7 +137,7 @@ sub set_path {
 
 sub set_path_by_multi_id {
     push @_, 1;
-    (&__set_path)[1];
+    goto &__set_path;
 }
 
 sub __set_path {
@@ -297,7 +297,7 @@ sub get_ids_by_paths {
 	$this_s = $this_s->{ shift @p } while defined $this_s and @p;
 	defined $this_s ? $this_s :
 	    !$ensure ? return :
-	    $is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_path($_);
+	    $is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
     } @$list if !($is_hyper or $is_ref);
     map {
 	my ($this_s, @p) = ($is_hyper ? $s->[ @$_ ] : $s,
@@ -309,7 +309,7 @@ sub get_ids_by_paths {
 	}
 	defined $this_s ? $this_s :
 	    !$ensure ? return :
-	    $is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_path($_);
+	    $is_multi ? ($m->set_path_by_multi_id($_, _GEN_ID))[0] : $m->set_path($_);
     } @$list;
 }
 
@@ -378,6 +378,8 @@ Return all the paths of the Map.
 Set the path by @ids. Returns the integer ID of the path.
 
 =head2 set_path_by_multi_id(\@seq, $id)
+
+    ($integer_ID, $multi_ID) = $m->set_path_by_multi_id(\@seq, $id)
 
 Set the path in the Map by the multi id.
 

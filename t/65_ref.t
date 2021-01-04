@@ -45,7 +45,7 @@ sub test_adjmap {
     ok( !$m->has_any_paths, $label );
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
-    is_deeply( $got, [ $is_multi ? $maybe_id : 0 ], $label ) or diag explain $got;
+    is_deeply( $got, [ 0, $is_multi ? $maybe_id : () ], $label ) or diag explain $got;
     is $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label;
     ok $m->_has_path_attrs(@$path_maybe_id), $label;
     ok $m->_del_path_attrs(@$path_maybe_id);
@@ -58,7 +58,7 @@ sub test_adjmap {
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     is( $m->_get_path_count($path), 0, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
-    is_deeply( $got, [ $is_multi ? $maybe_id : 1 ], $label ) or diag explain $got;
+    is_deeply( $got, [ 1, $is_multi ? $maybe_id : () ], $label ) or diag explain $got;
     is( $m->_get_path_count($path), 1, $label );
     $got = [ $m->paths ];
     is_deeply $got, [ $path ], $label or diag explain $got;
@@ -115,7 +115,7 @@ sub test_adjmap {
 	is_deeply $got, [ sort $path_maybe_id->[-1], qw(0 hello) ], $label or diag explain $got;
     }
     $got = [ $m->get_ids_by_paths([ $path, @paths_to_create ], 1) ];
-    is_deeply $got, [ $is_multi ? (1, 0, 0) : 1..3 ], $label or diag explain $got;
+    is_deeply $got, [ 1..3 ], $label or diag explain $got;
     ok $m->${ \$map->{has} }(@$_), $label for @paths_to_create_maybe_id;
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
     $m->${ \$map->{del} }(@$path_maybe_id);

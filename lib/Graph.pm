@@ -408,7 +408,7 @@ sub add_vertex_by_id {
 sub add_vertex_get_id {
     &expect_multivertexed;
     my ($g, $v) = @_;
-    my $id = $g->[ _V ]->set_path_by_multi_id( [$v], _GEN_ID );
+    my (undef, $id) = $g->[ _V ]->set_path_by_multi_id( [$v], _GEN_ID );
     $g->[ _G ]++;
     &_union_find_add_vertex if &has_union_find;
     return $id;
@@ -455,7 +455,7 @@ sub add_edge_get_id {
     my $g = $_[0];
     my @i = &_vertex_ids_ensure;
     @i = sort @i if &is_undirected;
-    my $id = $g->[ _E ]->set_path_by_multi_id( \@i, _GEN_ID );
+    my (undef, $id) = $g->[ _E ]->set_path_by_multi_id( \@i, _GEN_ID );
     $g->[ _G ]++;
     $g->_union_find_add_edge( @i ) if &has_union_find;
     return $id;
