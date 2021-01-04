@@ -2147,24 +2147,26 @@ sub _biconnectivity_compute {
     }
 
     # Mark the components each vertex belongs to.
-    my ($bci, %v2bc, %v2bc_vec, %bc2v) = 0;
-    my $Z = "\0" x ((@{$state{BC}} + 7) / 8);
-    @v2bc_vec{@u} = ($Z) x @u;
+    my ($bci, %v2bc, %bc2v) = 0;
     for my $bc (@{$state{BC}}) {
-      vec($v2bc_vec{$_}, $bci, 1) = $v2bc{$_}{$bci} = 1 for map @$_, @$bc;
+      $v2bc{$_}{$bci} = undef for map @$_, @$bc;
       $bci++;
     }
 
     # Any isolated vertices get each their own component.
-    $v2bc{$_}{$bci} = vec($v2bc_vec{$_}, $bci++, 1) = 1 for grep !exists $v2bc{$_}, @u;
+    $v2bc{$_}{$bci++} = undef for grep !exists $v2bc{$_}, @u;
 
+    # build vector now we know how big to make it
+    my ($Z, %v2bc_vec, @ap) = "\0" x (($bci + 7) / 8);
+    @v2bc_vec{@u} = ($Z) x @u;
     for my $v (@u) {
-      $bc2v{$_}{$v}{$_} = undef for keys %{$v2bc{$v}};
+	my @components = keys %{ $v2bc{$v} };
+	vec($v2bc_vec{$v}, $_, 1) = 1 for @components;
+	$bc2v{$_}{$v}{$_} = undef for @components;
+	# Articulation points / cut vertices are the vertices
+	# which belong to more than one component.
+	push @ap, $v if @components > 1;
     }
-
-    # Articulation points / cut vertices are the vertices
-    # which belong to more than one component.
-    my @ap = grep keys %{$v2bc{$_}} > 1, @u;
 
     # Bridges / cut edges are the components of two vertices.
     my @br = grep @$_ == 2, map [keys %$_], values %bc2v;
