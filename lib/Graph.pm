@@ -2,6 +2,7 @@ package Graph;
 
 use strict;
 use warnings;
+BEGIN { warnings->unimport('recursion') if $ENV{GRAPH_ALLOW_RECURSION} }
 
 sub __carp_confess { require Carp; Carp::confess(@_) }
 BEGIN {

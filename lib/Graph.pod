@@ -2830,6 +2830,17 @@ Another possibility is that you meant to have objects (blessed
 references) as graph vertices, but forgot to use C<refvertexed>
 (see L</refvertexed>) when creating the graph.
 
+=item *
+
+Deep recursion on subroutine "Graph::_biconnectivity_dfs" at ...
+
+If you have more than 100 vertices, the recursive algorithm will
+trigger Perl's recursion protection. If you set environment variable
+C<GRAPH_ALLOW_RECURSION> to a true value, this protection will be
+disabled, e.g.:
+
+    $ GRAPH_ALLOW_RECURSION=1 perl -Ilib util/grand.pl --test=bcc 101
+
 =back
 
 =head1 ACKNOWLEDGEMENTS

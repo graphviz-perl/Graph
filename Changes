@@ -1,5 +1,6 @@
 - bulk APIs for UnionFind
 - add unionfind config option for util/grand.pl (benchmark-ish script)
+- GRAPH_ALLOW_RECURSION env var to turn off recursion protection
 
 0.9716 2021-01-01
 - use Set::Object
