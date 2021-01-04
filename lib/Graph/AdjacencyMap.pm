@@ -6,13 +6,16 @@ use warnings;
 # $SIG{__DIE__ } = \&Graph::__carp_confess;
 # $SIG{__WARN__} = \&Graph::__carp_confess;
 
-my (@FLAGS, %FLAG_COMBOS, %FLAG2I);
+my (@FLAGS, %FLAG_COMBOS, %FLAG2I, @FIELDS);
 BEGIN {
     @FLAGS = qw(_COUNT _MULTI _UNORD _REF _UNIONFIND _LIGHT _STR);
     %FLAG_COMBOS = (
 	_COUNTMULTI => [qw(_COUNT _MULTI)],
 	_REFSTR => [qw(_REF _STR)],
     );
+    # Next id, Flags, Arity, Index to path, Successors / Path to Index,
+    # attributes - two-level for MULTI, node/multi count
+    @FIELDS = qw(_n _f _arity _i _s _attr _count);
     for my $i (0..$#FLAGS) {
 	my $n = $FLAGS[$i];
 	my $f = 1 << $i;
@@ -28,6 +31,10 @@ BEGIN {
 	*$k = sub () { return $f }; # return to dodge pointless 5.22 stricture
 	*{"_is$k"} = sub { $_[0]->[ 1 ] & $f }; # 1 = _f
     }
+    for my $i (0..$#FIELDS) {
+	no strict 'refs';
+	*{ $FIELDS[$i] }= sub () { $i };
+    }
 }
 
 require Exporter;
@@ -35,20 +42,12 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
 %EXPORT_TAGS =
     (flags =>  [@FLAGS, keys %FLAG_COMBOS, qw(_GEN_ID)],
-     fields => [qw(_n _f _arity _i _s _attr _count)]);
+     fields => \@FIELDS);
 @EXPORT_OK = map @$_, values %EXPORT_TAGS;
 
 my $_GEN_ID = 0;
 
 sub _GEN_ID () { \$_GEN_ID }
-
-sub _n () { 0 } # Next id.
-sub _f () { 1 } # Flags.
-sub _arity () { 2 } # Arity.
-sub _i () { 3 } # Index to path.
-sub _s () { 4 } # Successors / Path to Index.
-sub _attr () { 5 } # attributes - two-level for MULTI
-sub _count () { 6 }
 
 sub stringify {
     my ($f, $a, $s, $m) = (@{ $_[0] }[ _f, _arity, _s ], $_[0]);
