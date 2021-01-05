@@ -255,8 +255,8 @@ sub add_vertex {
 sub has_vertex {
     my $g = $_[0];
     my $V = $g->[ _V ];
-    return exists $V->[ _s ]->{ $_[1] } if ($V->[ _f ] & _LIGHT);
-    defined $V->has_path([$_[1]]);
+    return defined $V->has_path([$_[1]]) if ($V->[ _f ] & _REF);
+    exists $V->[ _s ]->{ $_[1] };
 }
 
 sub _vertices05 {
@@ -316,12 +316,12 @@ sub _vertex_ids_maybe_ensure {
     my $ensure = pop;
     my ($g, @args) = @_;
     my $V = $g->[ _V ];
-    return $V->get_ids_by_paths([ map [$_], @args ], $ensure) if &refvertexed;
+    return $V->get_ids_by_paths([ map [$_], @args ], $ensure) if ($V->[ _f ] & _REF);
     my $s = $V->[ _s ];
     my @non_exist = grep !exists $s->{ $_ }, @args;
     return if !$ensure and @non_exist;
     $V->get_ids_by_paths([ map [$_], @non_exist ], 1) if @non_exist;
-    return map $s->{ $_ }, @args;
+    @$s{ @args };
 }
 
 sub has_edge {
