@@ -102,7 +102,7 @@ sub test_adjmap {
     }
     $got = $m->_get_path_attrs(@$path_maybe_id);
     is_deeply $got, { say => 'hi' }, $label or diag explain $got;
-    $got = { %$got, extra => 'hello' };
+    $got = { %{ $got || {} }, extra => 'hello' };
     $got = $m->_set_path_attrs(@$path_maybe_id, $got);
     is_deeply [ sort $m->_get_path_attr_names(@$path_maybe_id) ], [ qw(extra say) ], $label;
     is_deeply [ $m->_get_path_attr(@$path_maybe_id, 'extra') ], [ qw(hello) ], $label;
