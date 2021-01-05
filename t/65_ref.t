@@ -142,6 +142,12 @@ sub test_adjmap {
         is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     }
     ok( !$m->has_any_paths, $label ) or diag explain $m;
+    if (defined $arity and $arity == 2) {
+	$got = [ $m->successors($path->[0]) ];
+	is_deeply $got, [ ], $label or diag explain $got;
+	$got = [ $m->paths_from($path->[0]) ];
+	is_deeply $got, [ ], $label or diag explain $got;
+    }
 }
 
 test_adjmap(@$_) for @MAP_TESTS;
