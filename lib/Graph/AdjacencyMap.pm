@@ -206,8 +206,9 @@ sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
     return unless my ($i, $p, $k) = $m->__has_path([$from]);
-    $p->[ -1 ]{ $to } = delete $p->[-1]{ $k->[-1] };
     $m->[ _i ][ $i ] = [ $to ];
+    $to = __strval($to, $m->[ _f ]) if ref($to) and ($m->[ _f ] & _REF);
+    $p->[ -1 ]{ $to } = delete $p->[-1]{ $k->[-1] };
     return 1;
 }
 

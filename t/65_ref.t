@@ -16,6 +16,7 @@ my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap::Light', [0, 1], [['a']] ],
     [ 'Graph::AdjacencyMap::Light', [0, 2], [[qw(a b)]] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [[$t]] ],
+    [ 'Graph::AdjacencyMap', [_REF, 1], [[$v]] ],
     [ 'Graph::AdjacencyMap', [_REF, 2], [[$u, $v]] ],
     [ 'Graph::AdjacencyMap', [0, undef], [[qw()]] ],
     [ 'Graph::AdjacencyMap', [0, undef], [[qw(a b c d)]] ],
