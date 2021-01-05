@@ -333,9 +333,9 @@ sub __strval {
 
 sub __arg {
     my ($f, $a, $m, @a) = (@{ $_[0] }[ _f, _arity ], $_[0], @{ $_[1] });
-    Graph::__carp_confess(sprintf "arguments %d expected %d for\n".$m->stringify,
-		  scalar @a, $a)
-        if defined($a) and @a != $a;
+    Graph::__carp_confess(sprintf "arguments %d (%s) expected %d for\n".$m->stringify,
+	scalar @a, "@a", $a)
+	if defined($a) and @a != $a;
 }
 
 1;
