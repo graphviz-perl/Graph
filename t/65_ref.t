@@ -131,9 +131,17 @@ sub test_adjmap {
     $got = [ $m->get_ids_by_paths(\@paths_to_create2, 1, 1) ];
     is_deeply $got, [ [2, 4], [3, 5] ], $label or diag explain $got;
     ok $m->${ \$map->{has} }(@$_), $label for @lookup2;
+    ok( $m->has_any_paths, $label ) or diag explain $m;
+    $m->${ \$map->{del} }(@$_) for @lookup2;
+    $m->${ \$map->{del} }($_, $is_multi ? 0 : ()) for @paths_to_create;
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
     $m->${ \$map->{del} }(@$path_maybe_id);
     ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );
+    if ($is_multi) {
+        $m->${ \$map->{del} }($path, $_) for $m->get_multi_ids($path);
+        is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
+    }
+    ok( !$m->has_any_paths, $label ) or diag explain $m;
 }
 
 test_adjmap(@$_) for @MAP_TESTS;
