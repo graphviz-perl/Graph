@@ -26,99 +26,81 @@ sub _new {
 
 sub set_paths {
     my ($m, @paths) = @_;
-    my ($a, $i, $s, @ids) = (@$m[ _arity, _i, _s ]);
+    my ($f, $a, $i, $pi, $map_s, $map_p, @ids) = (@$m[ _f, _arity, _i, _pi, _s, _p ]);
     for (@paths) {
 	my @args = @$_;
 	Graph::__carp_confess("Wrong number of args: expected $a, got (@args)") if $a != @args;
-	my $e0 = shift @args;
-	push(@ids, $s->{ $e0 }), next if $a == 1 && exists $s->{ $e0 };
-	push(@ids, $s->{ $e0 }{ $args[0] }), next if $a == 2 && exists $s->{ $e0 } && defined $s->{ $e0 }{ $args[0] };
-	$i->[ my $n = $m->[ _n ]++ ] = [ $e0, @args ];
-	if ($a == 2) {
-	    $s->{ $e0 }{ shift @args } = $n;
-	} else {
-	    $s->{ $e0 } = $n;
-	}
+	my $l = join ' ', @args;
+	push(@ids, $pi->{ $l }), next if defined $pi->{ $l };
+	$i->[ my $n = $m->[ _n ]++ ] = $_;
+	$pi->{ $l } = $n;
 	push @ids, $n;
+	Graph::AdjacencyMap::_successors_add($f, $map_s, $map_p, $n, $_) if $map_s;
     }
     @ids;
 }
 
 sub get_ids_by_paths {
-    my ($s, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _s ], @_ );
+    my ($pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _pi ], @_ );
     map {
 	my @ret = map {
-	    my ($this_s, @p) = ($s, @$_);
-	    $this_s = $this_s->{ shift @p } while defined $this_s and @p;
-	    defined $this_s ? $this_s : $ensure ? $m->set_paths($_) : return;
+	    my $id = $pi->{ join ' ', @$_ };
+	    defined $id ? $id : $ensure ? $m->set_paths($_) : return;
 	} $deep ? @$_ : $_;
 	$deep ? \@ret : @ret;
     } @$list;
 }
 
 sub has_path {
-    my ($a, $s, @args) = ( @{ $_[0] }[ _arity, _s ], @{ $_[1] } );
+    my ($a, $pi, @args) = ( @{ $_[0] }[ _arity, _pi ], @{ $_[1] } );
     Graph::__carp_confess("Wrong number of args, want $a, got (@args)") if $a != @args;
-    $s = $s->{ shift @args } while defined $s and @args;
-    $s;
+    $pi->{ join ' ', @args };
 }
 
 sub _get_path_count {
     defined(my $dummy = &has_path) ? 1 : 0; # defined &x asks if func defined
 }
 
-sub has_any_paths { keys %{ $_[0]->[ _s ] } }
-
 sub del_path {
-    my ($a, $i, $s, $attr, @args) = ( @{ my $m = $_[0] }[ _arity, _i, _s, _attr ], @{ $_[1] } );
+    my ($f, $a, $i, $pi, $map_s, $map_p, $attr, @args) = ( @{ my $m = $_[0] }[ _f, _arity, _i, _pi, _s, _p, _attr ], @{ $_[1] } );
     Graph::__carp_confess("Wrong number of args, want $a, got (@args)") if $a != @args;
-    return 0 if !defined(my $n = $s->{ my $e0 = shift @args });
-    if (@args == 1) {
-	my $e1 = shift @args;
-	return 0 if !defined($n = $n->{ $e1 });
-	delete $s->{ $e0 }->{ $e1 };
-	delete $s->{ $e0 } unless keys %{ $s->{ $e0 } };
-	delete $attr->{ $e0 }->{ $e1 };
-	delete $attr->{ $e0 } unless keys %{ $attr->{ $e0 } };
-    } else {
-	delete $s->{ $e0 };
-	delete $attr->{ $e0 };
-    }
-    delete $i->[ $n ];
+    my $l = join ' ', @args;
+    return 0 if !exists $pi->{ $l };
+    my $id = delete $pi->{ $l };
+    delete $attr->{ $l };
+    my $path = delete $i->[ $id ];
+    Graph::AdjacencyMap::_successors_del($f, $map_s, $map_p, $id, $path) if $map_s;
     return 1;
 }
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    my ($a, $i, $s, $attr) = @$m[ _arity, _i, _s, _attr ];
+    my ($a, $i, $pi, $attr) = @$m[ _arity, _i, _pi, _attr ];
     return 1 if $a > 1; # arity > 1, all integers, no names
-    return 0 unless exists $s->{ $from };
-    $s->{ $to } = delete $s->{ $from };
-    $attr->{ $to } = delete $attr->{ $from } if $attr->{ $from };
-    $i->[ $s->{ $to } ] = [ $to ];
+    return 0 unless exists $pi->{ $from };
+    $attr->{ $to } =     delete $attr->{ $from } if $attr->{ $from };
+    $i->[ $pi->{ $to } = delete $pi->{ $from } ] = [ $to ];
     return 1;
 }
 
 sub _set_path_attr_common {
     (my $m = $_[0])->set_paths($_[1]);
     my ($attr, @args) = ( @$m[ _attr ], @{ $_[1] } );
-    $attr = $attr->{ shift @args } ||= {} while $attr and @args > 1;
-    \$attr->{ $args[0] };
+    \$attr->{ join ' ', @args };
 }
 
 sub _get_path_attrs {
     my ($a, $attr, @args) = ( @{ $_[0] }[ _arity, _attr ], @{ $_[1] } );
     Graph::__carp_confess("Wrong number of args, want $a, got (@args)") if $a != @args;
-    $attr = $attr->{ shift @args } while $attr and @args > 0;
-    $attr ? $attr : ();
+    $attr->{ join ' ', @args };
 }
 
 sub _del_path_attrs {
     return undef unless defined &has_path;
     my ($a, $attr, @args) = ( @{ $_[0] }[ _arity, _attr ], @{ $_[1] } );
-    $attr = $attr->{ shift @args } while $attr and @args > 1;
-    return 0 unless $attr and exists $attr->{ $args[0] };
-    delete $attr->{ $args[0] };
+    my $l = join ' ', @args;
+    return 0 unless exists $attr->{ $l };
+    delete $attr->{ $l };
     1;
 }
 

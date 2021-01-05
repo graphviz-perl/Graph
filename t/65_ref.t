@@ -14,17 +14,20 @@ my $v = cplx(3, 4);
 my $z = cplx(4, 5);
 my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap::Light', [0, 1], [['a']] ],
-    [ 'Graph::AdjacencyMap::Light', [0, 2], [[qw(a b)]] ],
+    [ 'Graph::AdjacencyMap::Light', [0, 2], [[qw(2 7)]] ],
+    [ 'Graph::AdjacencyMap::Light', [_UNORD, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [[$t]] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [[$v]] ],
-    [ 'Graph::AdjacencyMap', [_REF, 2], [[$u, $v]] ],
     [ 'Graph::AdjacencyMap', [0, undef], [[qw()]] ],
-    [ 'Graph::AdjacencyMap', [0, undef], [[qw(a b c d)]] ],
-    [ 'Graph::AdjacencyMap', [0, 2], [[qw(a b)]] ],
+    [ 'Graph::AdjacencyMap', [0, undef], [[qw(2 7 9 12)]] ],
+    [ 'Graph::AdjacencyMap', [_UNORD, undef], [[qw()]] ],
+    [ 'Graph::AdjacencyMap', [_UNORD, undef], [[qw(2 7 9 12)]] ],
+    [ 'Graph::AdjacencyMap', [0, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap', [_MULTI, 1], [['a'], 'b'] ],
-    [ 'Graph::AdjacencyMap', [_MULTI, 2], [[qw(a b)], 'c'] ],
+    [ 'Graph::AdjacencyMap', [_MULTI, 2], [[qw(2 7)], 'c'] ],
     [ 'Graph::AdjacencyMap', [_COUNT, 1], [[qw(a)]] ],
-    [ 'Graph::AdjacencyMap', [_COUNT, 2], [[qw(a b)]] ],
+    [ 'Graph::AdjacencyMap', [_COUNT, 2], [[qw(2 7)]] ],
+    [ 'Graph::AdjacencyMap', [_UNORD, 2], [[qw(2 7)]] ],
 );
 my @METHOD_MAP = (
     { has => 'has_path', del => 'del_path', set => 'set_paths' },
@@ -40,7 +43,7 @@ sub test_adjmap {
     my $map = $METHOD_MAP[ $is_multi ];
     my @paths_to_create = map [ ($_) x (defined $arity ? @$path : 1) ], qw(y z);
     my @paths_to_create_maybe_id = map [ $_, $is_multi ? 0 : () ], @paths_to_create;
-    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, @{[$m->_dumper($arity)]})";
+    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, @{[$m->_dumper($arity)]}) (@$path)";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
     $got = [ $m->get_ids_by_paths([ [$path] ], 0, 1) ];
@@ -86,6 +89,12 @@ sub test_adjmap {
 	is_deeply $got, [ $path->[1] ], $label or diag explain $got;
 	$got = [ $m->paths_from($path->[0]) ];
 	is_deeply $got, [ $path ], $label or diag explain $got;
+	if ($flags & _UNORD) {
+	    $got = [ $m->successors($path->[1]) ];
+	    is_deeply $got, [ $path->[0] ], $label or diag explain $got;
+	    $got = [ $m->paths_from($path->[1]) ];
+	    is_deeply $got, [ $path ], $label or diag explain $got;
+	}
     }
     ok( !$m->_has_path_attrs(@$path_maybe_id), $label );
     is( $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label );
@@ -127,8 +136,8 @@ sub test_adjmap {
     $got = [ $m->get_ids_by_paths([ $path, @paths_to_create ], 1) ];
     is_deeply $got, [ 1..3 ], $label or diag explain $got;
     ok $m->${ \$map->{has} }(@$_), $label for @paths_to_create_maybe_id;
-    my @paths_to_create2 = map [ $_, [ map "X$_", @$_ ] ], @paths_to_create;
-    my @lookup2 = map [ [ map "X$_", @$_ ], $is_multi ? 0 : () ], @paths_to_create;
+    my @paths_to_create2 = map [ $_, [ map "1$_", @$_ ] ], @paths_to_create;
+    my @lookup2 = map [ [ map "1$_", @$_ ], $is_multi ? 0 : () ], @paths_to_create;
     $got = [ $m->get_ids_by_paths(\@paths_to_create2, 1, 1) ];
     is_deeply $got, [ [2, 4], [3, 5] ], $label or diag explain $got;
     ok $m->${ \$map->{has} }(@$_), $label for @lookup2;

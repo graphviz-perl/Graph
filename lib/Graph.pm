@@ -256,7 +256,7 @@ sub has_vertex {
     my $g = $_[0];
     my $V = $g->[ _V ];
     return defined $V->has_path([$_[1]]) if ($V->[ _f ] & _REF);
-    exists $V->[ _s ]->{ $_[1] };
+    exists $V->[ _pi ]->{ $_[1] };
 }
 
 sub _vertices05 {
@@ -317,11 +317,11 @@ sub _vertex_ids_maybe_ensure {
     my ($g, @args) = @_;
     my $V = $g->[ _V ];
     return $V->get_ids_by_paths([ map [$_], @args ], $ensure) if ($V->[ _f ] & _REF);
-    my $s = $V->[ _s ];
-    my @non_exist = grep !exists $s->{ $_ }, @args;
+    my $pi = $V->[ _pi ];
+    my @non_exist = grep !exists $pi->{ $_ }, @args;
     return if !$ensure and @non_exist;
     $V->get_ids_by_paths([ map [$_], @non_exist ], 1) if @non_exist;
-    @$s{ @args };
+    @$pi{ @args };
 }
 
 sub has_edge {
@@ -331,10 +331,7 @@ sub has_edge {
     return 0 if defined($Ea) and @_ != $Ea + 1;
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
     @i = sort @i if &is_undirected;
-    return $E->get_ids_by_paths([ \@i ], 0) if !(@i == 2 && !(!defined($Ea) or $Ef & _REF)); # Slow path.
-    my $s = $E->[ _s ];
-    return exists $s->{ $i[0] } &&
-	   exists $s->{ $i[0] }->{ $i[1] } ? 1 : 0;
+    exists $E->[ _pi ]{ "@i" };
 }
 
 sub any_edge {
