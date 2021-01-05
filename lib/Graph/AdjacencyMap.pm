@@ -50,10 +50,10 @@ my $_GEN_ID = 0;
 sub _GEN_ID () { \$_GEN_ID }
 
 sub stringify {
-    my ($f, $a, $s, $m) = (@{ $_[0] }[ _f, _arity, _s ], $_[0]);
+    my ($f, $arity, $m) = (@{ $_[0] }[ _f, _arity ], $_[0]);
     my ($multi, @rows) = $f & _MULTI;
-    my @p = map $_->[0], sort _s_sort map [$_,"@$_"], $m->paths; # use the Schwartz
-    if (defined $a and $a == 2) {
+    my @p = map $_->[0], sort { $a->[1] cmp $b->[1] } map [$_,"@$_"], $m->paths; # use the Schwartz
+    if (defined $arity and $arity == 2) {
 	require Set::Object;
 	my ($pre, $suc, @s) = (Set::Object->new(map $_->[0], @p), Set::Object->new(map $_->[1], @p));
 	@rows = ([ 'to:', @s = sort $suc->members ], map {
@@ -69,20 +69,17 @@ sub stringify {
 	@rows = map {
 	    my $attrs = $multi
 		? $m->[ _attr ][ $m->has_path($_) ] : $m->_get_path_attrs($_);
-	    [ (defined $a and $a == 1) ? $_->[0] : '[' . join(' ', @$_) . ']',
+	    [ (defined $arity and $arity == 1) ? $_->[0] : '[' . join(' ', @$_) . ']',
 		($m->get_ids_by_paths([ $_ ], 0))[0].
 		    (!defined $attrs ? '' : ",".$m->_dumper($attrs)) ];
 	} @p;
     }
     join '',
 	map "$_\n",
-	"@{[ref $m]} arity=@{[$m->_dumper($a)]} flags: @{[_stringify_fields($m->[ _f ])]}",
+	"@{[ref $m]} arity=@{[$m->_dumper($arity)]} flags: @{[_stringify_fields($m->[ _f ])]}",
 	map join(' ', map sprintf('%4s', $_), @$_),
 	@rows;
 }
-
-# because in BLOCK mode, $a is 1 while $b is right - probable perl bug
-sub _s_sort { $a->[1] cmp $b->[1] }
 
 sub _stringify_fields {
     return '0' if !$_[0];
