@@ -109,10 +109,6 @@ sub _dumper {
     $dumper->Dump;
 }
 
-sub _ids {
-    $_[0]->[ _i ];
-}
-
 sub has_any_paths {
     scalar keys %{ $_[0]->[ _pi ] };
 }

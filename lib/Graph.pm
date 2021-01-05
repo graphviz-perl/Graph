@@ -42,8 +42,6 @@ sub _V () { 2 } # Vertices.
 sub _E () { 3 } # Edges.
 sub _A () { 4 } # Attributes.
 sub _U () { 5 } # Union-Find.
-sub _S () { 6 } # Successors cache, [1] is the graph generation
-sub _P () { 7 } # Predecessors cache, not made if undirected
 
 my $Inf;
 
@@ -339,11 +337,7 @@ sub any_edge {
     my $E = $g->[ _E ];
     my $Ef = $E->[ _f ];
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
-    @i = sort @i if &is_undirected;
-    &_edge_cache;
-    my $N0 = $g->[ _S ][0];
-    my $s = $N0->{ $i[0] };
-    grep $_ == $i[1], map @$_, @{ $s };
+    $E->has_successor(@i);
 }
 
 sub _edges05 {
@@ -481,56 +475,15 @@ sub _edges_at {
     Set::Object->new(&_edges_from, &_edges_to)->${ wantarray ? \'members' : \'size' };
 }
 
-sub _edge_cache {
-    my $g = $_[0];
-    return if $g->[ _S ] && $g->[ _S ][1] == $g->[ _G ];
-    require Set::Object unless my $directed = &is_directed;
-    $g->[ _S ] = [ my $S0 = {}, $g->[ _G ] ];
-    $g->[ _P ] = [ my $P0 = {} ]; # only store generation in _S
-    my $Ei = $g->[ _E ]->_ids;
-    for (my $ei = $#$Ei; $ei >= 0; $ei--) {
-	next if !defined(my $ev = $Ei->[$ei]);
-	next unless @$ev;
-	if ($directed) {
-	    my ($f, $t) = @$ev;
-	    push @{ $S0->{ $f } }, $ev;
-	    push @{ $P0->{ $t } }, $ev;
-	} else {
-	    my @e = Set::Object->new(@$ev)->members;
-	    if (@e == 1) {
-		push @{ $S0->{ $e[0] } }, [ @e, @e ];
-		next;
-	    }
-	    for my $i (0..$#e) {
-		my ($f, @r) = _list_with_x_first($i, @e);
-		push @{ $S0->{ $f } }, [ $f, @r ];
-	    }
-	}
-    }
-}
-
-sub _list_with_x_first {
-    return if @_ == 1;
-    my $i = shift;
-    ($_[$i], @_[0..$i-1], @_[$i+1..$#_]);
-}
-
-sub _edges {
-    &_edge_cache;
-    my $n = pop;
-    my $N0 = $_[0]->[ $n ][0];
-    map @{ $N0->{ $_ } || [] }, &_vertex_ids;
-}
-
 sub _edges_from {
-    push @_, _S;
-    goto &_edges;
+    return if (my @i = &_vertex_ids) != @_ - 1;
+    $_[0]->[ _E ]->paths_from(@i);
 }
 
 sub _edges_to {
     goto &_edges_from if &is_undirected;
-    push @_, _P;
-    goto &_edges;
+    return if (my @i = &_vertex_ids) != @_ - 1;
+    $_[0]->[ _E ]->paths_to(@i);
 }
 
 sub edges_at {
@@ -550,16 +503,18 @@ sub edges_to {
 }
 
 sub successors {
-    goto &_edges_from if !wantarray;
-    my @v = map [ @$_[ 1 .. $#$_ ] ], &_edges_from;
-    map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
+    return if (my @i = &_vertex_ids) != @_ - 1;
+    my @v = $_[0]->[ _E ]->successors(@i);
+    return @v if !wantarray;
+    map @$_, $_[0]->[ _V ]->get_paths_by_ids([ \@v ]);
 }
 
 sub predecessors {
-    goto &_edges_to if !wantarray;
     goto &successors if &is_undirected;
-    my @v = map [ @$_[ 0 .. $#$_-1 ] ], &_edges_to;
-    map @$_, $_[0]->[ _V ]->get_paths_by_ids(\@v);
+    return if (my @i = &_vertex_ids) != @_ - 1;
+    my @v = $_[0]->[ _E ]->predecessors(@i);
+    return @v if !wantarray;
+    map @$_, $_[0]->[ _V ]->get_paths_by_ids([ \@v ]);
 }
 
 sub _cessors_by_radius {
@@ -612,9 +567,9 @@ sub neighbours_by_radius {
 
 sub neighbours {
     require Set::Object;
-    my $s = Set::Object->new(map @$_[1..$#$_], &_edges_from);
-    $s->insert(map @$_[0..$#$_-1], &_edges_to) if &is_directed;
-    map @$_, $_[0]->[ _V ]->get_paths_by_ids([ map [$_], $s->members ]);
+    my $s = Set::Object->new(&successors);
+    $s->insert(&predecessors) if &is_directed;
+    $s->members;
 }
 *neighbors = \&neighbours;
 
@@ -635,7 +590,7 @@ sub reachable_by_radius {
 sub delete_edge {
     &expect_non_unionfind;
     my $g = $_[0];
-    my @i = &_vertex_ids;
+    return $g if (my @i = &_vertex_ids) != @_ - 1;
     @i = sort @i if &is_undirected;
     return $g unless @i and $g->[ _E ]->del_path( \@i );
     $g->[ _G ]++;
@@ -663,8 +618,7 @@ sub get_vertex_count {
 
 sub get_edge_count {
     my $g = $_[0];
-    my @i = &_vertex_ids;
-    return 0 unless @i;
+    return 0 if (my @i = &_vertex_ids) != @_ - 1;
     @i = sort @i if &is_undirected;
     $g->[ _E ]->_get_path_count( \@i );
 }
@@ -1233,7 +1187,8 @@ sub subgraph {
   my @u = grep $g->has_vertex($_), @$src;
   my $v = Set::Object->new($dst ? grep $g->has_vertex($_), @$dst : @u);
   $s->add_vertices(@u, $dst ? $v->members : ());
-  $s->add_edges(grep $v->contains($_->[1]), $g->edges_from(@u));
+  my $directed = &is_directed;
+  $s->add_edges(grep $v->contains($directed ? $_->[1] : @$_), $g->edges_from(@u));
   return $s;
 }
 
