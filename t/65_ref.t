@@ -109,7 +109,7 @@ sub test_adjmap {
     $m->_del_path_attr(@$path_maybe_id, 'extra');
     is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ qw(say) ], $label;
     $got = [ $m->_get_path_attrs(@$path_maybe_id) ];
-    is_deeply( $got, [ { say => 'hi' } ] ), $label or diag explain $got;
+    is_deeply $got, [ { say => 'hi' } ], $label or diag explain $got;
     $m->_del_path_attr(@$path_maybe_id, 'say');
     is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ ], $label;
     is( $m->_get_path_count($path), 1, $label );
