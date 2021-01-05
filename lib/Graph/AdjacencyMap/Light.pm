@@ -58,7 +58,7 @@ sub get_ids_by_paths {
 
 sub has_path {
     my ($a, $s, @args) = ( @{ $_[0] }[ _arity, _s ], @{ $_[1] } );
-    return undef unless $a == @args;
+    Graph::__carp_confess("Wrong number of args, want $a, got (@args)") if $a != @args;
     $s = $s->{ shift @args } while defined $s and @args;
     $s;
 }
@@ -70,7 +70,8 @@ sub _get_path_count {
 sub has_any_paths { keys %{ $_[0]->[ _s ] } }
 
 sub del_path {
-    my ($i, $s, $attr, @args) = ( @{ my $m = $_[0] }[ _i, _s, _attr ], @{ $_[1] } );
+    my ($a, $i, $s, $attr, @args) = ( @{ my $m = $_[0] }[ _arity, _i, _s, _attr ], @{ $_[1] } );
+    Graph::__carp_confess("Wrong number of args, want $a, got (@args)") if $a != @args;
     return 0 if !defined(my $n = $s->{ my $e0 = shift @args });
     if (@args == 1) {
 	my $e1 = shift @args;
@@ -100,23 +101,24 @@ sub rename_path {
 
 sub _set_path_attr_common {
     (my $m = $_[0])->set_paths($_[1]);
-    my ($attr, @e) = ( @$m[ _attr ], @{ $_[1] } );
-    $attr = $attr->{ shift @e } ||= {} while $attr and @e > 1;
-    \$attr->{ $e[0] };
+    my ($attr, @args) = ( @$m[ _attr ], @{ $_[1] } );
+    $attr = $attr->{ shift @args } ||= {} while $attr and @args > 1;
+    \$attr->{ $args[0] };
 }
 
 sub _get_path_attrs {
-    my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
-    $attr = $attr->{ shift @e } while $attr and @e > 0;
+    my ($a, $attr, @args) = ( @{ $_[0] }[ _arity, _attr ], @{ $_[1] } );
+    Graph::__carp_confess("Wrong number of args, want $a, got (@args)") if $a != @args;
+    $attr = $attr->{ shift @args } while $attr and @args > 0;
     $attr ? $attr : ();
 }
 
 sub _del_path_attrs {
     return undef unless defined &has_path;
-    my ($attr, @e) = ( @{ $_[0] }[ _attr ], @{ $_[1] } );
-    $attr = $attr->{ shift @e } while $attr and @e > 1;
-    return 0 unless $attr and exists $attr->{ $e[0] };
-    delete $attr->{ $e[0] };
+    my ($a, $attr, @args) = ( @{ $_[0] }[ _arity, _attr ], @{ $_[1] } );
+    $attr = $attr->{ shift @args } while $attr and @args > 1;
+    return 0 unless $attr and exists $attr->{ $args[0] };
+    delete $attr->{ $args[0] };
     1;
 }
 
