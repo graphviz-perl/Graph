@@ -96,6 +96,13 @@ sub test_adjmap {
 	    is_deeply $got, [ $path->[0] ], $label or diag explain $got;
 	    $got = [ $m->paths_from($path->[1]) ];
 	    is_deeply $got, [ $path ], $label or diag explain $got;
+	} else {
+	    $got = [ $m->predecessors($path->[1]) ];
+	    is_deeply $got, [ $path->[0] ], $label or diag explain $got;
+	    ok $m->has_predecessor(reverse @$path), $label;
+	    ok !$m->has_predecessor($path->[1], 99), $label;
+	    $got = [ $m->paths_to($path->[1]) ];
+	    is_deeply $got, [ $path ], $label or diag explain $got;
 	}
     }
     ok( !$m->_has_path_attrs(@$path_maybe_id), $label );
@@ -159,6 +166,12 @@ sub test_adjmap {
 	is_deeply $got, [ ], $label or diag explain $got;
 	$got = [ $m->paths_from($path->[0]) ];
 	is_deeply $got, [ ], $label or diag explain $got;
+	if (!($flags & _UNORD)) {
+	    $got = [ $m->predecessors($path->[1]) ];
+	    is_deeply $got, [ ], $label or diag explain $got;
+	    $got = [ $m->paths_to($path->[1]) ];
+	    is_deeply $got, [ ], $label or diag explain $got;
+	}
     }
 }
 

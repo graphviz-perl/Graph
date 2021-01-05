@@ -356,6 +356,13 @@ sub paths_from {
     map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_s->{ $_ } || {} }, @v)->members;
 }
 
+sub paths_to {
+    my ($i, $map_p, @v) = ( @{ $_[0] }[ _i, _p ], @_[1..$#_] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, @v;
+    require Set::Object;
+    map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_p->{ $_ } || {} }, @v)->members;
+}
+
 sub successors {
     my ($map_s, @v) = ( @{ $_[0] }[ _s ], @_[1..$#_] );
     Graph::__carp_confess("undefined vertex") if grep !defined, @v;
@@ -367,6 +374,19 @@ sub has_successor {
     my ($map_s, $u, $v) = ( @{ $_[0] }[ _s ], @_[1, 2] );
     Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
     exists ${ $map_s->{ $u } || {} }{ $v };
+}
+
+sub predecessors {
+    my ($map_p, @v) = ( @{ $_[0] }[ _p ], @_[1..$#_] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, @v;
+    require Set::Object;
+    Set::Object->new(map keys %{ $map_p->{ $_ } || {} }, @v)->members;
+}
+
+sub has_predecessor {
+    my ($map_p, $u, $v) = ( @{ $_[0] }[ _p ], @_[1, 2] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
+    exists ${ $map_p->{ $u } || {} }{ $v };
 }
 
 sub __strval {
@@ -477,11 +497,29 @@ Return a string describing the object in a human-friendly(ish) way.
 
 Only valid for a map of arity other than 1.
 
+=head2 predecessors
+
+    @predecessors = $m->predecessors($v)
+
+Only valid for a non-C<_UNORD> map of arity other than 1.
+
+=head2 has_predecessor
+
+    $bool = $m->has_predecessor($v)
+
+Only valid for a non-C<_UNORD> map of arity other than 1.
+
 =head2 paths_from
 
     @paths = $m->paths_from(@v)
 
 Only valid for a map of arity other than 1.
+
+=head2 paths_to
+
+    @paths = $m->paths_to($v)
+
+Only valid for a non-C<_UNORD> map of arity other than 1.
 
 =head2 has_successor
 
