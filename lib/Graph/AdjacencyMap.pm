@@ -37,6 +37,11 @@ BEGIN {
     }
 }
 
+sub _new {
+    my ($class, $flags, $arity) = @_;
+    bless [ 0, $flags, $arity, [], (defined $arity ? {} : []), [], [] ], $class;
+}
+
 require Exporter;
 use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw(Exporter);
@@ -94,11 +99,6 @@ sub _dumper {
     $dumper->Indent(0)->Terse(1);
     $dumper->Sortkeys(1) if $dumper->can("Sortkeys");
     $dumper->Dump;
-}
-
-sub _new {
-    my ($class, $flags, $arity) = @_;
-    bless [ 0, $flags, $arity, [], (defined $arity ? {} : []), [], [] ], $class;
 }
 
 sub _ids {
