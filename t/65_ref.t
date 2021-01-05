@@ -87,6 +87,8 @@ sub test_adjmap {
     } elsif (defined $arity and $arity == 2) {
 	$got = [ $m->successors($path->[0]) ];
 	is_deeply $got, [ $path->[1] ], $label or diag explain $got;
+	ok $m->has_successor(@$path), $label;
+	ok !$m->has_successor($path->[0], 99), $label;
 	$got = [ $m->paths_from($path->[0]) ];
 	is_deeply $got, [ $path ], $label or diag explain $got;
 	if ($flags & _UNORD) {

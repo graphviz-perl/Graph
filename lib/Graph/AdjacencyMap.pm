@@ -363,6 +363,12 @@ sub successors {
     Set::Object->new(map keys %{ $map_s->{ $_ } || {} }, @v)->members;
 }
 
+sub has_successor {
+    my ($map_s, $u, $v) = ( @{ $_[0] }[ _s ], @_[1, 2] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
+    exists ${ $map_s->{ $u } || {} }{ $v };
+}
+
 sub __strval {
     my ($k, $f) = @_;
     return $k unless ref $k && ($f & _REF);
@@ -474,6 +480,12 @@ Only valid for a map of arity other than 1.
 =head2 paths_from
 
     @paths = $m->paths_from(@v)
+
+Only valid for a map of arity other than 1.
+
+=head2 has_successor
+
+    $bool = $m->has_successor($u, $v)
 
 Only valid for a map of arity other than 1.
 
