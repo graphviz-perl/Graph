@@ -13,14 +13,16 @@ use base 'Graph::AdjacencyMap';
 # $SIG{__DIE__ } = \&Graph::__carp_confess;
 # $SIG{__WARN__} = \&Graph::__carp_confess;
 
+my @LOCAL_OVERRIDE = (_s, _p);
+
 sub _is_COUNT    () { 0 }
 sub _is_MULTI    () { 0 }
-sub _is_UNIQ     () { 0 }
 sub _is_REF      () { 0 }
 
 sub _new {
     my ($class, $flags, $arity) = @_;
     (my $m = $class->SUPER::_new($flags | _LIGHT, $arity))->[ _attr ] = {};
+    @$m[ @LOCAL_OVERRIDE ] = map $m->[ $_ ] ? [] : undef, @LOCAL_OVERRIDE;
     $m;
 }
 
@@ -35,10 +37,65 @@ sub set_paths {
 	$i->[ my $n = $m->[ _n ]++ ] = $_;
 	$pi->{ $l } = $n;
 	push @ids, $n;
-	Graph::AdjacencyMap::_successors_add($f, $map_s, $map_p, $n, $_) if $map_s;
+	_successors_add($f, $map_s, $map_p, $n, $_) if $map_s;
     }
     @ids;
 }
+
+sub _successors_set {
+    my $val = pop;
+    my ($f, $map_s, $map_p, $id, $path) = @_;
+    my $pairs = Graph::AdjacencyMap::_successors_cartesian(($f & _UNORD), $path);
+    no warnings 'uninitialized'; # needed 5.8
+    vec($map_s->[ $_->[0] ], $_->[1], 1) = $val for @$pairs; # row-major
+    return if !$map_p;
+    vec($map_p->[ $_->[1] ], $_->[0], 1) = $val for @$pairs;
+}
+sub _successors_add { push @_, 1; goto &_successors_set }
+sub _successors_del { push @_, 0; goto &_successors_set }
+
+sub _paths_fromto {
+    my $offset = pop;
+    my ($i, $pi, $f, $map_x, @v) = ( @{ $_[0] }[ _i, _pi, _f, $offset ], @_[1..$#_] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, @v;
+    require Set::Object;
+    my ($paths, $invert, $unord) = (Set::Object->new, $offset == _p, $f & _UNORD);
+    for my $tuple (grep defined $_->[1], map [$_, $map_x->[$_]], @v) {
+	my ($v, $s) = ($tuple->[0], scalar unpack("b*", $tuple->[1]));
+	$paths->insert(join ' ', (
+	    $unord ? sort($v, pos($s) - 1) :
+	    $invert ? (pos($s) - 1, $v) : ($v, pos($s) - 1)
+	)) while $s =~ /1/g;
+    }
+    map $i->[ $pi->{ $_ } ], $paths->members;
+}
+sub paths_from { push @_, _s; goto &_paths_fromto }
+sub paths_to { push @_, _p; goto &_paths_fromto }
+
+sub _cessors {
+    my $offset = pop;
+    my ($map_x, @v) = ( @{ $_[0] }[ $offset ], @_[1..$#_] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, @v;
+    require Set::Object;
+    my $c = Set::Object->new;
+    for my $row (grep defined, @$map_x[ @v ]) {
+	# 10x quicker than: grep vec($row, $_, 1), 0..$#$m
+	my $s = unpack("b*", $row);
+	$c->insert(pos($s) - 1) while $s =~ /1/g;
+    }
+    $c->members;
+}
+sub successors { push @_, _s; goto &_cessors }
+sub predecessors { push @_, _p; goto &_cessors }
+
+sub _has_cessor {
+    my $offset = pop;
+    my ($map_x, $u, $v) = ( @{ $_[0] }[ $offset ], @_[1, 2] );
+    Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
+    vec(($map_x->[ $u ] || return 0), $v, 1);
+}
+sub has_successor { push @_, _s; goto &_has_cessor }
+sub has_predecessor { push @_, _p; goto &_has_cessor }
 
 sub get_ids_by_paths {
     my ($pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _pi ], @_ );
@@ -69,7 +126,7 @@ sub del_path {
     my $id = delete $pi->{ $l };
     delete $attr->{ $l };
     my $path = delete $i->[ $id ];
-    Graph::AdjacencyMap::_successors_del($f, $map_s, $map_p, $id, $path) if $map_s;
+    _successors_del($f, $map_s, $map_p, $id, $path) if $map_s;
     return 1;
 }
 
