@@ -193,7 +193,7 @@ sub new {
 	_am_heavy($vflags, 1) :
 	    _am_light($vflags, 1);
     $g->[ _E ] = ($is_hyper or $eflags & ~_UNORD) ?
-	_am_heavy($eflags, $is_hyper ? undef : 2) :
+	_am_heavy($eflags, $is_hyper ? 0 : 2) :
 	    _am_light($eflags, 2);
 
     $g->add_vertices(@V) if @V;
@@ -225,7 +225,7 @@ sub __stringified { $_[0]->[ _V ]->_is_STR   }
 
 sub countedged    { $_[0]->[ _E ]->_is_COUNT }
 sub multiedged    { $_[0]->[ _E ]->_is_MULTI }
-sub hyperedged    { !defined $_[0]->[ _E ]->[ _arity ] }
+sub hyperedged    { !$_[0]->[ _E ]->[ _arity ] }
 sub undirected    { $_[0]->[ _E ]->_is_UNORD }
 
 sub directed { ! $_[0]->[ _E ]->_is_UNORD }
@@ -326,7 +326,7 @@ sub has_edge {
     my $g = $_[0];
     my $E = $g->[ _E ];
     my ($Ef, $Ea) = @$E[ _f, _arity ];
-    return 0 if defined($Ea) and @_ != $Ea + 1;
+    return 0 if $Ea and @_ != $Ea + 1;
     return 0 if (my @i = &_vertex_ids) != @_ - 1;
     @i = sort @i if &is_undirected;
     exists $E->[ _pi ]{ "@i" };

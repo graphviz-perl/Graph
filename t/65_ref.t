@@ -18,10 +18,10 @@ my @MAP_TESTS = (
     [ 'Graph::AdjacencyMap::Light', [_UNORD, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [[$t]] ],
     [ 'Graph::AdjacencyMap', [_REF, 1], [[$v]] ],
-    [ 'Graph::AdjacencyMap', [0, undef], [[qw()]] ],
-    [ 'Graph::AdjacencyMap', [0, undef], [[qw(2 7 9 12)]] ],
-    [ 'Graph::AdjacencyMap', [_UNORD, undef], [[qw()]] ],
-    [ 'Graph::AdjacencyMap', [_UNORD, undef], [[qw(2 7 9 12)]] ],
+    [ 'Graph::AdjacencyMap', [0, 0], [[qw()]] ],
+    [ 'Graph::AdjacencyMap', [0, 0], [[qw(2 7 9 12)]] ],
+    [ 'Graph::AdjacencyMap', [_UNORD, 0], [[qw()]] ],
+    [ 'Graph::AdjacencyMap', [_UNORD, 0], [[qw(2 7 9 12)]] ],
     [ 'Graph::AdjacencyMap', [0, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap', [_MULTI, 1], [['a'], 'b'] ],
     [ 'Graph::AdjacencyMap', [_MULTI, 2], [[qw(2 7)], 'c'] ],
@@ -41,9 +41,9 @@ sub test_adjmap {
     my $is_multi = $m->_is_MULTI ? 1 : 0;
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
-    my @paths_to_create = map [ ($_) x (defined $arity ? @$path : 1) ], qw(y z);
+    my @paths_to_create = map [ ($_) x ($arity ? @$path : 1) ], qw(y z);
     my @paths_to_create_maybe_id = map [ $_, $is_multi ? 0 : () ], @paths_to_create;
-    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, @{[$m->_dumper($arity)]}) (@$path)";
+    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, $arity) (@$path)";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
     $got = [ $m->get_ids_by_paths([ [$path] ], 0, 1) ];
@@ -84,7 +84,7 @@ sub test_adjmap {
 	ok $m->rename_path('newname', @$path), $label;
 	isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
 	is( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), undef, $label );
-    } elsif (defined $arity and $arity == 2) {
+    } elsif ($arity == 2) {
 	$got = [ $m->successors($path->[0]) ];
 	is_deeply $got, [ $path->[1] ], $label or diag explain $got;
 	ok $m->has_successor(@$path), $label;
@@ -161,7 +161,7 @@ sub test_adjmap {
         is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     }
     ok( !$m->has_any_paths, $label ) or diag explain $m;
-    if (defined $arity and $arity == 2) {
+    if ($arity == 2) {
 	$got = [ $m->successors($path->[0]) ];
 	is_deeply $got, [ ], $label or diag explain $got;
 	$got = [ $m->paths_from($path->[0]) ];

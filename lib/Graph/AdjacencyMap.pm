@@ -40,7 +40,7 @@ BEGIN {
 
 sub _new {
     my ($class, $flags, $arity) = @_;
-    my $hyper = !defined $arity;
+    my $hyper = !$arity;
     my $need_s = ($hyper || $arity > 1) && !($hyper && !($flags & _UNORD)); # no directed hyper yet
     my $need_p = $need_s && !($flags & _UNORD);
     bless [
@@ -66,7 +66,7 @@ sub stringify {
     my ($f, $arity, $m) = (@{ $_[0] }[ _f, _arity ], $_[0]);
     my ($multi, @rows) = $f & _MULTI;
     my @p = map $_->[0], sort { $a->[1] cmp $b->[1] } map [$_,"@$_"], $m->paths; # use the Schwartz
-    if (defined $arity and $arity == 2) {
+    if ($arity == 2) {
 	require Set::Object;
 	my ($pre, $suc, @s) = (Set::Object->new(map $_->[0], @p), Set::Object->new(map $_->[1], @p));
 	@rows = ([ 'to:', @s = sort $suc->members ], map {
@@ -82,14 +82,14 @@ sub stringify {
 	@rows = map {
 	    my $attrs = $multi
 		? $m->[ _attr ][ $m->has_path($_) ] : $m->_get_path_attrs($_);
-	    [ (defined $arity and $arity == 1) ? $_->[0] : '[' . join(' ', @$_) . ']',
+	    [ $arity == 1 ? $_->[0] : '[' . join(' ', @$_) . ']',
 		($m->get_ids_by_paths([ $_ ], 0))[0].
 		    (!defined $attrs ? '' : ",".$m->_dumper($attrs)) ];
 	} @p;
     }
     join '',
 	map "$_\n",
-	"@{[ref $m]} arity=@{[$m->_dumper($arity)]} flags: @{[_stringify_fields($m->[ _f ])]}",
+	"@{[ref $m]} arity=$arity flags: @{[_stringify_fields($m->[ _f ])]}",
 	map join(' ', map sprintf('%4s', $_), @$_),
 	@rows;
 }
@@ -140,7 +140,7 @@ sub set_path_by_multi_id {
 sub __set_path {
     my $inc_if_exists = pop;
     &__arg;
-    my ($f, $a, $map_i, $pi, $map_s, $map_p, $m, $id, @a) = (@{ $_[0] }[ _f, _arity, _i, _pi, _s, _p ], @_[0, 2], @{ $_[1] });
+    my ($f, $map_i, $pi, $map_s, $map_p, $m, $id, @a) = (@{ $_[0] }[ _f, _i, _pi, _s, _p ], @_[0, 2], @{ $_[1] });
     my $is_multi = $f & _MULTI;
     my @path = @a;
     @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
@@ -245,7 +245,7 @@ sub get_multi_ids {
 
 sub rename_path {
     my ($m, $from, $to) = @_;
-    return 1 if $m->[ _arity ] > 1; # arity > 1, all integers, no names
+    return 1 if $m->[ _arity ] != 1; # all integers, no names
     return unless my ($i, $l) = $m->__has_path([$from]);
     $m->[ _i ][ $i ] = [ $to ];
     $to = __strval($to, $m->[ _f ]) if ref($to) and ($m->[ _f ] & _REF);
@@ -396,7 +396,7 @@ sub __arg {
     my ($f, $a, $m, @a) = (@{ $_[0] }[ _f, _arity ], $_[0], @{ $_[1] });
     Graph::__carp_confess(sprintf "arguments %d (%s) expected %d for\n".$m->stringify,
 	scalar @a, "@a", $a)
-	if defined($a) and @a != $a;
+	if $a and @a != $a;
 }
 
 1;
