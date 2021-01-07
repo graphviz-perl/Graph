@@ -174,9 +174,7 @@ sub _successors_add {
 
 sub _successors_del {
     my ($f, $map_s, $map_p, $id, $path) = @_;
-    my @a = @$path;
-    @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
-    my $pairs = _successors_cartesian(($f & _UNORD), \@a);
+    my $pairs = _successors_cartesian(($f & _UNORD), $path);
     for (@$pairs) {
 	my ($p, $s) = @$_;
 	my @new = grep $_ != $id, @{ $map_s->{ $p }{ $s } };
