@@ -6,6 +6,9 @@ use warnings;
 # $SIG{__DIE__ } = \&Graph::__carp_confess;
 # $SIG{__WARN__} = \&Graph::__carp_confess;
 
+my $empty = {};
+sub _empty () { $empty }
+
 my (@FLAGS, %FLAG_COMBOS, %FLAG2I, @FIELDS);
 BEGIN {
     @FLAGS = qw(_COUNT _MULTI _UNORD _REF _UNIONFIND _LIGHT _STR);
@@ -348,7 +351,7 @@ sub _paths_fromto {
     my ($i, $map_x, @v) = ( @{ $_[0] }[ _i, $offset ], @_[1..$#_] );
     Graph::__carp_confess("undefined vertex") if grep !defined, @v;
     require Set::Object;
-    map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_x->{ $_ } || {} }, @v)->members;
+    map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_x->{ $_ } || _empty }, @v)->members;
 }
 sub paths_from { push @_, _s; goto &_paths_fromto }
 sub paths_to { push @_, _p; goto &_paths_fromto }
@@ -358,7 +361,7 @@ sub _cessors {
     my ($map_x, @v) = ( @{ $_[0] }[ $offset ], @_[1..$#_] );
     Graph::__carp_confess("undefined vertex") if grep !defined, @v;
     require Set::Object;
-    Set::Object->new(map keys %{ $map_x->{ $_ } || {} }, @v)->members;
+    Set::Object->new(map keys %{ $map_x->{ $_ } || _empty }, @v)->members;
 }
 sub successors { push @_, _s; goto &_cessors }
 sub predecessors { push @_, _p; goto &_cessors }
@@ -367,7 +370,7 @@ sub _has_cessor {
     my $offset = pop;
     my ($map_x, $u, $v) = ( @{ $_[0] }[ $offset ], @_[1, 2] );
     Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
-    exists ${ $map_x->{ $u } || {} }{ $v };
+    exists ${ $map_x->{ $u } || _empty }{ $v };
 }
 sub has_successor { push @_, _s; goto &_has_cessor }
 sub has_predecessor { push @_, _p; goto &_has_cessor }
