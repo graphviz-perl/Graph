@@ -6,10 +6,8 @@ use warnings;
 # $SIG{__DIE__ } = \&Graph::__carp_confess;
 # $SIG{__WARN__} = \&Graph::__carp_confess;
 
-sub _V () { 2 } # Graph::_V()
 sub _E () { 3 } # Graph::_E()
 sub _i () { 3 } # Index to path.
-sub _s () { 4 } # Successors / Path to Index.
 
 sub new {
     my ($class, $g, %opt) = @_;
@@ -60,65 +58,36 @@ sub stringify {
     join '', map "$_\n", $top, @rows;
 }
 
-sub set {
+sub set { push @_, 1; goto &_get_set }
+sub unset { push @_, 0; goto &_get_set }
+sub get { push @_, undef; goto &_get_set }
+sub _get_set {
+    my $val = pop;
     my ($m, $u, $v) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
-    vec($m->[0]->[$i], $j, 1) = 1 if defined $i && defined $j;
+    my ($m0, $m1) = @$m[0, 1];
+    return if grep !defined, my ($i, $j) = @$m1{ $u, $v };
+    defined $val ? vec($m0->[$i], $j, 1) = $val : vec($m0->[$i], $j, 1);
 }
 
-sub unset {
-    my ($m, $u, $v) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
-    vec($m->[0]->[$i], $j, 1) = 0 if defined $i && defined $j;
-}
-
-sub get {
-    my ($m, $u, $v) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
-    defined $i && defined $j ? vec($m->[0]->[$i], $j, 1) : undef;
-}
-
-sub set_row {
+sub _set_row {
+    my $val = pop;
     my ($m, $u) = splice @_, 0, 2;
-    my $m0 = $m->[0];
-    my $m1 = $m->[1];
-    my $i = $m1->{ $u };
-    return unless defined $i;
-    for my $v (@_) {
-	my $j = $m1->{ $v };
-	vec($m0->[$i], $j, 1) = 1 if defined $j;
-    }
+    my ($m0, $m1) = @$m[0, 1];
+    return unless defined(my $i = $m1->{ $u });
+    vec($m0->[$i], $_, 1) = $val for grep defined, @$m1{ @_ };
 }
-
-sub unset_row {
-    my ($m, $u) = splice @_, 0, 2;
-    my $m0 = $m->[0];
-    my $m1 = $m->[1];
-    my $i = $m1->{ $u };
-    return unless defined $i;
-    for my $v (@_) {
-	my $j = $m1->{ $v };
-	vec($m0->[$i], $j, 1) = 0 if defined $j;
-    }
-}
+sub set_row { push @_, 1; goto &_set_row }
+sub unset_row { push @_, 0; goto &_set_row }
 
 sub get_row {
     my ($m, $u) = splice @_, 0, 2;
-    my $m0 = $m->[0];
-    my $m1 = $m->[1];
-    my $i = $m1->{ $u };
-    return () x @_ unless defined $i;
-    my @r;
-    for my $v (@_) {
-	my $j = $m1->{ $v };
-	push @r, defined $j ? (vec($m0->[$i], $j, 1) ? 1 : 0) : undef;
-    }
-    return @r;
+    my ($m0, $m1) = @$m[0, 1];
+    return () x @_ unless defined(my $i = $m1->{ $u });
+    map defined() ? (vec($m0->[$i], $_, 1) ? 1 : 0) : undef, @$m1{ @_ };
 }
 
 sub vertices {
-    my ($m, $u, $v) = @_;
-    keys %{ $m->[1] };
+    keys %{ $_[0]->[1] };
 }
 
 1;
