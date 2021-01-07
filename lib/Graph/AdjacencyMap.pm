@@ -343,45 +343,34 @@ sub get_ids_by_paths {
     } @$list;
 }
 
-sub paths_from {
-    my ($i, $map_s, @v) = ( @{ $_[0] }[ _i, _s ], @_[1..$#_] );
+sub _paths_fromto {
+    my $offset = pop;
+    my ($i, $map_x, @v) = ( @{ $_[0] }[ _i, $offset ], @_[1..$#_] );
     Graph::__carp_confess("undefined vertex") if grep !defined, @v;
     require Set::Object;
-    map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_s->{ $_ } || {} }, @v)->members;
+    map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_x->{ $_ } || {} }, @v)->members;
 }
+sub paths_from { push @_, _s; goto &_paths_fromto }
+sub paths_to { push @_, _p; goto &_paths_fromto }
 
-sub paths_to {
-    my ($i, $map_p, @v) = ( @{ $_[0] }[ _i, _p ], @_[1..$#_] );
+sub _cessors {
+    my $offset = pop;
+    my ($map_x, @v) = ( @{ $_[0] }[ $offset ], @_[1..$#_] );
     Graph::__carp_confess("undefined vertex") if grep !defined, @v;
     require Set::Object;
-    map $i->[ $_ ], Set::Object->new(map @$_, map values %{ $map_p->{ $_ } || {} }, @v)->members;
+    Set::Object->new(map keys %{ $map_x->{ $_ } || {} }, @v)->members;
 }
+sub successors { push @_, _s; goto &_cessors }
+sub predecessors { push @_, _p; goto &_cessors }
 
-sub successors {
-    my ($map_s, @v) = ( @{ $_[0] }[ _s ], @_[1..$#_] );
-    Graph::__carp_confess("undefined vertex") if grep !defined, @v;
-    require Set::Object;
-    Set::Object->new(map keys %{ $map_s->{ $_ } || {} }, @v)->members;
-}
-
-sub has_successor {
-    my ($map_s, $u, $v) = ( @{ $_[0] }[ _s ], @_[1, 2] );
+sub _has_cessor {
+    my $offset = pop;
+    my ($map_x, $u, $v) = ( @{ $_[0] }[ $offset ], @_[1, 2] );
     Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
-    exists ${ $map_s->{ $u } || {} }{ $v };
+    exists ${ $map_x->{ $u } || {} }{ $v };
 }
-
-sub predecessors {
-    my ($map_p, @v) = ( @{ $_[0] }[ _p ], @_[1..$#_] );
-    Graph::__carp_confess("undefined vertex") if grep !defined, @v;
-    require Set::Object;
-    Set::Object->new(map keys %{ $map_p->{ $_ } || {} }, @v)->members;
-}
-
-sub has_predecessor {
-    my ($map_p, $u, $v) = ( @{ $_[0] }[ _p ], @_[1, 2] );
-    Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
-    exists ${ $map_p->{ $u } || {} }{ $v };
-}
+sub has_successor { push @_, _s; goto &_has_cessor }
+sub has_predecessor { push @_, _p; goto &_has_cessor }
 
 sub __strval {
     my ($k, $f) = @_;
