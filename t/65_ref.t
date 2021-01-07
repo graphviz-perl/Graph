@@ -41,7 +41,7 @@ sub test_adjmap {
     my $is_multi = $m->_is_MULTI ? 1 : 0;
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
-    my @paths_to_create = map [ ($_) x ($arity ? @$path : 1) ], qw(y z);
+    my @paths_to_create = map [ ($_) x ($arity ? @$path : 1) ], qw(22 23);
     my @paths_to_create_maybe_id = map [ $_, $is_multi ? 0 : () ], @paths_to_create;
     my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, $arity) (@$path)";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
