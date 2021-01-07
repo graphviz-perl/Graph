@@ -253,15 +253,13 @@ sub add_vertex {
 sub has_vertex {
     my $g = $_[0];
     my $V = $g->[ _V ];
-    return defined $V->has_path([$_[1]]) if ($V->[ _f ] & _REF);
+    return defined $V->has_path($_[1]) if ($V->[ _f ] & _REF);
     exists $V->[ _pi ]->{ $_[1] };
 }
 
 sub _vertices05 {
     my $g = $_[0];
-    my @v = $g->[ _V ]->paths;
-    return scalar @v if !wantarray;
-    map @$_, @v;
+    $g->[ _V ]->paths;
 }
 
 sub vertices {
@@ -314,11 +312,11 @@ sub _vertex_ids_maybe_ensure {
     my $ensure = pop;
     my ($g, @args) = @_;
     my $V = $g->[ _V ];
-    return $V->get_ids_by_paths([ map [$_], @args ], $ensure) if ($V->[ _f ] & _REF);
+    return $V->get_ids_by_paths(\@args, $ensure) if ($V->[ _f ] & _REF);
     my $pi = $V->[ _pi ];
     my @non_exist = grep !exists $pi->{ $_ }, @args;
     return if !$ensure and @non_exist;
-    $V->get_ids_by_paths([ map [$_], @non_exist ], 1) if @non_exist;
+    $V->get_ids_by_paths(\@non_exist, 1) if @non_exist;
     @$pi{ @args };
 }
 
@@ -371,7 +369,7 @@ sub add_vertex_by_id {
     &expect_multivertexed;
     my ($g, $v, $id) = @_;
     my $V = $g->[ _V ];
-    return $g if $V->has_path_by_multi_id( my @args = ([$v], $id) );
+    return $g if $V->has_path_by_multi_id( my @args = ($v, $id) );
     my ($i) = $V->set_path_by_multi_id( @args );
     $g->[ _U ]->add($i) if &has_union_find;
     $g->[ _G ]++;
@@ -381,7 +379,7 @@ sub add_vertex_by_id {
 sub add_vertex_get_id {
     &expect_multivertexed;
     my ($g, $v) = @_;
-    my ($i, $multi_id) = $g->[ _V ]->set_path_by_multi_id( [$v], _GEN_ID );
+    my ($i, $multi_id) = $g->[ _V ]->set_path_by_multi_id( $v, _GEN_ID );
     $g->[ _U ]->add($i) if &has_union_find;
     $g->[ _G ]++;
     return $multi_id;
@@ -390,7 +388,7 @@ sub add_vertex_get_id {
 sub has_vertex_by_id {
     &expect_multivertexed;
     my ($g, $v, $id) = @_;
-    $g->[ _V ]->has_path_by_multi_id( [$v], $id );
+    $g->[ _V ]->has_path_by_multi_id( $v, $id );
 }
 
 sub delete_vertex_by_id {
@@ -400,7 +398,7 @@ sub delete_vertex_by_id {
     return $g unless &has_vertex_by_id;
     # TODO: what to about the edges at this vertex?
     # If the multiness of this vertex goes to zero, delete the edges?
-    $g->[ _V ]->del_path_by_multi_id( [$v], $id );
+    $g->[ _V ]->del_path_by_multi_id( $v, $id );
     $g->[ _G ]++;
     return $g;
 }
@@ -408,7 +406,7 @@ sub delete_vertex_by_id {
 sub get_multivertex_ids {
     &expect_multivertexed;
     my $g = shift;
-    $g->[ _V ]->get_multi_ids( \@_ );
+    $g->[ _V ]->get_multi_ids( @_ );
 }
 
 sub add_edge_by_id {
@@ -602,18 +600,18 @@ sub delete_vertex {
     my $g = $_[0];
     return $g if @_ != 2;
     my $V = $g->[ _V ];
-    return $g unless defined $V->has_path([$_[1]]);
+    return $g unless defined $V->has_path($_[1]);
     # TODO: _edges_at is excruciatingly slow (rt.cpan.org 92427)
     my $E = $g->[ _E ];
     $E->del_path( $_ ) for &_edges_at;
-    $V->del_path([$_[1]]);
+    $V->del_path($_[1]);
     $g->[ _G ]++;
     return $g;
 }
 
 sub get_vertex_count {
     my $g = shift;
-    $g->[ _V ]->_get_path_count( \@_ );
+    $g->[ _V ]->_get_path_count( @_ );
 }
 
 sub get_edge_count {
@@ -862,116 +860,118 @@ for my $entity (qw(vertex edge)) {
 	my ($raw, $func) = @$t;
 	my ($first, $rest) = ($raw =~ /^(\w+?)_(.+)/);
 	my $m = join '_', $first, $entity, $rest;
+	my $is_vertex = $entity eq 'vertex';
 	*$m = sub {
-	    &$expect_non; push @_, 0, $entity, $offset, $args_non; goto &$func;
+	    &$expect_non; push @_, 0, $entity, $offset, $args_non, $is_vertex; goto &$func;
 	};
 	*{$m.'_by_id'} = sub {
-	    &$expect_yes; push @_, 1, $entity, $offset, $args_yes; goto &$func;
+	    &$expect_yes; push @_, 1, $entity, $offset, $args_yes, $is_vertex; goto &$func;
 	};
     }
 }
 
 sub _munge_args {
-    my ($is_multi, $is_undirected, @args) = @_;
-    return \@args if !$is_undirected and !$is_multi;
-    return [ sort @args ] if !$is_multi;
+    my ($is_vertex, $is_multi, $is_undirected, @args) = @_;
+    return \@args if !$is_vertex and !$is_undirected and !$is_multi;
+    return [ sort @args ] if !$is_vertex and !$is_multi;
+    return @args if $is_vertex;
     my $id = pop @args;
     ($is_undirected ? [ sort @args ] : \@args, $id);
 }
 
 sub _set_attribute {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     my $value = pop;
     my $attr = pop;
     no strict 'refs';
     &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_set_path_attr( @args, $attr, $value );
 }
 
 sub _set_attributes {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     my $attr = pop;
     no strict 'refs';
     &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_set_path_attrs( @args, $attr );
 }
 
 sub _has_attributes {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     no strict 'refs';
     return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_has_path_attrs( @args );
 }
 
 sub _has_attribute {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     my $attr = pop;
     no strict 'refs';
     return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_has_path_attr( @args, $attr );
 }
 
 sub _get_attributes {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     no strict 'refs';
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     scalar $_[0]->[ $offset ]->_get_path_attrs( @args );
 }
 
 sub _get_attribute {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     no strict 'refs';
     my $attr = pop;
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     scalar $_[0]->[ $offset ]->_get_path_attr( @args, $attr );
 }
 
 sub _get_attribute_names {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     no strict 'refs';
     return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_get_path_attr_names( @args );
 }
 
 sub _get_attribute_values {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     no strict 'refs';
     return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_get_path_attr_values( @args );
 }
 
 sub _delete_attributes {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     no strict 'refs';
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_del_path_attrs( @args );
 }
 
 sub _delete_attribute {
-    my ($is_multi, $entity, $offset, $args) = splice @_, -4, 4;
+    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
     my $attr = pop;
     no strict 'refs';
     return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
     my @args = ($entity eq 'edge') ? &$args : @_[1..$#_];
-    @args = _munge_args($is_multi, &is_undirected, @args);
+    @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_del_path_attr( @args, $attr );
 }
 
@@ -981,7 +981,7 @@ sub add_vertices {
 	$g->add_vertex_by_id($_, _GEN_ID) for @v;
 	return $g;
     }
-    my @i = $g->[ _V ]->set_paths(map [$_], @v);
+    my @i = $g->[ _V ]->set_paths(@v);
     $g->[ _G ]++;
     return $g if !&has_union_find;
     $g->[ _U ]->add(@i);
@@ -1000,7 +1000,7 @@ sub add_edges {
 	return $g;
     }
     my $uf = &has_union_find;
-    my @paths = $g->[ _V ]->get_ids_by_paths([ map [ map [$_], @$_ ], @edges ], 1, 1);
+    my @paths = $g->[ _V ]->get_ids_by_paths(\@edges, 1, 1);
     @paths = map [ sort @$_ ], @paths if &is_undirected;
     $g->[ _E ]->set_paths( @paths );
     $uf->union(@paths) if $uf;
@@ -1018,7 +1018,7 @@ sub rename_vertices {
     my ($g, $code) = @_;
     my %seen;
     $g->rename_vertex($_, $code->($_))
-	for grep !$seen{$_}++, map @$_, $g->[ _V ]->paths;
+	for grep !$seen{$_}++, $g->[ _V ]->paths;
     return $g;
 }
 
@@ -1835,7 +1835,7 @@ sub _connected_components_compute {
     return [ [], {} ] unless my @v = $g->unique_vertices;
     if (my $UF = &has_union_find) {
 	my $V  = $g->[ _V ];
-	my @ids = $V->get_ids_by_paths([ map [$_], @v ], 0);
+	my @ids = $V->get_ids_by_paths(\@v, 0);
 	my ($counter, %cc2counter) = 0;
 	my @cc = $UF->find(@ids);
 	for (my $i = 0; $i <= $#v; $i++) {

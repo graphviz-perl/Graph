@@ -13,19 +13,19 @@ my $u = bless { 3, 4 }, "Ubu";
 my $v = cplx(3, 4);
 my $z = cplx(4, 5);
 my @MAP_TESTS = (
-    [ 'Graph::AdjacencyMap::Light', [0, 1], [['a']] ],
+    [ 'Graph::AdjacencyMap::Light', [0, 1], ['a'] ],
     [ 'Graph::AdjacencyMap::Light', [0, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap::Light', [_UNORD, 2], [[qw(2 7)]] ],
-    [ 'Graph::AdjacencyMap', [_REF, 1], [[$t]] ],
-    [ 'Graph::AdjacencyMap', [_REF, 1], [[$v]] ],
+    [ 'Graph::AdjacencyMap', [_REF, 1], [$t] ],
+    [ 'Graph::AdjacencyMap', [_REF, 1], [$v] ],
     [ 'Graph::AdjacencyMap', [0, 0], [[qw()]] ],
     [ 'Graph::AdjacencyMap', [0, 0], [[qw(2 7 9 12)]] ],
     [ 'Graph::AdjacencyMap', [_UNORD, 0], [[qw()]] ],
     [ 'Graph::AdjacencyMap', [_UNORD, 0], [[qw(2 7 9 12)]] ],
     [ 'Graph::AdjacencyMap', [0, 2], [[qw(2 7)]] ],
-    [ 'Graph::AdjacencyMap', [_MULTI, 1], [['a'], 'b'] ],
+    [ 'Graph::AdjacencyMap', [_MULTI, 1], ['a', 'b'] ],
     [ 'Graph::AdjacencyMap', [_MULTI, 2], [[qw(2 7)], 'c'] ],
-    [ 'Graph::AdjacencyMap', [_COUNT, 1], [[qw(a)]] ],
+    [ 'Graph::AdjacencyMap', [_COUNT, 1], [qw(a)] ],
     [ 'Graph::AdjacencyMap', [_COUNT, 2], [[qw(2 7)]] ],
     [ 'Graph::AdjacencyMap', [_UNORD, 2], [[qw(2 7)]] ],
 );
@@ -41,9 +41,9 @@ sub test_adjmap {
     my $is_multi = $m->_is_MULTI ? 1 : 0;
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
-    my @paths_to_create = map [ ($_) x ($arity ? @$path : 1) ], qw(22 23);
+    my @paths_to_create = map $arity == 1 ? $_ : [ ($_) x ($arity || 1) ], qw(22 23);
     my @paths_to_create_maybe_id = map [ $_, $is_multi ? 0 : () ], @paths_to_create;
-    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, $arity) (@$path)";
+    my $label = "$class(@{[Graph::AdjacencyMap::_stringify_fields($flags)]}, $arity) @{[$m->_dumper($path)]}";
     my $got = [ $m->get_ids_by_paths([ $path ], 0) ];
     is_deeply $got, [], $label or diag explain $got;
     $got = [ $m->get_ids_by_paths([ [$path] ], 0, 1) ];
@@ -69,21 +69,23 @@ sub test_adjmap {
     $got = [ $m->paths ];
     is_deeply $got, [ $path ], $label or diag explain $got;
     isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
-    $got = [ $m->get_ids_by_paths([ $path ], 0) ];
-    is_deeply $got, [ 1 ], $label or diag explain $got;
-    $got = [ $m->get_paths_by_ids([ map [$_], @$got ]) ];
-    is_deeply( $got, [ $path ], $label ) or diag explain $got;
-    $got = [ $m->get_ids_by_paths([ [$path, $path] ], 0, 1) ];
-    is_deeply $got, [ [1, 1] ], $label or diag explain $got;
+    if ($arity == 1) {
+	$got = [ $m->get_ids_by_paths([ $path ], 0) ];
+	is_deeply $got, [ 1 ], $label or diag explain $got;
+	$got = [ $m->get_paths_by_ids([ [ 1 ] ]) ];
+	is_deeply( $got, [ [$path] ], $label ) or diag explain $got;
+	$got = [ $m->get_ids_by_paths([ [$path, $path] ], 0, 1) ];
+	is_deeply $got, [ [1, 1] ], $label or diag explain $got;
+    }
     eval { $m->stringify };
     is $@, '', $label;
-    if (@$path == 1) {
-	ok $m->rename_path(@$path, 'newname', $label);
+    if ($arity == 1) {
+	ok $m->rename_path($path, 'newname'), $label;
 	is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
-	isnt( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), undef, $label );
-	ok $m->rename_path('newname', @$path), $label;
+	isnt( $m->${ \$map->{has} }('newname', $is_multi ? $maybe_id : ()), undef, $label );
+	ok $m->rename_path('newname', $path), $label;
 	isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
-	is( $m->${ \$map->{has} }(['newname'], $is_multi ? $maybe_id : ()), undef, $label );
+	is( $m->${ \$map->{has} }('newname', $is_multi ? $maybe_id : ()), undef, $label );
     } elsif ($arity == 2) {
 	$got = [ $m->successors($path->[0]) ];
 	is_deeply $got, [ $path->[1] ], $label or diag explain $got;
@@ -111,12 +113,12 @@ sub test_adjmap {
     ok( $m->_has_path_attrs(@$path_maybe_id), $label );
     is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ 'say' ], $label;
     is_deeply [ $m->_get_path_attr_values(@$path_maybe_id) ], [ 'hi' ], $label;
-    if (@$path == 1) {
+    if ($arity == 1) {
 	my @new_path_full = @$path_maybe_id;
-	$new_path_full[0] = ['newname'];
-	ok $m->rename_path(@$path, 'newname'), $label;
+	$new_path_full[0] = 'newname';
+	ok $m->rename_path($path, 'newname'), $label;
 	is_deeply [ $m->_get_path_attr_names(@new_path_full) ], [ 'say' ], $label;
-	ok $m->rename_path('newname', @$path), $label;
+	ok $m->rename_path('newname', $path), $label;
 	is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ 'say' ], $label;
     }
     $got = $m->_get_path_attrs(@$path_maybe_id);
@@ -142,17 +144,18 @@ sub test_adjmap {
 	$got = [ sort $m->get_multi_ids($path) ];
 	is_deeply $got, [ sort $path_maybe_id->[-1], qw(0 hello) ], $label or diag explain $got;
     }
-    $got = [ $m->get_ids_by_paths([ $path, @paths_to_create ], 1) ];
-    is_deeply $got, [ 1..3 ], $label or diag explain $got;
-    ok $m->${ \$map->{has} }(@$_), $label for @paths_to_create_maybe_id;
-    my @paths_to_create2 = map [ $_, [ map "1$_", @$_ ] ], @paths_to_create;
-    my @lookup2 = map [ [ map "1$_", @$_ ], $is_multi ? 0 : () ], @paths_to_create;
-    $got = [ $m->get_ids_by_paths(\@paths_to_create2, 1, 1) ];
-    is_deeply $got, [ [2, 4], [3, 5] ], $label or diag explain $got;
-    ok $m->${ \$map->{has} }(@$_), $label for @lookup2;
-    ok( $m->has_any_paths, $label ) or diag explain $m;
-    $m->${ \$map->{del} }(@$_) for @lookup2;
-    $m->${ \$map->{del} }($_, $is_multi ? 0 : ()) for @paths_to_create;
+    if ($arity == 1) {
+	$got = [ $m->get_ids_by_paths([ $path, @paths_to_create ], 1) ];
+	is_deeply $got, [ 1..3 ], $label or diag explain $got;
+	ok $m->${ \$map->{has} }(@$_), $label for @paths_to_create_maybe_id;
+	my @paths_to_create_deep = map [ $_, "1$_" ], @paths_to_create;
+	my @paths_deep_maybe_id = map [ "1$_", $is_multi ? 0 : () ], @paths_to_create;
+	$got = [ $m->get_ids_by_paths(\@paths_to_create_deep, 1, 1) ];
+	is_deeply $got, [ [2, 4], [3, 5] ], $label or diag explain $got;
+	ok $m->${ \$map->{has} }(@$_), $label for @paths_deep_maybe_id;
+	ok( $m->has_any_paths, $label ) or diag explain $m;
+	$m->${ \$map->{del} }(@$_) for @paths_deep_maybe_id, @paths_to_create_maybe_id;
+    }
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
     $m->${ \$map->{del} }(@$path_maybe_id);
     ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );

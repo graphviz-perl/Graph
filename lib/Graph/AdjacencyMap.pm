@@ -68,7 +68,9 @@ sub _GEN_ID () { \$_GEN_ID }
 sub stringify {
     my ($f, $arity, $m) = (@{ $_[0] }[ _f, _arity ], $_[0]);
     my ($multi, @rows) = $f & _MULTI;
-    my @p = map $_->[0], sort { $a->[1] cmp $b->[1] } map [$_,"@$_"], $m->paths; # use the Schwartz
+    my @p = $m->paths;
+    @p = $arity == 1 ? sort @p
+	: map $_->[0], sort { $a->[1] cmp $b->[1] } map [$_,"@$_"], @p; # use the Schwartz
     if ($arity == 2) {
 	require Set::Object;
 	my ($pre, $suc, @s) = (Set::Object->new(map $_->[0], @p), Set::Object->new(map $_->[1], @p));
@@ -85,7 +87,7 @@ sub stringify {
 	@rows = map {
 	    my $attrs = $multi
 		? $m->[ _attr ][ $m->has_path($_) ] : $m->_get_path_attrs($_);
-	    [ $arity == 1 ? $_->[0] : '[' . join(' ', @$_) . ']',
+	    [ $arity == 1 ? $_ : '[' . join(' ', @$_) . ']',
 		($m->get_ids_by_paths([ $_ ], 0))[0].
 		    (!defined $attrs ? '' : ",".$m->_dumper($attrs)) ];
 	} @p;
@@ -143,11 +145,11 @@ sub set_path_by_multi_id {
 sub __set_path {
     my $inc_if_exists = pop;
     &__arg;
-    my ($f, $map_i, $pi, $map_s, $map_p, $m, $id, @a) = (@{ $_[0] }[ _f, _i, _pi, _s, _p ], @_[0, 2], @{ $_[1] });
+    my ($f, $a, $map_i, $pi, $map_s, $map_p, $m, $k, $id) = (@{ $_[0] }[ _f, _arity, _i, _pi, _s, _p ], @_);
     my $is_multi = $f & _MULTI;
-    my @path = @a;
-    @a = map ref() ? __strval($_, $f) : $_, @a if $f & _REF;
-    my $l = join ' ', @a;
+    my $k_orig = $k;
+    $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
+    my $l = $a == 1 ? "$k" : "@$k";
     if (exists $pi->{ $l }) {
 	return ($pi->{ $l }) if !($inc_if_exists and ($f & _COUNTMULTI));
 	my $nc = \$m->[ _count ][ my $i = $pi->{ $l } ];
@@ -160,10 +162,10 @@ sub __set_path {
 	$na->{ $id } = { };
 	return ($i, $id);
     }
-    $map_i->[ $pi->{ $l } = my $i = $m->[ _n ]++ ] = \@path;
+    $map_i->[ $pi->{ $l } = my $i = $m->[ _n ]++ ] = $k_orig;
     $m->[ _attr ][ $i ] = { ($id = ($id eq _GEN_ID) ? 0 : $id) => {} } if $is_multi;
     $m->[ _count ][ $i ] = $is_multi ? 0 : 1 if ($f & _COUNTMULTI);
-    _successors_add($f, $map_s, $map_p, $i, \@a) if $map_s; # dereffed
+    _successors_add($f, $map_s, $map_p, $i, $k) if $map_s; # dereffed
     ($i, $id);
 }
 
@@ -247,8 +249,8 @@ sub get_multi_ids {
 sub rename_path {
     my ($m, $from, $to) = @_;
     return 1 if $m->[ _arity ] != 1; # all integers, no names
-    return unless my ($i, $l) = $m->__has_path([$from]);
-    $m->[ _i ][ $i ] = [ $to ];
+    return unless my ($i, $l) = $m->__has_path($from);
+    $m->[ _i ][ $i ] = $to;
     $to = __strval($to, $m->[ _f ]) if ref($to) and ($m->[ _f ] & _REF);
     $m->[ _pi ]{ $to } = delete $m->[ _pi ]{ $l };
     return 1;
@@ -263,9 +265,9 @@ sub _del_path_attrs {
 
 sub __has_path {
     &__arg;
-    my ($f, $pi, @k) = (@{ $_[0] }[ _f, _pi ], @{ $_[1] });
-    @k = map ref() ? __strval($_, $f) : $_, @k if $f & _REF;
-    my $id = $pi->{ my $l = join ' ', @k };
+    my ($f, $a, $pi, $k) = (@{ $_[0] }[ _f, _arity, _pi ], $_[1]);
+    $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
+    my $id = $pi->{ my $l = $a == 1 ? "$k" : "@$k" };
     (defined $id ? $id : return, $l);
 }
 
@@ -316,7 +318,7 @@ sub _sequence_del {
 
 sub get_paths_by_ids {
     my ($i, undef, $list) = ( @{ $_[0] }[ _i ], @_ );
-    map [ map @{ $i->[ $_ ] }, @$_ ], @$list;
+    map [ map $i->[ $_ ], @$_ ], @$list;
 }
 
 sub paths {
@@ -324,11 +326,11 @@ sub paths {
 }
 
 sub get_ids_by_paths {
-    my ($f, $pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _f, _pi ], @_ );
+    my ($f, $a, $pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _f, _arity, _pi ], @_ );
     my ($is_multi, $is_ref) = (map $f & $_, _MULTI, _REF);
     return map { # Fast path
 	my @ret = map {
-	    my $id = $pi->{"@$_"};
+	    my $id = $pi->{ $a != 1 ? "@$_" : $_ };
 	    defined $id ? $id :
 		!$ensure ? return :
 		($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
@@ -337,7 +339,10 @@ sub get_ids_by_paths {
     } @$list if !$is_ref;
     map {
 	my @ret = map {
-	    my $id = $pi->{ join ' ', !$is_ref ? @$_ : map !ref() ? $_ : __strval($_, $f), @$_ };
+	    my $id = $pi->{ $a != 1 ? "@$_" :
+		!$is_ref || !ref() ? $_ :
+		__strval($_, $f)
+	    };
 	    defined $id ? $id :
 		!$ensure ? return :
 		($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
@@ -383,10 +388,10 @@ sub __strval {
 }
 
 sub __arg {
-    my ($f, $a, $m, @a) = (@{ $_[0] }[ _f, _arity ], $_[0], @{ $_[1] });
+    my ($f, $a, $m, $k) = (@{ $_[0] }[ _f, _arity ], @_[0, 1]);
     Graph::__carp_confess(sprintf "arguments %d (%s) expected %d for\n".$m->stringify,
-	scalar @a, "@a", $a)
-	if $a and @a != $a;
+	scalar @$k, "@$k", $a)
+	if $a > 1 and @$k != $a;
 }
 
 1;
@@ -437,10 +442,11 @@ Return all the paths of the Map.
 
 =head2 set_paths(\@seq1, \@seq2, ...)
 
-    @ids = set_paths(\@seq1, \@seq2, ...)
+    @ids = set_paths($seq1, $seq2, ...)
 
-Create/identify the path of C<@seq*>. Returns the integer ID of each path.
+Create/identify the path of C<$seq*>. Returns the integer ID of each path.
 For arity other than 1, the sequence items must be integers.
+For arity 1, do not wrap the item in an array.
 For C<_UNORD>, you must give the sequence already sorted.
 
 =head2 set_path_by_multi_id(\@seq, $id)
@@ -453,12 +459,14 @@ Set the path in the Map by the multi id.
 
 Given an array-ref of array-refs of vertex IDs, returns a list of
 array-refs of vertex-names.
+This is to look up vertex paths for use in edges. Only useful for arity 1.
 
 =head2 get_ids_by_paths
 
     @ids = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure, 0);
     @id_lists = $m->get_ids_by_paths([ \@seq1, \@seq2... ], $ensure, 1);
 
+This is to look up vertex IDs for use in edges. Only useful for arity 1.
 Given an array-ref of array-refs with paths, returns a list of IDs of
 existing paths.
 
@@ -466,8 +474,7 @@ If C<$ensure> is true, will first create paths that do not already exist.
 If it is not, any non-existing paths will cause an empty list to be returned.
 
 If $deep is true, each sequence will be treated as a list of paths,
-and IDs filled in for the return values. This is to look up vertex IDs
-for use in edges.
+and IDs filled in for the return values.
 
 =head2 rename_path($from, $to)
 
