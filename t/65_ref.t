@@ -54,7 +54,7 @@ sub test_adjmap {
     is_deeply( $got, [ 0, $is_multi ? $maybe_id : () ], $label ) or diag explain $got;
     is $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label;
     ok $m->_has_path_attrs(@$path_maybe_id), $label;
-    ok $m->_del_path_attrs(@$path_maybe_id);
+    ok $m->_del_path_attrs(@$path_maybe_id), $label;
     ok( $m->has_any_paths, $label );
     isnt( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $m->${ \$map->{set} }(@$path_maybe_id); # second time
@@ -133,7 +133,7 @@ sub test_adjmap {
     is_deeply [ $m->_get_path_attr_names(@$path_maybe_id) ], [ ], $label;
     is( $m->_get_path_count($path), 1, $label );
     $m->_set_path_attr(@$path_maybe_id, 'say', 'hi');
-    ok $m->_del_path_attrs(@$path_maybe_id);
+    ok $m->_del_path_attrs(@$path_maybe_id), $label;
     ok( !$m->_has_path_attr(@$path_maybe_id, 'say'), $label );
     is( $m->_get_path_count($path), 1, $label );
     if ($is_multi) {
