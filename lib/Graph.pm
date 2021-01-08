@@ -22,6 +22,8 @@ my @GRAPH_PROPS_COPIED = qw(
     undirected refvertexed countvertexed multivertexed __stringified
     hyperedged countedged multiedged
 );
+my $_empty_array = [];
+sub _empty_array () { $_empty_array }
 
 my $can_deep_copy_Storable;
 sub _can_deep_copy_Storable () {
@@ -1882,7 +1884,7 @@ sub connected_component_by_vertex {
 sub connected_component_by_index {
     &expect_undirected;
     my $value = (&_connected_components)[0]->[$_[1]];
-    $value ? @{ $value || [] } : ();
+    $value ? @{ $value || _empty_array } : ();
 }
 
 sub connected_components {
@@ -2096,7 +2098,7 @@ sub _biconnectivity_compute {
     for my $u (@u) {
 	next if exists $state{num}->{$u};
 	_biconnectivity_dfs($g, $u, \%state);
-	push @{$state{BC}}, delete $state{stack} if @{ $state{stack} || [] };
+	push @{$state{BC}}, delete $state{stack} if @{ $state{stack} || _empty_array };
     }
 
     # Mark the components each vertex belongs to.
@@ -2132,7 +2134,7 @@ sub _biconnectivity_compute {
 sub biconnectivity {
     &expect_undirected;
     @{ _check_cache($_[0], 'biconnectivity', [],
-			   \&_biconnectivity_compute, @_[1..$#_]) || [] };
+			   \&_biconnectivity_compute, @_[1..$#_]) || _empty_array };
 }
 
 sub is_biconnected {
@@ -2198,7 +2200,7 @@ sub biconnected_graph {
 }
 
 sub bridges {
-    @{ (&biconnectivity)[2] || [] };
+    @{ (&biconnectivity)[2] || _empty_array };
 }
 
 ###

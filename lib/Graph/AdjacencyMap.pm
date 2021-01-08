@@ -322,7 +322,7 @@ sub get_paths_by_ids {
 }
 
 sub paths {
-    grep defined, @{ $_[0]->[ _i ] || [] };
+    grep defined, @{ $_[0]->[ _i ] || Graph::_empty_array() };
 }
 
 sub get_ids_by_paths {
