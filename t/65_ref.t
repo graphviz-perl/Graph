@@ -101,8 +101,6 @@ sub test_adjmap {
 	} else {
 	    $got = [ $m->predecessors($path->[1]) ];
 	    is_deeply $got, [ $path->[0] ], $label or diag explain $got;
-	    ok $m->has_predecessor(reverse @$path), $label;
-	    ok !$m->has_predecessor($path->[1], 99), $label;
 	    $got = [ $m->paths_to($path->[1]) ];
 	    is_deeply $got, [ $path ], $label or diag explain $got;
 	}

@@ -371,14 +371,11 @@ sub _cessors {
 sub successors { push @_, _s; goto &_cessors }
 sub predecessors { push @_, _p; goto &_cessors }
 
-sub _has_cessor {
-    my $offset = pop;
-    my ($map_x, $u, $v) = ( @{ $_[0] }[ $offset ], @_[1, 2] );
+sub has_successor {
+    my ($map_s, $u, $v) = ( @{ $_[0] }[ _s ], @_[1, 2] );
     Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
-    exists ${ $map_x->{ $u } || _empty }{ $v };
+    exists ${ $map_s->{ $u } || _empty }{ $v };
 }
-sub has_successor { push @_, _s; goto &_has_cessor }
-sub has_predecessor { push @_, _p; goto &_has_cessor }
 
 sub __strval {
     my ($k, $f) = @_;
@@ -493,12 +490,6 @@ Only valid for a map of arity other than 1.
 =head2 predecessors
 
     @predecessors = $m->predecessors($v)
-
-Only valid for a non-C<_UNORD> map of arity other than 1.
-
-=head2 has_predecessor
-
-    $bool = $m->has_predecessor($v)
 
 Only valid for a non-C<_UNORD> map of arity other than 1.
 

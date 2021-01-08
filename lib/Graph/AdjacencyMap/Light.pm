@@ -88,14 +88,11 @@ sub _cessors {
 sub successors { push @_, _s; goto &_cessors }
 sub predecessors { push @_, _p; goto &_cessors }
 
-sub _has_cessor {
-    my $offset = pop;
-    my ($map_x, $u, $v) = ( @{ $_[0] }[ $offset ], @_[1, 2] );
+sub has_successor {
+    my ($map_s, $u, $v) = ( @{ $_[0] }[ _s ], @_[1, 2] );
     Graph::__carp_confess("undefined vertex") if grep !defined, $u, $v;
-    vec(($map_x->[ $u ] || return 0), $v, 1);
+    vec(($map_s->[ $u ] || return 0), $v, 1);
 }
-sub has_successor { push @_, _s; goto &_has_cessor }
-sub has_predecessor { push @_, _p; goto &_has_cessor }
 
 sub get_ids_by_paths {
     my ($pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _pi ], @_ );
