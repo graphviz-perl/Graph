@@ -1040,28 +1040,27 @@ sub as_hashes {
     }
     if (&is_multiedged) {
         for my $e ($g->edges) {
+            my $edge_attr = {
+                map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
+                    $g->get_multiedge_ids(@$e)
+            };
             if ($is_hyper) {
-                my %h = (attributes => {
-                    map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
-                        $g->get_multiedge_ids(@$e)
-                });
+                my %h = (attributes => $edge_attr);
                 if ($is_directed) {
                 } else {
                     $h{vertices} = $e;
                 }
                 push @e, \%h;
             } else {
-                $e{ $e->[0] }{ $e->[1] } = {
-                    map +($_ => $g->get_edge_attributes_by_id(@$e, $_) || {}),
-                        $g->get_multiedge_ids(@$e)
-                };
+                $e{ $e->[0] }{ $e->[1] } = $edge_attr;
+                $e{ $e->[1] }{ $e->[0] } = $edge_attr if !$is_directed;
             }
         }
     } else {
-	for ($g->edges) {
-	    $e{ $_->[0] }{ $_->[1] } = $g->get_edge_attributes(@$_) || {};
-	    $e{ $_->[1] }{ $_->[0] } = $g->get_edge_attributes(@$_) || {}
-		if !$is_directed;
+	for my $e ($g->edges) {
+	    my $edge_attr = $g->get_edge_attributes(@$e) || {};
+	    $e{ $e->[0] }{ $e->[1] } = $edge_attr;
+	    $e{ $e->[1] }{ $e->[0] } = $edge_attr if !$is_directed;
 	}
     }
     ( \%n, $is_hyper ? \@e : \%e );
