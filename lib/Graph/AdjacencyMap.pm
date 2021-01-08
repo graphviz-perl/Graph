@@ -318,7 +318,7 @@ sub _sequence_del {
 
 sub get_paths_by_ids {
     my ($i, undef, $list) = ( @{ $_[0] }[ _i ], @_ );
-    map [ map $i->[ $_ ], @$_ ], @$list;
+    map [ @$i[ @$_ ] ], @$list;
 }
 
 sub paths {
