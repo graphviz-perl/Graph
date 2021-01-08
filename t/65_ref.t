@@ -38,7 +38,7 @@ sub test_adjmap {
     my ($class, $args, $path_maybe_id) = @_;
     my ($path, $maybe_id) = @$path_maybe_id;
     my ($m, $flags, $arity) = ($class->_new(@$args), @$args);
-    my $is_multi = $m->_is_MULTI ? 1 : 0;
+    my ($is_multi, $is_unord) = ($m->_is_MULTI ? 1 : 0, $m->_is_UNORD);
     my $maybe_count = $m->_is_COUNT ? 2 : 1;
     my $map = $METHOD_MAP[ $is_multi ];
     my @paths_to_create = map $arity == 1 ? $_ : [ ($_) x ($arity || 1) ], qw(22 23);
@@ -93,7 +93,7 @@ sub test_adjmap {
 	ok !$m->has_successor($path->[0], 99), $label;
 	$got = [ $m->paths_from($path->[0]) ];
 	is_deeply $got, [ $path ], $label or diag explain $got;
-	if ($flags & _UNORD) {
+	if ($is_unord) {
 	    $got = [ $m->successors($path->[1]) ];
 	    is_deeply $got, [ $path->[0] ], $label or diag explain $got;
 	    $got = [ $m->paths_from($path->[1]) ];
@@ -167,7 +167,7 @@ sub test_adjmap {
 	is_deeply $got, [ ], $label or diag explain $got;
 	$got = [ $m->paths_from($path->[0]) ];
 	is_deeply $got, [ ], $label or diag explain $got;
-	if (!($flags & _UNORD)) {
+	if (!($is_unord)) {
 	    $got = [ $m->predecessors($path->[1]) ];
 	    is_deeply $got, [ ], $label or diag explain $got;
 	    $got = [ $m->paths_to($path->[1]) ];
