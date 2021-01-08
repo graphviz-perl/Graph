@@ -87,7 +87,7 @@ sub stringify {
 	@rows = map {
 	    my $attrs = $multi
 		? $m->[ _attr ][ $m->has_path($_) ] : $m->_get_path_attrs($_);
-	    [ $arity == 1 ? $_ : '[' . join(' ', @$_) . ']',
+	    [ $m->_dumper($_),
 		($m->get_ids_by_paths([ $_ ], 0))[0].
 		    (!defined $attrs ? '' : ",".$m->_dumper($attrs)) ];
 	} @p;
@@ -267,7 +267,8 @@ sub __has_path {
     &__arg;
     my ($f, $a, $pi, $k) = (@{ $_[0] }[ _f, _arity, _pi ], $_[1]);
     $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
-    my $id = $pi->{ my $l = $a == 1 ? "$k" : "@$k" };
+    my $l = $a == 1 ? "$k" : "@$k";
+    my $id = $pi->{ $l };
     (defined $id ? $id : return, $l);
 }
 
@@ -339,10 +340,10 @@ sub get_ids_by_paths {
     } @$list if !$is_ref;
     map {
 	my @ret = map {
-	    my $id = $pi->{ $a != 1 ? "@$_" :
-		!$is_ref || !ref() ? $_ :
-		__strval($_, $f)
-	    };
+	    my $k = $_;
+	    $k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
+	    my $l = $a == 1 ? "$k" : "@$k";
+	    my $id = $pi->{ $l };
 	    defined $id ? $id :
 		!$ensure ? return :
 		($is_multi ? $m->set_path_by_multi_id($_, _GEN_ID) : $m->set_paths($_))[0];
