@@ -2806,7 +2806,7 @@ general, hypergraphs are simply generalisations of simple-graph ideas,
 with some of the arbitrary limitations removed.
 
 For more information on directed hypergraphs, see
-L<Directed Hypergraphs and Applications, Gallo-Longo-Pallottino-Nguyen|https://static.aminer.org/pdf/PDF/000/836/884/directed_hypergraphs_and_applications.pdf>.
+L<Directed Hypergraphs and Applications, Gallo-Longo-Pallottino-Nguyen|https://doi.org/10.1016/0166-218X%2893%2990045-P>.
 It defines hyperarcs (directed edges in a hypergraph) as ordered pairs
 of subsets of V, and hyperedges (undirected) as single subsets of
 V. Since sets are unordered and elements within them are unique, this
