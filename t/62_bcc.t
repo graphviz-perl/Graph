@@ -330,41 +330,16 @@ for (0..2*$N-1) {
 
 is( $g3->biconnected_components, 5 );
 
-my $c0a = $g3->biconnected_component_by_index(0);
-my $c0b = $g3->biconnected_component_by_index(0);
-my $c0c = $g3->biconnected_component_by_index(0);
-my $c0d = $g3->biconnected_component_by_index(0);
-my $c0e = $g3->biconnected_component_by_index(0);
+my @c0 = map $g3->biconnected_component_by_index(0), 1..5;
+my @c1 = map $g3->biconnected_component_by_index(1), 1..5;
+my @c2 = map $g3->biconnected_component_by_index(2), 1..5;
 
-my $c1a = $g3->biconnected_component_by_index(1);
-my $c1b = $g3->biconnected_component_by_index(1);
-my $c1c = $g3->biconnected_component_by_index(1);
-my $c1d = $g3->biconnected_component_by_index(1);
-my $c1e = $g3->biconnected_component_by_index(1);
+is( "@{$c0[0]}", "@{$c0[$_]}" ) for 1..4;
+is( "@{$c1[0]}", "@{$c1[$_]}" ) for 1..4;
+is( "@{$c2[0]}", "@{$c2[$_]}" ) for 1..4;
 
-my $c2a = $g3->biconnected_component_by_index(2);
-my $c2b = $g3->biconnected_component_by_index(2);
-my $c2c = $g3->biconnected_component_by_index(2);
-my $c2d = $g3->biconnected_component_by_index(2);
-my $c2e = $g3->biconnected_component_by_index(2);
-
-is( "@$c0a", "@$c0b" );
-is( "@$c0a", "@$c0c" );
-is( "@$c0a", "@$c0d" );
-is( "@$c0a", "@$c0e" );
-
-is( "@$c1a", "@$c1b" );
-is( "@$c1a", "@$c1c" );
-is( "@$c1a", "@$c1d" );
-is( "@$c1a", "@$c1e" );
-
-is( "@$c2a", "@$c2b" );
-is( "@$c2a", "@$c2c" );
-is( "@$c2a", "@$c2d" );
-is( "@$c2a", "@$c2e" );
-
-isnt( "@$c0a", "@$c1a" );
-isnt( "@$c0a", "@$c2a" );
+isnt( "@{$c0[0]}", "@{$c1[0]}" );
+isnt( "@{$c0[0]}", "@{$c2[0]}" );
 
 is( $g3->biconnected_component_by_index(5), undef );
 
