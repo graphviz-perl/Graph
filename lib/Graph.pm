@@ -2186,24 +2186,24 @@ sub biconnected_component_by_vertex {
 sub same_biconnected_components {
     my ($v2bc, $Z) =  (&biconnectivity)[4,5];
     return 0 if grep !defined, my @vecs = @$v2bc{ @_[1..$#_] };
-    !grep $Z eq ($vecs[0] & $_), @vecs[1..$#vecs];
+    my $accumulator = $vecs[0];
+    $accumulator &= $_ for @vecs[1..$#vecs]; # accumulate 0s -> all in same
+    $accumulator ne $Z;
 }
 
 sub biconnected_graph {
     my ($g, %opt) = @_;
-    my ($bc, $v2bc) = (&biconnectivity)[1, 3];
+    my $bc = (&biconnectivity)[1];
     my $bcg = Graph->new(directed => 0);
     my $sc_cb = $opt{super_component} || \&_super_component;
     my @s = map $sc_cb->(@$_), @$bc;
     $bcg->set_vertex_attribute($s[$_], 'subvertices', $bc->[$_]) for 0..$#$bc;
-    my %k;
     my @edges;
     for my $i (0..$#$bc) {
 	my @u = @{ $bc->[ $i ] };
 	for my $j (0..$i-1) {
 	    my %j; @j{ @{ $bc->[ $j ] } } = ();
 	    next if !grep exists $j{ $_ }, @u;
-	    next if $k{ $i }{ $j }++;
 	    push @edges, [ @s[$i, $j] ];
 	}
     }

@@ -1,7 +1,7 @@
 use strict; use warnings;
 use Graph;
 
-use Test::More tests => 395;
+use Test::More;
 
 my $N = 5;
 
@@ -357,8 +357,47 @@ is("@{[sort @{ $g3c->get_vertex_attribute('a+b+e+f+s', 'subvertices') }]}", "a b
 is("@{[sort @{ $g3c->get_vertex_attribute('i+j+k', 'subvertices') }]}", "i j k");
 is($g3c->get_vertex_attribute('i+k+j', 'subvertices'), undef);
 
+my $g4 = Graph->new(undirected => 1, edges => [[qw(a b)], [qw(a c)], [qw(a d)]]);
+# edges coloured by what comp they're in - >1 colour on vertex = in >1 comp
+my @component_colours = do { no warnings 'qw'; qw(#FF0000 #00FF00 #0000FF #FFFF00 #FF00FF #00FFFF) };
+sub _bicon_graphvizify {
+    my ($g) = @_;
+    my ($gc, @bc) = ($g->copy, $g->biconnected_components);
+    require Set::Object;
+    for my $ci (0..$#bc) {
+	for my $v (@{ $bc[$ci] }) {
+	    $gc->set_vertex_attribute($v, 'components', (my $bcs = $gc->get_vertex_attribute($v, 'components') || Set::Object->new));
+	    $bcs->insert($ci);
+	}
+    }
+    $gc->set_graph_attribute(graphviz => { groups => [
+	map +{
+	    attributes => {
+		subgraph => { pencolor => $component_colours[ $_ % @component_colours ] },
+		name => "cluster_$_",
+	    },
+	    nodes => $bc[$_],
+	}, 0..$#bc
+    ]});
+    for my $u ($g->vertices) {
+	my $comps_u = $gc->get_vertex_attribute($u, 'components');
+	for my $v ($g->successors($u)) {
+	    my $comps_v = $gc->get_vertex_attribute($v, 'components');
+	    my $colour = $component_colours[ ($comps_u->intersection($comps_v)->members)[0] % @component_colours ];
+	    $gc->set_edge_attribute($u, $v, graphviz => { color => $colour });
+	}
+    }
+    $gc;
+}
+#require GraphViz2;
+#open my $fh, '>', 'bicon.dot';
+#my $g_gv = _bicon_graphvizify($g3);
+#print $fh GraphViz2->from_graph($g_gv)->dot_input;
+ok !$g4->same_biconnected_components(qw(a b c));
+
 my $d = Graph->new;
 
 eval { $d->biconnectivity };
 like($@, qr/Graph::biconnectivity: expected undirected graph, got directed/);
 
+done_testing;
