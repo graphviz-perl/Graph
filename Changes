@@ -1,3 +1,4 @@
+0.9717 2021-01-27
 - bulk APIs for UnionFind
 - add unionfind config option for util/grand.pl (benchmark-ish script)
 - GRAPH_ALLOW_RECURSION env var to turn off recursion protection
