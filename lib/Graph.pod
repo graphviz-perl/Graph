@@ -1447,13 +1447,6 @@ For directed graphs: The number of outgoing edges at the vertex.
 For undirected graphs: the number of edges at the vertex (identical to
 C<in_degree()>, C<degree()>, C<vertex_degree()>).
 
-=item average_degree
-
-   my $ad = $g->average_degree;
-
-Return the average degree (as in C<degree()> or C<vertex_degree()>)
-taken over all vertices.
-
 =back
 
 Related methods are
@@ -1479,8 +1472,6 @@ The edges leaving the vertex.
 The edges entering the vertex.
 
 =back
-
-See also L</average_degree>.
 
 =head2 Counted Vertices
 

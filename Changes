@@ -1,3 +1,5 @@
+- remove doc of deleted average_degree method - thanks @lindleyw for report
+
 0.9717 2021-01-27
 - bulk APIs for UnionFind
 - add unionfind config option for util/grand.pl (benchmark-ish script)
