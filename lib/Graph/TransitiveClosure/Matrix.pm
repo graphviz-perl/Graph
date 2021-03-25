@@ -189,7 +189,7 @@ sub all_paths {
     return if $u eq $v;
     $seen ||= {};
     return if exists $seen->{$u};
-    $seen->{$u} = undef;
+    $seen = { %$seen, $u => undef }; # accumulate, but don't mutate
     my @found;
     push @found, [$u, $v] if $tc->[ _G ]->has_edge($u, $v);
     push @found,
