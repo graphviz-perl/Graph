@@ -1,3 +1,5 @@
+- fix all_paths infinite loop on cycle - thanks @tobez for report
+
 0.9718 2021-03-13
 - remove doc of deleted average_degree method - thanks @lindleyw for report
 

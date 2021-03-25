@@ -185,13 +185,16 @@ sub path_vertices {
 }
 
 sub all_paths {
-    my ($tc, $u, $v) = @_;
+    my ($tc, $u, $v, $seen) = @_;
     return if $u eq $v;
+    $seen ||= {};
+    return if exists $seen->{$u};
+    $seen->{$u} = undef;
     my @found;
     push @found, [$u, $v] if $tc->[ _G ]->has_edge($u, $v);
     push @found,
         map [$u, @$_],
-        map $tc->all_paths($_, $v),
+        map $tc->all_paths($_, $v, $seen),
         grep $tc->is_reachable($_, $v),
         grep $_ ne $v && $_ ne $u, $tc->[ _G ]->successors($u);
     @found;
