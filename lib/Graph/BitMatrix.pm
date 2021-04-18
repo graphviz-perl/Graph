@@ -28,10 +28,9 @@ sub new {
     #	vec($bm0->[$i], $j, 1) = 1 if $g->has_edge($u, $V[$j]);
     #    }
     # }
-    my $Ei = $g->[_E]->[_i];
     my $undirected = $g->is_undirected;
-    for my $e (grep defined, @{ $Ei }) {
-	my ($i0, $j0) = @$e;
+    for my $e ($g->edges) {
+	my ($i0, $j0) = map $V{$_}, @$e;
 	($j0, $i0) = ($i0, $j0) if $transpose;
 	vec($bm0->[$i0], $j0, 1) = 1;
 	vec($bm0->[$j0], $i0, 1) = 1 if $undirected;

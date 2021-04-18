@@ -6,10 +6,12 @@ use Graph::BitMatrix;
 
 my $g = Graph->new;
 
+$g->add_edge(qw(e a));
 $g->add_edge(qw(a b));
 $g->add_edge(qw(b c));
 $g->add_edge(qw(b d));
 $g->add_edge(qw(d d));
+$g->delete_vertex('e');
 
 my $m = Graph::BitMatrix->new($g);
 
