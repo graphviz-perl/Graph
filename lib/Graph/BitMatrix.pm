@@ -29,18 +29,12 @@ sub new {
     #    }
     # }
     my $Ei = $g->[_E]->[_i];
-    if ($g->is_undirected) {
-	for my $e (grep defined, @{ $Ei }) {
-	    my ($i0, $j0) = @$e;
-	    vec($bm0->[$i0], $j0, 1) = 1;
-	    vec($bm0->[$j0], $i0, 1) = 1;
-	}
-    } else {
-	for my $e (grep defined, @{ $Ei }) {
-	    my ($i0, $j0) = @$e;
-            ($j0, $i0) = ($i0, $j0) if $transpose;
-	    vec($bm0->[$i0], $j0, 1) = 1;
-	}
+    my $undirected = $g->is_undirected;
+    for my $e (grep defined, @{ $Ei }) {
+	my ($i0, $j0) = @$e;
+	($j0, $i0) = ($i0, $j0) if $transpose;
+	vec($bm0->[$i0], $j0, 1) = 1;
+	vec($bm0->[$j0], $i0, 1) = 1 if $undirected;
     }
     $bm;
 }
