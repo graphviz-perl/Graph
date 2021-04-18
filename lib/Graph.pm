@@ -317,6 +317,7 @@ sub _vertex_ids_multi {
 sub _vertex_ids_maybe_ensure {
     my $ensure = pop;
     my ($g, @args) = @_;
+    __carp_confess "Graph: given undefined vertex" if grep !defined, @args;
     my $V = $g->[ _V ];
     my $deep = &is_hyperedged && &is_directed;
     return $V->get_ids_by_paths(\@args, $ensure, $deep) if ($V->[ _f ] & _REF) or $deep;
