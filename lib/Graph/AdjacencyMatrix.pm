@@ -29,31 +29,22 @@ sub new {
     my $m = Graph::BitMatrix->new($g);
     my $self = bless [ $m, undef, \@V ], $class;
     return $self if !$want_distance;
-    # for my $u (@V) {
-    #     for my $v (@V) {
-    #         if ($g->has_edge($u, $v)) {
-    #             $n->set($u, $v,
-    #                    $g->get_edge_attribute($u, $v, $d));
-    #        }
-    #     }
-    # }
     my $n = $self->[ _DM ] = Graph::Matrix->new($g);
     $n->set($_, $_, 0) for @V;
-    my $Ei = $g->[_E][_i];
     my $n0 = $n->[0];
     my $n1 = $n->[1];
     my $undirected = $g->is_undirected;
     my $multiedged = $g->multiedged;
-    for my $t (grep defined, @$Ei) {
-	my ($i0, $j0) = @$t;
-	my $u = $V[ $i0 ];
-	my $v = $V[ $j0 ];
-	$n0->[ $i0 ]->[ $j0 ] = $multiedged
+    for my $e ($g->edges) {
+	my ($u, $v) = @$e;
+        $n->set($u, $v, $multiedged
 	    ? _multiedged_distances($g, $u, $v, $d)
-	    : $g->get_edge_attribute($u, $v, $d);
-	$n0->[ $j0 ]->[ $i0 ] = $multiedged
+	    : $g->get_edge_attribute($u, $v, $d)
+        );
+        $n->set($v, $u, $multiedged
 	    ? _multiedged_distances($g, $v, $u, $d)
-	    : $g->get_edge_attribute($v, $u, $d) if $undirected;
+	    : $g->get_edge_attribute($v, $u, $d)
+        ) if $undirected;
     }
     $self;
 }

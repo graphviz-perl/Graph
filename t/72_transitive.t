@@ -515,4 +515,15 @@ EOF
     ok $tcg->is_reachable(7, 8), '7-8 reachable when on cycle';
 }
 
+{
+  my $g = Graph::Directed->new(edges => [
+    [qw(A C)], [qw(A NOTA)], [qw(B A)], [qw(B C)], [qw(B NOTA)],
+  ]);
+  $g->delete_vertex('C');
+  my $tc = $g->transitive_closure;
+  is $tc, 'A-A,A-NOTA,B-A,B-B,B-NOTA,NOTA-NOTA';
+  $tc->delete_edge($_,$_) for qw(A B C N);
+  is $tc, 'A-NOTA,B-A,B-NOTA,NOTA-NOTA';
+}
+
 done_testing;
