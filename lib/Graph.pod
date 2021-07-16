@@ -927,7 +927,7 @@ See L</"Clearing cached results">.
 
     $g->is_strongly_connected
 
-For a directed graph, return true is the directed graph is strongly
+For a directed graph, return true if the directed graph is strongly
 connected, false if not.
 
 See also L</is_weakly_connected>.
@@ -986,7 +986,7 @@ See L</"Clearing cached results">.
 
     $g->is_weakly_connected
 
-For a directed graph, return true is the directed graph is weakly
+For a directed graph, return true if the directed graph is weakly
 connected, false if not.
 
 Weakly connected graph is also known as I<semiconnected> graph.
