@@ -1139,11 +1139,8 @@ sub _deep_copy_DataDumper {
 }
 
 sub deep_copy {
-    if (_can_deep_copy_Storable()) {
-	return _deep_copy_Storable(@_); # uncoverable statement
-    } else {
-	return _deep_copy_DataDumper(@_); # uncoverable statement
-    }
+    _can_deep_copy_Storable()
+	? _deep_copy_Storable(@_) : _deep_copy_DataDumper(@_);
 }
 
 *deep_copy_graph = \&deep_copy;
