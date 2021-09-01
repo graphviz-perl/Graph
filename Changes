@@ -1,4 +1,5 @@
 - doc fixes - thanks @xsawyerx
+- fix problem with deep_copy with vertices that are refs - thanks @merkys for report
 
 0.9722 2021-07-04
 - fix neighbours et al not returning count in scalar context - thanks @merkys for report

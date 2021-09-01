@@ -175,6 +175,10 @@ and even then only if B::Deparse can reconstruct your code.  This
 functionality uses either Storable or Data::Dumper behind the scenes,
 depending on which is available (Storable is preferred).
 
+If your vertices are references, the copied graph will have its
+connections fixed up. Support for this is new as of 0.9723, so please
+report any problems.
+
 =item undirected_copy
 
 =item undirected_copy_graph

@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 42;
+use Test::More;
 
 use Graph::Directed;
 use Graph::Undirected;
@@ -114,3 +114,13 @@ SKIP: {
     my $c = $g->_deep_copy_DataDumper;
     is($c->get_graph_attribute('color')->(3), 81);
 }
+
+my $edges = [[{ name => 'A' }, { name => 'B' }]];
+SKIP: {
+    my $orig = Graph::Undirected->new(refvertexed=>1, edges=>$edges);
+    for my $g ($orig, $orig->deep_copy) {
+        is scalar $g->neighbours( $_ ), 1, 'still linked up' for $g->vertices;
+    }
+}
+
+done_testing;

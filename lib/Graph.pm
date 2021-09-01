@@ -1162,7 +1162,9 @@ sub _deep_copy_DataDumper {
 }
 
 sub deep_copy {
-    _deep_copy_best(@_);
+    my $g2 = _deep_copy_best(@_);
+    $g2->[ _V ]->reindex if grep ref, &_vertices05;
+    $g2;
 }
 
 *deep_copy_graph = \&deep_copy;
