@@ -1,3 +1,4 @@
+0.9723 2021-09-01
 - doc fixes - thanks @xsawyerx
 - fix problem with deep_copy with vertices that are refs - thanks @merkys for report
 
