@@ -133,6 +133,14 @@ sub _opt_unknown {
         @opt > 1 ? 's' : '';
 }
 
+sub _opt_from_existing {
+    my ($g) = @_;
+    my %existing;
+    $existing{$_}++ for grep $g->$_, @GRAPH_PROPS_COPIED;
+    $existing{unionfind}++ if $g->has_union_find;
+    %existing;
+}
+
 sub new {
     my ($class, @args) = @_;
     my $gflags = 0;
@@ -140,13 +148,8 @@ sub new {
     my $eflags = 0;
     my %opt = _get_options( \@args );
 
-    if (ref $class && $class->isa('Graph')) {
-	my %existing;
-	no strict 'refs';
-	$existing{$_}++ for grep $class->$_, @GRAPH_PROPS_COPIED;
-	$existing{unionfind}++ if $class->has_union_find;
-	%opt = (%existing, %opt) if %existing; # allow overrides
-    }
+    %opt = (_opt_from_existing($class), %opt) # allow overrides
+	if ref $class && $class->isa('Graph');
 
     $opt{undirected} = !delete $opt{directed} if exists $opt{directed};
 
