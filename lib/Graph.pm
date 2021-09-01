@@ -141,32 +141,39 @@ sub _opt_from_existing {
     %existing;
 }
 
-sub new {
-    my ($class, @args) = @_;
-    my $gflags = 0;
-    my $vflags = 0;
-    my $eflags = 0;
-    my %opt = _get_options( \@args );
-
-    %opt = (_opt_from_existing($class), %opt) # allow overrides
-	if ref $class && $class->isa('Graph');
-
-    $opt{undirected} = !delete $opt{directed} if exists $opt{directed};
-
-    _opt(\%opt, \$vflags,
+sub _opt_to_vflags {
+    my ($vflags, $opt) = (0, @_);
+    _opt($opt, \$vflags,
 	 countvertexed	=> _COUNT,
 	 multivertexed	=> _MULTI,
 	 refvertexed	=> _REF,
 	 refvertexed_stringified => _REFSTR ,
 	 __stringified => _STR,
 	);
+    $vflags;
+}
 
-    _opt(\%opt, \$eflags,
+sub _opt_to_eflags {
+    my ($eflags, $opt) = (0, @_);
+    $opt->{undirected} = !delete $opt->{directed} if exists $opt->{directed};
+    _opt($opt, \$eflags,
 	 countedged	=> _COUNT,
 	 multiedged	=> _MULTI,
 	 undirected	=> _UNORD,
 	);
-    my $is_hyper = delete $opt{hyperedged};
+    ($eflags, delete $opt->{hyperedged});
+}
+
+sub new {
+    my ($class, @args) = @_;
+    my $gflags = 0;
+    my %opt = _get_options( \@args );
+
+    %opt = (_opt_from_existing($class), %opt) # allow overrides
+	if ref $class && $class->isa('Graph');
+
+    my $vflags = _opt_to_vflags(\%opt);
+    my ($eflags, $is_hyper) = _opt_to_eflags(\%opt);
 
     _opt(\%opt, \$gflags,
 	 unionfind     => _UNIONFIND,
