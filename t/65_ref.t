@@ -2,7 +2,7 @@ use strict; use warnings;
 use Test::More;
 
 use Graph;
-use Graph::AdjacencyMap qw(:flags);
+use Graph::AdjacencyMap qw(:flags :fields);
 use Graph::AdjacencyMap::Light;
 
 use Math::Complex;
@@ -51,6 +51,11 @@ sub test_adjmap {
     is( $m->${ \$map->{has} }(@$path_maybe_id), undef, $label );
     $got = [ $m->${ \$map->{set} }(@$path_maybe_id) ];
     is_deeply( $got, [ 0, $is_multi ? $maybe_id : () ], $label ) or diag explain $got;
+    if ($args->[0] == _REF) {
+	my $m2 = Graph::_deep_copy_best($m);
+	$m2->reindex;
+	isnt( $m2->${ \$map->{has} }($m2->[ _i ][0]), undef, $label );
+    }
     is $m->_set_path_attr(@$path_maybe_id, 'say', 'hi'), 'hi', $label;
     ok $m->_has_path_attrs(@$path_maybe_id), $label;
     ok $m->_del_path_attrs(@$path_maybe_id), $label;

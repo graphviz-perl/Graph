@@ -404,6 +404,17 @@ sub __arg {
 	if $a > 1 and @$k != $a;
 }
 
+sub reindex {
+    my ($f, $a, $i2p, $m) = (@{ $_[0] }[ _f, _arity, _i ], $_[0]);
+    my $is_ref = $a == 1 && ($f & _REF);
+    my $pi = $m->[ _pi ] = {};
+    for my $i ( 0..$#{ $i2p } ) {
+        next if !defined(my $k = $i2p->[ $i ]); # deleted
+        $k = __strval($k, $f) if $is_ref && ref($k);
+        $pi->{ $k } = $i;
+    }
+}
+
 1;
 __END__
 =pod
@@ -524,6 +535,11 @@ Only valid for a non-C<_UNORD> map of arity other than 1.
     $bool = $m->has_successor($u, $v)
 
 Only valid for a map of arity other than 1.
+
+=head2 reindex
+
+Will recreate the mapping from paths to indexes. Intended for use after
+a deep copy.
 
 =head1 AUTHOR AND COPYRIGHT
 
