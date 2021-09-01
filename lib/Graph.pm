@@ -195,12 +195,8 @@ sub new {
 
     $g->[ _F ] = $gflags;
     $g->[ _G ] = 0;
-    $g->[ _V ] = $vflags ?
-	_am_heavy($vflags, 1) :
-	    _am_light($vflags, 1);
-    $g->[ _E ] = ($is_hyper or $eflags & ~_UNORD) ?
-	_am_heavy($eflags, $is_hyper ? 0 : 2) :
-	    _am_light($eflags, 2);
+    $g->[ _V ] = _make_v($vflags);
+    $g->[ _E ] = _make_e($is_hyper, $eflags);
 
     $g->add_vertices(@V) if @V;
 
@@ -212,6 +208,18 @@ sub new {
 	if $gflags & _UNIONFIND;
 
     return $g;
+}
+
+sub _make_v {
+    my ($vflags) = @_;
+    $vflags ? _am_heavy($vflags, 1) : _am_light($vflags, 1);
+}
+
+sub _make_e {
+    my ($is_hyper, $eflags) = @_;
+    ($is_hyper or $eflags & ~_UNORD) ?
+	_am_heavy($eflags, $is_hyper ? 0 : 2) :
+	    _am_light($eflags, 2);
 }
 
 sub _am_light {
