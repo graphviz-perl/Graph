@@ -1136,6 +1136,11 @@ sub copy {
 
 *copy_graph = \&copy;
 
+sub _deep_copy_best {
+    _can_deep_copy_Storable()
+        ? _deep_copy_Storable(@_) : _deep_copy_DataDumper(@_);
+}
+
 sub _deep_copy_Storable {
     my $g = shift;
     require Safe;   # For deep_copy().
@@ -1157,8 +1162,7 @@ sub _deep_copy_DataDumper {
 }
 
 sub deep_copy {
-    _can_deep_copy_Storable()
-	? _deep_copy_Storable(@_) : _deep_copy_DataDumper(@_);
+    _deep_copy_best(@_);
 }
 
 *deep_copy_graph = \&deep_copy;
