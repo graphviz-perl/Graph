@@ -1,3 +1,5 @@
+- doc fixes - thanks @xsawyerx
+
 0.9722 2021-07-04
 - fix neighbours et al not returning count in scalar context - thanks @merkys for report
 
