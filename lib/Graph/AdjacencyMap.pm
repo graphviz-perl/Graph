@@ -351,7 +351,7 @@ sub get_ids_by_paths {
 	my @ret = map {
 	    my @ret2 = map {
 		my $k = $_;
-		$k = __strval($k, $f) if $a == 1 && ($f & _REF) && ref($k);
+		$k = __strval($k, $f) if $a == 1 && $is_ref && ref($k);
 		my $l = ($a == 0 && !$is_unord) ? join '|', map join(' ', sort @$_), @$k : $a == 1 ? "$k" : "@$k";
 		my $id = $pi->{ $l };
 		defined $id ? $id :
