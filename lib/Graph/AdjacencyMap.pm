@@ -393,8 +393,9 @@ sub has_successor {
 sub __strval {
     my ($k, $f) = @_;
     return $k unless ref $k && ($f & _REF);
-    require overload;
-    (($f & _STR) xor overload::Method($k, '""')) ? overload::StrVal($k) : $k;
+    return "$k" if ($f & _STR);
+    require Scalar::Util;
+    Scalar::Util::refaddr($k);
 }
 
 sub __arg {

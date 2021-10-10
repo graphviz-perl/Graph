@@ -23,7 +23,6 @@ ok $gwithref->refvertexed_stringified;
 my $n1 = new MyNode('name'=>'alpha');
 my $n2 = new MyNode('name'=>'beta');
 $gnoref->add_edge($n1, $n2);
-
 $gwithref->add_edge($n1, $n2);
 
 is_deeply([sort keys %{$gnoref->[2]->[4]}],[sort keys %{$gwithref->[2]->[4]}]);

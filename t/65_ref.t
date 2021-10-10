@@ -326,4 +326,10 @@ for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
     }
 }
 
+my $g_ref = Graph->new(refvertexed => 1);
+$g_ref->add_edge( my $A = {}, {} );
+bless $A;
+is $g_ref->neighbours( $_ ), 1, 'each known vertex has 1 neighbour'
+  for $g_ref->vertices;
+
 done_testing;
