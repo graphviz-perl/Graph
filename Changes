@@ -1,3 +1,6 @@
+0.9726 2023-02-11
+- fix subgraph of undirected (#28) - thanks @merkys for report
+
 0.9725 2021-10-10
 - fix refvertexed which was stringifying not using ref address - thanks @merkys for report
 
