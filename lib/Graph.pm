@@ -1225,7 +1225,16 @@ sub subgraph {
   my $v = Set::Object->new($dst ? grep $g->has_vertex($_), @$dst : @u);
   $s->add_vertices(@u, $dst ? $v->members : ());
   my $directed = &is_directed;
-  $s->add_edges(grep $v->contains($directed ? $_->[1] : @$_), $g->edges_from(@u));
+  if ($directed) {
+    $s->add_edges(grep $v->contains($_->[1]), $g->edges_from(@u));
+  } else {
+    my $valid = $dst ? $v + Set::Object->new(@u) : $v;
+    $s->add_edges(
+      grep +($v->contains($_->[0]) || $v->contains($_->[1])) &&
+        ($valid->contains($_->[0]) && $valid->contains($_->[1])),
+        $g->edges_from(@u)
+    );
+  }
   return $s;
 }
 
