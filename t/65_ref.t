@@ -284,46 +284,30 @@ my $o6a = bless \*foo, 'G';
 my $o6b = bless \*bar, 'G';
 { package G; use overload '""' => sub { "g" } }
 
-for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
+for my $d (1, 0) {
+  for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
     for my $j ($o1b, $o2b, $o3b, $o4b, $o5b, $o6b) {
-	note "i = $i, j = $j";
+      note "d = $d, i = $i, j = $j";
 
-	my $g1 = Graph->new(refvertexed => 1, directed => 1);
+      my $g = Graph->new(refvertexed => 1, directed => $d);
 
-	ok( $g1->add_edge($i, $j));
-	note "g1 = $g1";
-	ok( $g1->has_vertex($i));
-	ok( $g1->has_vertex($j));
-	ok( $g1->has_edge($i, $j));
-	ok( $g1->delete_vertex($i));
-	note "g1 = $g1";
-	ok(!$g1->has_vertex($i));
-	ok( $g1->has_vertex($j));
-	ok(!$g1->has_edge($i, $j));
-	ok($g1->delete_vertex($j));
-	note "g1 = $g1, i=$i, j=$j";
-	ok(!$g1->has_vertex($i));
-	ok(!$g1->has_vertex($j));
-	ok(!$g1->has_edge($i, $j));
-
-	my $g2 = Graph->new(refvertexed => 1, directed => 0);
-
-	ok( $g2->add_edge($i, $j));
-	note "g2 = $g2";
-	ok( $g2->has_vertex($i));
-	ok( $g2->has_vertex($j));
-	ok( $g2->has_edge($i, $j));
-	ok( $g2->delete_vertex($i));
-	note "g2 = $g2";
-	ok(!$g2->has_vertex($i));
-	ok( $g2->has_vertex($j));
-	ok(!$g2->has_edge($i, $j));
-	ok($g2->delete_vertex($j));
-	note "g2 = $g2, i=$i, j=$j";
-	ok(!$g2->has_vertex($i));
-	ok(!$g2->has_vertex($j));
-	ok(!$g2->has_edge($i, $j));
+      ok( $g->add_edge($i, $j));
+      note "g = $g";
+      ok( $g->has_vertex($i));
+      ok( $g->has_vertex($j));
+      ok( $g->has_edge($i, $j));
+      ok( $g->delete_vertex($i));
+      note "g = $g";
+      ok(!$g->has_vertex($i));
+      ok( $g->has_vertex($j));
+      ok(!$g->has_edge($i, $j));
+      ok($g->delete_vertex($j));
+      note "g = $g, i=$i, j=$j";
+      ok(!$g->has_vertex($i));
+      ok(!$g->has_vertex($j));
+      ok(!$g->has_edge($i, $j));
     }
+  }
 }
 
 my $g_ref = Graph->new(refvertexed => 1);
