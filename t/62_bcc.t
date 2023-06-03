@@ -395,9 +395,7 @@ sub _bicon_graphvizify {
 #print $fh GraphViz2->from_graph($g_gv)->dot_input;
 ok !$g4->same_biconnected_components(qw(a b c));
 
-my $d = Graph->new;
-
-eval { $d->biconnectivity };
+eval { Graph->new->biconnectivity };
 like($@, qr/Graph::biconnectivity: expected undirected graph, got directed/);
 
 done_testing;
