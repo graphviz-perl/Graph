@@ -288,9 +288,7 @@ for my $d (1, 0) {
   for my $i ($o1a, $o2a, $o3a, $o4a, $o5a, $o6a) {
     for my $j ($o1b, $o2b, $o3b, $o4b, $o5b, $o6b) {
       note "d = $d, i = $i, j = $j";
-
       my $g = Graph->new(refvertexed => 1, directed => $d);
-
       ok( $g->add_edge($i, $j));
       note "g = $g";
       ok( $g->has_vertex($i));
@@ -302,7 +300,6 @@ for my $d (1, 0) {
       ok( $g->has_vertex($j));
       ok(!$g->has_edge($i, $j));
       ok($g->delete_vertex($j));
-      note "g = $g, i=$i, j=$j";
       ok(!$g->has_vertex($i));
       ok(!$g->has_vertex($j));
       ok(!$g->has_edge($i, $j));
