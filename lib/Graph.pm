@@ -2120,7 +2120,6 @@ sub _biconnectivity_dfs {
     if (!exists $state->{num}{$v}) {
       push @{$state->{stack}}, [$u, $v];
       $state->{pred}{$v} = $u;
-      $state->{succ}{$u}{$v}++;
       _biconnectivity_dfs($g, $v, $state);
       $state->{low}{$u} = List::Util::min(@{ $state->{low} }{$u, $v});
       _biconnectivity_out($state, $u, $v)
