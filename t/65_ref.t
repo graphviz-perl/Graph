@@ -298,6 +298,9 @@ for my $d (1, 0) {
       ok( $g->has_vertex($i));
       ok( $g->has_vertex($j));
       ok( $g->has_edge($i, $j));
+      if (!$d) { # bridges only for undirected
+        eval {ok $g->has_vertex($_) for map @$_, $g->bridges}; is $@, '';
+      }
       ok( $g->delete_vertex($i));
       note "g = $g";
       ok(!$g->has_vertex($i));

@@ -2114,13 +2114,13 @@ sub _biconnectivity_out {
 }
 
 sub _biconnectivity_dfs {
-  my ($g, $u, $state) = @_;
+  my ($E, $u, $state) = @_;
   $state->{low}{$u} = $state->{num}{$u} = $state->{dfs}++;
-  for my $v ($g->successors($u)) {
+  for my $v ($E->successors($u)) {
     if (!exists $state->{num}{$v}) {
       push @{$state->{stack}}, [$u, $v];
       $state->{pred}{$v} = $u;
-      _biconnectivity_dfs($g, $v, $state);
+      _biconnectivity_dfs($E, $v, $state);
       $state->{low}{$u} = List::Util::min(@{ $state->{low} }{$u, $v});
       _biconnectivity_out($state, $u, $v)
 	if $state->{low}{$v} >= $state->{num}{$u};
@@ -2136,11 +2136,12 @@ sub _biconnectivity_dfs {
 sub _biconnectivity_compute {
     require List::Util;
     my ($g) = @_;
+    my ($V, $E) = @$g[ _V, _E ];
     my %state = (BC=>[], dfs=>0);
-    my @u = $g->vertices;
+    my @u = $V->ids;
     for my $u (@u) {
 	next if exists $state{num}->{$u};
-	_biconnectivity_dfs($g, $u, \%state);
+	_biconnectivity_dfs($E, $u, \%state);
 	push @{$state{BC}}, delete $state{stack} if @{ $state{stack} || _empty_array };
     }
 
@@ -2171,7 +2172,8 @@ sub _biconnectivity_compute {
 
     # Create the subgraph components.
     my @sg = map [ List::Util::uniq( map @$_, @$_ ) ], @{$state{BC}};
-    return [ \@ap, \@sg, \@br, \%v2bc, \%v2bc_vec, $Z ];
+    my ($apdeep, $sgv, $brv) = $V->get_paths_by_ids([[\@ap], \@sg, \@br], 1);
+    return [ @$apdeep, $sgv, $brv, \%v2bc, \%v2bc_vec, $Z ];
 }
 
 sub biconnectivity {
@@ -2211,12 +2213,16 @@ sub biconnected_component_by_vertex {
     my ($v) = splice @_, 1, 1;
     my $v2bc = (&biconnectivity)[3];
     splice @_, 1, 0, $v;
+    my $V = $_[0]->[ _V ];
+    ($v) = $V->get_ids_by_paths([$v]);
     return defined $v2bc->{ $v } ? keys %{ $v2bc->{ $v } } : ();
 }
 
 sub same_biconnected_components {
     my ($v2bc, $Z) =  (&biconnectivity)[4,5];
-    return 0 if grep !defined, my @vecs = @$v2bc{ @_[1..$#_] };
+    my $V = $_[0]->[ _V ];
+    my @vs = $V->get_ids_by_paths([@_[1..$#_]]);
+    return 0 if grep !defined, my @vecs = @$v2bc{ @vs };
     my $accumulator = $vecs[0];
     $accumulator &= $_ for @vecs[1..$#vecs]; # accumulate 0s -> all in same
     $accumulator ne $Z;
