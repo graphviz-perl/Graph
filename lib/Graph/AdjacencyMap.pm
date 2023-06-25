@@ -334,6 +334,10 @@ sub paths {
     grep defined, @{ $_[0]->[ _i ] || Graph::_empty_array() };
 }
 
+sub ids {
+    values %{ $_[0]->[ _pi ] || Graph::_empty_array() };
+}
+
 sub get_ids_by_paths {
     my ($f, $a, $pi, $m, $list, $ensure, $deep) = ( @{ $_[0] }[ _f, _arity, _pi ], @_ );
     $deep ||= 0;
@@ -460,7 +464,11 @@ Return true if the Map has the path by a multi(vertex) id, false if not.
 
 =head2 paths
 
-Return all the paths of the Map.
+Return all the paths (left-hand sides) of the Map.
+
+=head2 ids
+
+Return all the right-hand sides of the Map, unsorted.
 
 =head2 set_paths(\@seq1, \@seq2, ...)
 
