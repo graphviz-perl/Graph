@@ -1825,6 +1825,28 @@ sub directed_copy {
 
 *directed_copy_graph = \&directed_copy;
 
+sub is_bipartite {
+    my $g = shift;
+
+    my $is_bipartite = 1;
+    my %colors;
+    my $operations = {
+        tree_edge => sub {
+            my( $seen, $unseen ) = @_;
+            ( $seen, $unseen ) = sort { exists $colors{$b} <=> exists $colors{$a} } ( $seen, $unseen );
+            $colors{$seen} = -1 unless $colors{$seen};
+            $colors{$unseen} = -$colors{$seen};
+        },
+        non_tree_edge => sub {
+            $is_bipartite = '' if $colors{$_[0]} == $colors{$_[1]};
+        },
+    };
+
+    require Graph::Traversal::DFS;
+    Graph::Traversal::DFS->new( $g, %$operations )->dfs;
+    return $is_bipartite;
+}
+
 ###
 # Cache or not.
 #

@@ -559,6 +559,11 @@ To find at least one such cycle, see L</find_a_cycle>.
 
 Return true if the graph is acyclic (does not contain any cycles).
 
+=item is_bipartite
+
+Return true if the graph is bipartite (also known as 2-colourable, or
+not containing cycles of odd length).
+
 =back
 
 To find a cycle, use L</find_a_cycle>.
