@@ -1834,7 +1834,7 @@ sub is_bipartite {
         tree_edge => sub {
             my( $seen, $unseen ) = @_;
             ( $seen, $unseen ) = sort { exists $colors{$b} <=> exists $colors{$a} } ( $seen, $unseen );
-            $colors{$seen} = -1 unless $colors{$seen};
+            $colors{$seen} ||= -1;
             $colors{$unseen} = -$colors{$seen};
         },
         non_tree_edge => sub {
