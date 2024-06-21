@@ -1826,7 +1826,7 @@ sub directed_copy {
 *directed_copy_graph = \&directed_copy;
 
 sub is_bipartite {
-    my $g = shift;
+    my $g = $_[0];
 
     my $is_bipartite = 1;
     my %colors;
