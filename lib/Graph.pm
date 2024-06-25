@@ -14,7 +14,7 @@ BEGIN {
 
 use Graph::AdjacencyMap qw(:flags :fields);
 
-our $VERSION = '0.9727';
+our $VERSION = '0.9728';
 
 require 5.006; # Weak references are absolutely required.
 
