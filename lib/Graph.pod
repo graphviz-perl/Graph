@@ -564,6 +564,10 @@ Return true if the graph is acyclic (does not contain any cycles).
 Return true if the graph is bipartite (also known as 2-colourable, or
 not containing cycles of odd length). Currently only works with undirected graphs.
 
+=item is_planar
+
+Return true if the graph is planar. Currently only works with undirected graphs.
+
 =back
 
 To find a cycle, use L</find_a_cycle>.
