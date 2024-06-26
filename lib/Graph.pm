@@ -1856,9 +1856,7 @@ sub is_planar {
 
     my $path_graph = Graph->new(undirected => 1);
 
-    my $n = 0;
-    my $d = 0;
-    my %order;
+    my ($n, $d, %order) = (0, 0);
     my $operations = {
         pre => sub {
             $order{$_[0]} = $n;
