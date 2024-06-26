@@ -1850,7 +1850,7 @@ sub is_bipartite {
 
 sub is_planar {
     &expect_undirected;
-    my $g = $_[0];
+    my ($g) = @_;
 
     my @paths_at;
     for ($g->vertices) {
