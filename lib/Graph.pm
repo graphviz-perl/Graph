@@ -1848,6 +1848,42 @@ sub is_bipartite {
     return $is_bipartite;
 }
 
+sub is_planar {
+    &expect_undirected;
+    my $g = $_[0];
+
+    my @paths_at;
+    for ($g->vertices) {
+        push @paths_at, [];
+    }
+
+    my $path_graph = Graph->new(undirected => 1);
+
+    my $n = 0;
+    my $d = 0;
+    my %order;
+    my $operations = {
+        pre => sub {
+            $order{$_[0]} = $n;
+            $n++;
+        },
+        non_tree_edge => sub {
+            my( $i, $j ) = sort map { $order{$_} } @_[0..1];
+            for (@{$paths_at[$i]}) { # for all crossed paths
+                $path_graph->add_edge( $_, $d );
+            }
+            for ($i+1..$j-1) {
+                push @{$paths_at[$_]}, $d;
+            }
+            $d++;
+        },
+    };
+
+    require Graph::Traversal::DFS;
+    Graph::Traversal::DFS->new( $g, %$operations )->dfs;
+    return $path_graph->is_bipartite;
+}
+
 ###
 # Cache or not.
 #
