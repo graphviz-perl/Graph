@@ -1851,11 +1851,8 @@ sub is_bipartite {
 sub is_planar {
     &expect_undirected;
     my ($g) = @_;
-
     my @paths_at = map [], 1..$g->vertices;
-
     my $path_graph = Graph->new(undirected => 1);
-
     my ($n, $d, %order) = (0, 0);
     my $operations = {
         pre => sub {
@@ -1873,7 +1870,6 @@ sub is_planar {
             $d++;
         },
     };
-
     require Graph::Traversal::DFS;
     Graph::Traversal::DFS->new( $g, %$operations )->dfs;
     return $path_graph->is_bipartite;

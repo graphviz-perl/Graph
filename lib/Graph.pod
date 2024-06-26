@@ -1,5 +1,7 @@
 =pod
 
+=encoding utf8
+
 =head1 NAME
 
 Graph - graph data structures and algorithms
@@ -566,7 +568,10 @@ not containing cycles of odd length). Currently only works with undirected graph
 
 =item is_planar
 
-Return true if the graph is planar. Currently only works with undirected graphs.
+Return true if the graph is planar. The implementation is based on left-right
+planarity test as described in
+L<A characterization of planar graphs by Trémaux orders, de Fraysseix and Rosenstiehl|https://doi.org/10.1007/BF02579375>.
+Currently only works with undirected graphs.
 
 =back
 
