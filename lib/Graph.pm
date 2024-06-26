@@ -1852,10 +1852,7 @@ sub is_planar {
     &expect_undirected;
     my ($g) = @_;
 
-    my @paths_at;
-    for ($g->vertices) {
-        push @paths_at, [];
-    }
+    my @paths_at = map [], 1..$g->vertices;
 
     my $path_graph = Graph->new(undirected => 1);
 
