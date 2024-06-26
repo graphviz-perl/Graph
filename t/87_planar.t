@@ -35,4 +35,21 @@ $g5->add_cycle('A'..'D');
 $g5->add_cycle('1'..'6');
 ok($g5->is_planar);
 
+my $g6 = Graph::Undirected->new; # K5
+for my $A ('A'..'E') {
+    for my $B ('A'..'E') {
+        next if $A eq $B;
+        $g6->add_edge( $A, $B );
+    }
+}
+ok(!$g6->is_planar);
+
+my $g7 = Graph::Undirected->new; # K3,3
+for my $A ('A'..'C') {
+    for my $B ('1'..'3') {
+        $g7->add_edge( $A, $B );
+    }
+}
+ok(!$g7->is_planar);
+
 done_testing;
