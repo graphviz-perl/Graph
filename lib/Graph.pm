@@ -1827,8 +1827,7 @@ sub directed_copy {
 
 sub is_bipartite {
     &expect_undirected;
-    my $g = $_[0];
-
+    my ($g) = @_;
     my $is_bipartite = 1;
     my %colors;
     my $operations = {
@@ -1842,7 +1841,6 @@ sub is_bipartite {
             $is_bipartite = '' if $colors{$_[0]} == $colors{$_[1]};
         },
     };
-
     require Graph::Traversal::DFS;
     Graph::Traversal::DFS->new( $g, %$operations )->dfs;
     return $is_bipartite;
