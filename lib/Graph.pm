@@ -1827,8 +1827,7 @@ sub directed_copy {
 
 sub is_bipartite {
     &expect_undirected;
-    my $g = $_[0];
-
+    my ($g) = @_;
     my $is_bipartite = 1;
     my %colors;
     my $operations = {
@@ -1842,10 +1841,36 @@ sub is_bipartite {
             $is_bipartite = '' if $colors{$_[0]} == $colors{$_[1]};
         },
     };
-
     require Graph::Traversal::DFS;
     Graph::Traversal::DFS->new( $g, %$operations )->dfs;
     return $is_bipartite;
+}
+
+sub is_planar {
+    &expect_undirected;
+    my ($g) = @_;
+    my @paths_at = map [], 1..$g->vertices;
+    my $path_graph = Graph->new(undirected => 1);
+    my ($n, $d, %order) = (0, 0);
+    my $operations = {
+        pre => sub {
+            $order{$_[0]} = $n;
+            $n++;
+        },
+        non_tree_edge => sub {
+            my( $i, $j ) = sort map { $order{$_} } @_[0..1];
+            for (@{$paths_at[$i]}) { # for all crossed paths
+                $path_graph->add_edge( $_, $d );
+            }
+            for ($i+1..$j-1) {
+                push @{$paths_at[$_]}, $d;
+            }
+            $d++;
+        },
+    };
+    require Graph::Traversal::DFS;
+    Graph::Traversal::DFS->new( $g, %$operations )->dfs;
+    return $path_graph->is_bipartite;
 }
 
 ###
