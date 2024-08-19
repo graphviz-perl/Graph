@@ -191,6 +191,8 @@ sub new {
         __carp_confess "Graph: edges should be an array ref of array refs"
 	    if ref $opt{edges} ne 'ARRAY';
 	@E = @{ delete $opt{edges} };
+	__carp_confess "Graph: edges should be array refs"
+	    if grep ref $_ ne 'ARRAY', @E;
     }
 
     _opt_unknown(\%opt);
@@ -202,20 +204,14 @@ sub new {
 	if ($eflags & _COUNT) && ($eflags & _MULTI);
 
     my $g = bless [ ], ref $class || $class;
-
     $g->[ _F ] = $gflags;
     $g->[ _G ] = 0;
     $g->[ _V ] = _make_v($vflags);
     $g->[ _E ] = _make_e($is_hyper, $eflags);
-
-    $g->add_vertices(@V) if @V;
-
-    __carp_confess "Graph: edges should be array refs"
-	if grep ref $_ ne 'ARRAY', @E;
-    $g->add_edges(@E);
-
     $g->[ _U ] = do { require Graph::UnionFind; Graph::UnionFind->new }
 	if $gflags & _UNIONFIND;
+    $g->add_vertices(@V) if @V;
+    $g->add_edges(@E) if @E;
 
     return $g;
 }
