@@ -884,10 +884,12 @@ my %entity2offset = (vertex => _V, edge => _E);
 my %entity2args = (edge => '_vertex_ids');
 for my $entity (qw(vertex edge)) {
     no strict 'refs';
-    my $expect_non = \&{ "expect_non_multi${entity}" };
-    my $expect_yes = \&{ "expect_multi${entity}" };
+    my $expect_non = \&{ "expect_non_multi$entity" };
+    my $expect_yes = \&{ "expect_multi$entity" };
     my $args_non = $entity2args{$entity} && \&{$entity2args{$entity}};
     my $args_yes = $entity2args{$entity} && \&{$entity2args{$entity}.'_multi'};
+    my $has_base = 'has_' . $entity;
+    my $add_base = 'add_' . $entity;
     my $offset = $entity2offset{$entity};
     for my $t (@generic_methods) {
 	my ($raw, $func) = @$t;
@@ -895,10 +897,10 @@ for my $entity (qw(vertex edge)) {
 	my $m = join '_', $first, $entity, $rest;
 	my $is_vertex = $entity eq 'vertex';
 	*$m = sub {
-	    &$expect_non; push @_, 0, $entity, $offset, $args_non, $is_vertex; goto &$func;
+	    &$expect_non; push @_, 0, $offset, $args_non, $is_vertex, \&$has_base, \&$add_base; goto &$func;
 	};
 	*{$m.'_by_id'} = sub {
-	    &$expect_yes; push @_, 1, $entity, $offset, $args_yes, $is_vertex; goto &$func;
+	    &$expect_yes; push @_, 1, $offset, $args_yes, $is_vertex, \&{$has_base.'_by_id'}, \&{$add_base.'_by_id'}; goto &$func;
 	};
     }
 }
@@ -913,96 +915,86 @@ sub _munge_args {
 }
 
 sub _set_attribute {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
+    my ($is_multi, $offset, $args, $is_vertex, $has, $add) = splice @_, -6;
     my $value = pop;
     my $attr = pop;
-    no strict 'refs';
-    &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    &$add unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_set_path_attr( @args, $attr, $value );
 }
 
 sub _set_attributes {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
+    my ($is_multi, $offset, $args, $is_vertex, $has, $add) = splice @_, -6;
     my $attr = pop;
-    no strict 'refs';
-    &{ 'add_' . $entity . ($is_multi ? '_by_id' : '') } unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    &$add unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_set_path_attrs( @args, $attr );
 }
 
 sub _has_attributes {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
-    no strict 'refs';
-    return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
+    return 0 unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_has_path_attrs( @args );
 }
 
 sub _has_attribute {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
     my $attr = pop;
-    no strict 'refs';
-    return 0 unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    return 0 unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_has_path_attr( @args, $attr );
 }
 
 sub _get_attributes {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
-    no strict 'refs';
-    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
+    return undef unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     scalar $_[0]->[ $offset ]->_get_path_attrs( @args );
 }
 
 sub _get_attribute {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
-    no strict 'refs';
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
     my $attr = pop;
-    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    return undef unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     scalar $_[0]->[ $offset ]->_get_path_attr( @args, $attr );
 }
 
 sub _get_attribute_names {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
-    no strict 'refs';
-    return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
+    return unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_get_path_attr_names( @args );
 }
 
 sub _get_attribute_values {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
-    no strict 'refs';
-    return unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
+    return unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_get_path_attr_values( @args );
 }
 
 sub _delete_attributes {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
-    no strict 'refs';
-    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
+    return undef unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_del_path_attrs( @args );
 }
 
 sub _delete_attribute {
-    my ($is_multi, $entity, $offset, $args, $is_vertex) = splice @_, -5, 5;
+    my ($is_multi, $offset, $args, $is_vertex, $has) = splice @_, -6;
     my $attr = pop;
-    no strict 'refs';
-    return undef unless &{ 'has_' . $entity . ($is_multi ? '_by_id' : '') };
+    return undef unless &$has;
     my @args = $args ? &$args : @_[1..$#_];
     @args = _munge_args($is_vertex, $is_multi, &is_undirected, @args);
     $_[0]->[ $offset ]->_del_path_attr( @args, $attr );
