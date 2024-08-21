@@ -92,10 +92,10 @@ my $GRID=$OPTIONS{grid} || $OPTIONS{height} || $OPTIONS{width};
 my $RANDOM=$OPTIONS{random} || $OPTIONS{nodes} || $OPTIONS{edges};
 $CYCLE=$CONE=$GRID=$RANDOM=1 unless $INPUT || $CYCLE || $CONE || $GRID || $RANDOM;
 
-my $CIRCUMFERENCE=get_param('circumference') if $CYCLE;
-my $CONE_SIZE=get_param('circumference') if $CONE;
-my($HEIGHT,$WIDTH)=grid_size() if $GRID;
-my($NODES,$EDGES)=random_size() if $RANDOM;
+my $CIRCUMFERENCE= $CYCLE ? get_param('circumference') : undef;
+my $CONE_SIZE= $CONE ? get_param('circumference') : undef;
+my($HEIGHT,$WIDTH)= $GRID ? grid_size() : undef;
+my($NODES,$EDGES)= $RANDOM ? random_size() : undef;
 my $DENSITY=get_param('density');
 
 if ($INPUT && @ARGV) {
