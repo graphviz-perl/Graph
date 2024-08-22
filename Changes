@@ -1,4 +1,5 @@
 - add get_edge_attribute_all
+- make SP_Dijkstra and SP_Bellman_Ford work with multiedged
 
 0.9729
 - add is_planar (#31) - thanks @merkys

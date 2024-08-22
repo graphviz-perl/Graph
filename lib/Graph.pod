@@ -1537,14 +1537,14 @@ attach different attributes to different instances.
 To enable multiedges on a graph:
 
     use Graph;
-    my $g0 = Graph->new(countedged => 1);
-    my $g0 = Graph->new(multiedged => 1);
+    my $g0 = Graph->new(countedged => 1); # "weaker" kind
+    my $g0 = Graph->new(multiedged => 1); # "stronger" kind
 
 Similarly for vertices
 
     use Graph;
-    my $g1 = Graph->new(countvertexed => 1);
-    my $g1 = Graph->new(multivertexed => 1);
+    my $g1 = Graph->new(countvertexed => 1); # "weaker" kind
+    my $g1 = Graph->new(multivertexed => 1); # "stronger" kind
 
 You can test for these by
 
@@ -1593,8 +1593,10 @@ a I<multigraph>, for which you can test with C<is_multi_graph()>.
 
 B<NOTE>: The various graph algorithms do not in general work well with
 multigraphs (they often assume I<simple graphs>, that is, no
-multiedges or loops), and no effort has been made to test the
-algorithms with multigraphs.
+multiedges or loops), and no effort has been made to test all
+algorithms with multigraphs. However, L</SP_Dijkstra> and
+L</SP_Bellman_Ford> I<have> been tested with multiedges and do work
+(they choose the lowest weight of a given edge's incarnations).
 
 vertices() and edges() will return the multiple elements: if you want
 just the unique elements, use

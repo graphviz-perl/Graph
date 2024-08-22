@@ -2220,7 +2220,7 @@ sub _SPT_add {
     my ($g, $h, $HF, $r, $attr, $unseen, $etc) = @_;
     my $etc_r = $etc->{ $r } || 0;
     for my $s ( grep exists $unseen->{ $_ }, $g->successors( $r ) ) {
-	my $t = $g->get_edge_attribute( $r, $s, $attr );
+	my ($t) = sort {$a<=>$b} $g->get_edge_attribute_all($r, $s, $attr);
 	$t = 1 unless defined $t;
 	__carp_confess "Graph::SPT_Dijkstra: edge $r-$s is negative ($t)"
 	    if $t < 0;
@@ -2236,7 +2236,7 @@ sub _SPT_add {
 
 sub _SPT_Dijkstra_compute {
     require Graph::SPTHeapElem;
-    my $sptg = $_[0]->_heap_walk($_[0]->new, \&_SPT_add, {}, @_[1..$#_]);
+    my $sptg = $_[0]->_heap_walk($_[0]->new(multiedged=>0), \&_SPT_add, {}, @_[1..$#_]);
     $sptg->set_graph_attribute('SPT_Dijkstra_root', $_[4]);
     $sptg;
 }
@@ -2274,7 +2274,7 @@ sub SP_Dijkstra {
 sub __SPT_Bellman_Ford {
     my ($g, $u, $v, $attr, $d, $p, $c0, $c1) = @_;
     return unless $c0->{ $u };
-    my $w = $g->get_edge_attribute($u, $v, $attr);
+    my ($w) = sort {$a<=>$b} $g->get_edge_attribute_all($u, $v, $attr);
     $w = 1 unless defined $w;
     if (defined $d->{ $v }) {
 	if (defined $d->{ $u }) {
@@ -2317,7 +2317,7 @@ sub _SPT_Bellman_Ford {
     for my $e ($g->edges) {
 	my ($u, $v) = @$e;
 	if (defined $d{ $u } && defined $d{ $v }) {
-	    my $d = $g->get_edge_attribute($u, $v, $attr);
+	    my ($d) = sort {$a<=>$b} $g->get_edge_attribute_all($u, $v, $attr);
 	    __carp_confess "Graph::SPT_Bellman_Ford: negative cycle exists"
 		if defined $d && $d{ $v } > $d{ $u } + $d;
 	}
@@ -2329,11 +2329,11 @@ sub _SPT_Bellman_Ford {
 sub _SPT_Bellman_Ford_compute {
     my ($g, @args) = @_;
     my ($p, $d) = $g->_SPT_Bellman_Ford(@args);
-    my $h = $g->new;
+    my $h = $g->new(multiedged=>0);
     for my $v (keys %$p) {
 	my $u = $p->{ $v };
-	$h->set_edge_attribute( $u, $v, $args[6],
-				$g->get_edge_attribute($u, $v, $args[6]));
+	my ($w) = sort {$a<=>$b} $g->get_edge_attribute_all($u, $v, $args[6]);
+	$h->set_edge_attribute( $u, $v, $args[6], $w);
 	$h->set_vertex_attributes( $v, { $args[6], $d->{ $v }, p => $u } );
     }
     $h->set_graph_attribute('SPT_Bellman_Ford_root', $args[3]);

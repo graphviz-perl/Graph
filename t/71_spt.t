@@ -62,8 +62,11 @@ ok( $sua eq "a=b,a=g,b=f,b=h,c=h,d=e,e=g" ||
 
 # Sedgewick, Algorithms in C, Third Edition
 # Chapter 21, "Shortest Paths", Figure 21.10 (p 282)
-my $g2 = Graph::Directed->new;
-$g2->add_weighted_edge(@$_) for [0,1,0.41], [1,2,0.51], [2,3,0.50], [4,3,0.36],
+for my $is_multi (0,1) {
+my $g2 = Graph::Directed->new(multiedged=>$is_multi);
+my $awe = 'add_weighted_edge'.($is_multi ? '_by_id' : '');
+my @id = $is_multi ? 'ID' : ();
+$g2->$awe(@$_[0,1], @id, $_->[2]) for [0,1,0.41], [1,2,0.51], [2,3,0.50], [4,3,0.36],
   [3,5,0.38], [3,0,0.45], [0,5,0.29], [5,4,0.21], [1,4,0.32], [4,2,0.32],
   [5,1,0.29];
 
@@ -103,6 +106,7 @@ is($s2_bf->get_vertex_attribute(@$_[0,1]), $_->[2], "vertex @$_[0,1]")
   [0,'p',undef], [1,'p',0], [2,'p',4], [3,'p',4], [4,'p',5], [5,'p',0];
 is("@{[$g2->SP_Bellman_Ford(@$_[0,1])]}", $_->[2], "path @$_[0,1]")
   for @s2_tests;
+}
 
 my $g3 = Graph::Directed->new;
 $g3->add_weighted_path(qw(a 1 b 2 c 3 d -1 e 4 f));
