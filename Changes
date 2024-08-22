@@ -1,10 +1,11 @@
+0.9730 2024-08-22
 - add get_edge_attribute_all
 - make SP_Dijkstra and SP_Bellman_Ford work with multiedged
 
-0.9729
+0.9729 2024-06-28
 - add is_planar (#31) - thanks @merkys
 
-0.9728
+0.9728 2024-06-25
 - add is_bipartite (#30) - thanks @merkys
 
 0.9727 2023-06-25
