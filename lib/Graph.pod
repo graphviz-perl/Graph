@@ -2487,6 +2487,12 @@ If you are using multiedges, use the I<by_id> variants:
 
 =back
 
+For handling transparently graphs that are either C<multiedged> or not:
+
+=over
+
+=item get_edge_attribute_all
+
 To get all values of a given attribute for a given edge, use
 C<get_edge_attribute_all>:
 
@@ -2495,6 +2501,8 @@ C<get_edge_attribute_all>:
 This will return all defined values for that edge and attribute, whether
 the graph is C<multiedged> or not. This will be in no particular order.
 This is useful for path-weight calculation.
+
+=back
 
 For graph attributes:
 
