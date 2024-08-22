@@ -88,6 +88,8 @@ is($s2_di->get_vertex_attribute(@$_[0,1]), $_->[2], "vertex @$_[0,1]")
       [3,'weight',0.86], [4,'weight',0.50], [5,'weight',0.29],
     [0,'p',undef], [1,'p',0], [2,'p',4], [3,'p',4], [4,'p',5], [5,'p',0];
 
+is +($s2_di->get_edge_attribute_all(0, 1, 'weight'))[0], 0.41, "get_edge_attribute_all";
+
 my $s2_bf = $g2->SPT_Bellman_Ford(first_root => "0");
 is( $s2_bf, "0-1,0-5,4-2,4-3,5-4" );
 is($s2_bf->get_edge_attribute(@$_[0,1], 'weight'), $_->[2], "edge @$_[0,1]")

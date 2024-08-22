@@ -105,6 +105,12 @@ is_deeply $got, {
     e => { f => { hot => { weight => 44 } } }
 } or diag explain $got;
 
+ok( $g->set_edge_weight_by_id("a", "b", "hot", 42));
+ok( $g->set_edge_weight_by_id("a", "b", "cool", 57));
+my @vals = $g->get_edge_attribute_all("a", "b", "weight");
+is_deeply [sort {$a<=>$b} @vals], [42, 57], 'get_edge_attribute_all'
+  or diag explain \@vals;
+
 $g = Graph->new(hyperedged => 1, multiedged => 1, directed => 0);
 $g->set_edge_attributes_by_id('a', 'b', 'x', 'hot',
 		           { color => 'pearl', weight => 'heavy' });

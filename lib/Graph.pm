@@ -915,6 +915,15 @@ for my $entity (qw(vertex edge)) {
     }
 }
 
+sub get_edge_attribute_all {
+  my ($g, $u, $v, $name) = @_;
+  die "no attribute name given" if !defined $name;
+  grep defined(),
+    &is_multiedged ? (map $g->get_edge_attribute_by_id($u, $v, $_, $name),
+      $g->get_multiedge_ids($u, $v))
+      : $g->get_edge_attribute($u, $v, $name);
+}
+
 sub add_vertices {
     my ($g, @v) = @_;
     if (&is_multivertexed) {

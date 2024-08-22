@@ -1,3 +1,5 @@
+- add get_edge_attribute_all
+
 0.9729
 - add is_planar (#31) - thanks @merkys
 

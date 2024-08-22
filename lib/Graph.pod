@@ -2485,6 +2485,15 @@ If you are using multiedges, use the I<by_id> variants:
 
 =back
 
+To get all values of a given attribute for a given edge, use
+C<get_edge_attribute_all>:
+
+  @values = $g->get_edge_attribute_all($u, $v, $name)
+
+This will return all defined values for that edge and attribute, whether
+the graph is C<multiedged> or not. This will be in no particular order.
+This is useful for path-weight calculation.
+
 For graph attributes:
 
 =over 4
