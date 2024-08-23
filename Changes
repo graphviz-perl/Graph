@@ -1,3 +1,4 @@
+0.9731 2024-08-24
 - add add_{edges,path}_by_id
 - fix calling "new" on Graph::Undirected object
 - make {,{un,}directed_}copy preserve multi{edg,vertex}ed
