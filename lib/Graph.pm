@@ -1745,17 +1745,21 @@ sub _undirected_copy_compute {
 }
 
 sub undirected_copy {
-    &expect_directed;
-    return _check_cache($_[0], 'undirected_copy', [], \&_undirected_copy_compute);
+  &expect_directed;
+  _check_cache($_[0], 'undirected_copy', [], \&_undirected_copy_compute);
 }
 
 *undirected_copy_graph = \&undirected_copy;
 
+sub _directed_copy_compute {
+  my @edges = &_edges05;
+  Graph->new(directed => 1, vertices => [&isolated_vertices],
+      edges => [@edges, map [reverse @$_], @edges]);
+}
+
 sub directed_copy {
-    &expect_undirected;
-    my @edges = &_edges05;
-    Graph->new(directed => 1, vertices => [&isolated_vertices],
-	edges => [@edges, map [reverse @$_], @edges]);
+  &expect_undirected;
+  _check_cache($_[0], 'directed_copy', [], \&_directed_copy_compute);
 }
 
 *directed_copy_graph = \&directed_copy;
@@ -1820,6 +1824,7 @@ my %_cache_type =
      'SPT_Dijkstra'        => ['_spt_di', 'SPT_Dijkstra_root'],
      'SPT_Bellman_Ford'    => ['_spt_bf', 'SPT_Bellman_Ford_root'],
      'undirected_copy'     => ['_undirected'],
+     'directed_copy'       => ['_directed'],
      'transitive_closure_matrix' => ['_tcm'],
     );
 

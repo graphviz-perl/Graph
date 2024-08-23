@@ -192,7 +192,7 @@ so that for any directed edge (u, v) there is an undirected edge (u, v).
 
 =item undirected_copy_clear_cache
 
-    @path = $g->undirected_copy_clear_cache;
+    $g->undirected_copy_clear_cache;
 
 See L</"Clearing cached results">.
 
@@ -205,6 +205,12 @@ See L</"Clearing cached results">.
 Create a directed shallow copy (vertices and edges) of the undirected graph
 so that for any undirected edge (u, v) there are two directed edges (u, v)
 and (v, u).
+
+=item directed_copy_clear_cache
+
+    $g->directed_copy_clear_cache;
+
+See L</"Clearing cached results">.
 
 =item transpose
 
