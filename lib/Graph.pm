@@ -987,7 +987,7 @@ sub rename_vertices {
 sub as_hashes {
     my ($g) = @_;
     my (%v, %e, @e);
-    my ($is_hyper, $is_directed)= (&is_hyperedged, &is_directed);
+    my ($is_hyper, $is_directed) = (&is_hyperedged, &is_directed);
     if (&is_multivertexed) {
         for my $v ($g->unique_vertices) {
             $v{$v} = {
@@ -1024,23 +1024,8 @@ sub as_hashes {
 
 sub ingest {
     my ($g, $g2) = @_;
-    for my $v ($g2->vertices) {
-        if (&is_multivertexed) {
-            $g->set_vertex_attributes_by_id($v, $_, $g2->get_vertex_attributes_by_id($v, $_))
-                for $g2->get_multivertex_ids($v);
-        } else {
-            $g->set_vertex_attributes($v, $g2->get_vertex_attributes($v));
-        }
-        if (&is_multiedged) {
-            for my $e ($g2->edges_from($v)) {
-                $g->set_edge_attributes_by_id(@$e, $_, $g2->get_edge_attributes_by_id(@$e, $_))
-                    for $g2->get_multiedge_ids(@$e);
-            }
-        } else {
-            $g->set_edge_attributes(@$_, $g2->get_edge_attributes(@$_))
-                for $g2->edges_from($v);
-        }
-    }
+    _copy_vertices($g2, $g, 1);
+    _copy_edges($g2, $g, 1);
     $g;
 }
 
@@ -1739,28 +1724,51 @@ sub topological_sort {
 *toposort = \&topological_sort;
 
 sub _copy_vertices {
-  my ($g, $gc) = @_;
+  my ($g, $gc, $attr_too) = @_;
   if (&is_multivertexed) {
     for my $v (&_vertices05) {
-      $gc->add_vertex_by_id($v, $_) for $g->get_multivertex_ids($v);
+      if ($attr_too) {
+        $gc->set_vertex_attributes_by_id($v, $_, $g->get_vertex_attributes_by_id($v, $_))
+          for $g->get_multivertex_ids($v);
+      } else {
+        $gc->add_vertex_by_id($v, $_) for $g->get_multivertex_ids($v);
+      }
     }
   } else {
-    $gc->add_vertices(&_vertices05);
+    if ($attr_too) {
+      $gc->set_vertex_attributes($_, $g->get_vertex_attributes($_)) for &_vertices05;
+    } else {
+      $gc->add_vertices(&_vertices05);
+    }
   }
 }
 
 sub _copy_edges {
-  my ($g, $gc, $mirror) = @_;
+  my ($g, $gc, $attr_too, $mirror) = @_;
   my @edges = &_edges05;
   if (&is_multiedged) {
     for my $e (@edges) {
       for my $id ($g->get_multiedge_ids(@$e)) {
-        $gc->add_edge_by_id(@$e, $id);
-        $gc->add_edge_by_id(reverse(@$e), $id) if $mirror;
+        if ($attr_too) {
+          $gc->set_edge_attributes_by_id(@$e, $id, $g->get_edge_attributes_by_id(@$e, $id));
+          $gc->set_edge_attributes_by_id(reverse(@$e), $id, $g->get_edge_attributes_by_id(@$e, $id)) if $mirror;
+        } else {
+          $gc->add_edge_by_id(@$e, $id);
+          $gc->add_edge_by_id(reverse(@$e), $id) if $mirror;
+        }
       }
     }
   } else {
-    $gc->add_edges(@edges, !$mirror ? () : map [reverse @$_], @edges);
+    if ($attr_too) {
+      $gc->set_edge_attributes(@$_, $g->get_edge_attributes(@$_))
+        for @edges;
+      if ($mirror) {
+        $gc->set_edge_attributes(reverse(@$_), $g->get_edge_attributes(@$_))
+          for @edges;
+      }
+    } else {
+      $gc->add_edges(@edges, !$mirror ? () : map [reverse @$_], @edges);
+    }
   }
 }
 
@@ -1781,7 +1789,7 @@ sub undirected_copy {
 sub _directed_copy_compute {
   my $gc = $_[0]->new(undirected=>0);
   _copy_vertices($_[0], $gc);
-  _copy_edges($_[0], $gc, 1);
+  _copy_edges($_[0], $gc, 0, 1);
   $gc;
 }
 
