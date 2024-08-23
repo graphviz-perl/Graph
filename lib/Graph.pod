@@ -1693,6 +1693,10 @@ the non-multi vertices and edges:
 
 =over 4
 
+=item add_path_by_id
+
+=item add_edges_by_id
+
 =item add_weighted_edge_by_id
 
 =item add_weighted_edges_by_id

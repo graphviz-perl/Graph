@@ -38,6 +38,13 @@ is $g3->transpose, "a=b,a=c,b=c,c=d";
 is $g4->transpose, "a-b,b-a,c-b";
 is $g5->transpose, "a=b,b=c";
 
+$g0 = Graph::Directed->new(multiedged=>1);
+$g1 = Graph::Undirected->new(multiedged=>1);
+$_->add_path_by_id(qw(a b c), 'id') for $g0, $g1;
+$_->add_path_by_id(qw(d b e), 'id') for $g0, $g1;
+is $g0, "a-b,b-c,b-e,d-b";
+is $g1, "a=b,b=c,b=d,b=e";
+
 my $g6 = Graph->new;
 is($g6->complete->edges, 0);
 is($g6->complement->edges, 0);

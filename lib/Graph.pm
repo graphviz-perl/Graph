@@ -958,6 +958,18 @@ sub add_edges {
     return $g;
 }
 
+sub add_edges_by_id {
+    &expect_multiedged;
+    my ($g, $id) = (shift, pop);
+    my @edges;
+    while (defined(my $u = shift @_)) {
+	push @edges, ref $u eq 'ARRAY' ? $u : @_ ? [ $u, shift @_ ]
+	    : __carp_confess "Graph::add_edges: missing end vertex";
+    }
+    $g->add_edge_by_id(@$_, $id) for @edges;
+    return $g;
+}
+
 sub rename_vertex {
     my $g = shift;
     $g->[ _V ]->rename_path(@_);
@@ -1320,11 +1332,22 @@ sub add_weighted_edge_by_id {
     goto &set_edge_attribute_by_id;
 }
 
+sub add_path_by_id {
+    &expect_multiedged;
+    my ($g, $u, $id) = (shift, shift, pop);
+    my @edges;
+    while (@_) {
+	my $v = shift;
+	push @edges, [ $u, $v ];
+	$u = $v;
+    }
+    $g->add_edges_by_id(@edges, $id);
+    return $g;
+}
+
 sub add_weighted_path_by_id {
     &expect_multiedged;
-    my $g = shift;
-    my $id = pop;
-    my $u = shift;
+    my ($g, $u, $id) = (shift, shift, pop);
     while (@_) {
 	my ($w, $v) = splice @_, 0, 2;
 	$g->set_edge_attribute_by_id($u, $v, $id, $defattr, $w);

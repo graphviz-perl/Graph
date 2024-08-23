@@ -1,3 +1,5 @@
+- add add_{edges,path}_by_id
+
 0.9730 2024-08-22
 - add get_edge_attribute_all
 - make SP_Dijkstra and SP_Bellman_Ford work with multiedged
