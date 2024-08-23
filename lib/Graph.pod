@@ -189,12 +189,19 @@ report any problems.
 
 Create an undirected shallow copy (vertices and edges) of the directed graph
 so that for any directed edge (u, v) there is an undirected edge (u, v).
+As of 0.9731 this preserves C<multiedged> and C<multivertexed> IDs.
 
 =item undirected_copy_clear_cache
 
     $g->undirected_copy_clear_cache;
 
 See L</"Clearing cached results">.
+
+=item undirected_copy_attributes
+
+Added in 0.9731. Like L</undirected_copy> but also sets the copy's
+attributes to the same values as the original's. This is not a deep copy,
+so use caution in handling the copy's attributes.
 
 =item directed_copy
 
@@ -205,12 +212,19 @@ See L</"Clearing cached results">.
 Create a directed shallow copy (vertices and edges) of the undirected graph
 so that for any undirected edge (u, v) there are two directed edges (u, v)
 and (v, u).
+As of 0.9731 this preserves C<multiedged> and C<multivertexed> IDs.
 
 =item directed_copy_clear_cache
 
     $g->directed_copy_clear_cache;
 
 See L</"Clearing cached results">.
+
+=item directed_copy_attributes
+
+Added in 0.9731. Like L</directed_copy> but also sets the copy's
+attributes to the same values as the original's. This is not a deep copy,
+so use caution in handling the copy's attributes.
 
 =item transpose
 

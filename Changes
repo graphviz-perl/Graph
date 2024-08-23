@@ -1,6 +1,7 @@
 - add add_{edges,path}_by_id
 - fix calling "new" on Graph::Undirected object
 - make {,{un,}directed_}copy preserve multi{edg,vertex}ed
+- add {un,}directed_copy_attributes
 
 0.9730 2024-08-22
 - add get_edge_attribute_all

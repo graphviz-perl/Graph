@@ -1786,6 +1786,15 @@ sub undirected_copy {
 
 *undirected_copy_graph = \&undirected_copy;
 
+sub undirected_copy_attributes {
+  &expect_directed;
+  my $gc = $_[0]->new(undirected=>1);
+  $gc->set_graph_attributes($_[0]->get_graph_attributes);
+  _copy_vertices($_[0], $gc, 1);
+  _copy_edges($_[0], $gc, 1);
+  $gc;
+}
+
 sub _directed_copy_compute {
   my $gc = $_[0]->new(undirected=>0);
   _copy_vertices($_[0], $gc);
@@ -1799,6 +1808,15 @@ sub directed_copy {
 }
 
 *directed_copy_graph = \&directed_copy;
+
+sub directed_copy_attributes {
+  &expect_undirected;
+  my $gc = $_[0]->new(directed=>1);
+  $gc->set_graph_attributes($_[0]->get_graph_attributes);
+  _copy_vertices($_[0], $gc, 1);
+  _copy_edges($_[0], $gc, 1, 1);
+  $gc;
+}
 
 sub is_bipartite {
     &expect_undirected;
