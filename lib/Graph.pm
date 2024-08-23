@@ -1050,11 +1050,9 @@ sub ingest {
 
 sub copy {
     my ($g, @args) = @_;
-    my %opt = _get_options( \@args );
-    no strict 'refs';
-    my $c = (ref $g)->new(map +($_ => &$_ ? 1 : 0), @GRAPH_PROPS_COPIED);
-    $c->add_vertices(&isolated_vertices);
-    $c->add_edges(&_edges05);
+    my $c = $g->new(@args);
+    _copy_vertices($g, $c);
+    _copy_edges($g, $c);
     return $c;
 }
 
@@ -1740,8 +1738,37 @@ sub topological_sort {
 
 *toposort = \&topological_sort;
 
+sub _copy_vertices {
+  my ($g, $gc) = @_;
+  if (&is_multivertexed) {
+    for my $v (&_vertices05) {
+      $gc->add_vertex_by_id($v, $_) for $g->get_multivertex_ids($v);
+    }
+  } else {
+    $gc->add_vertices(&_vertices05);
+  }
+}
+
+sub _copy_edges {
+  my ($g, $gc, $mirror) = @_;
+  my @edges = &_edges05;
+  if (&is_multiedged) {
+    for my $e (@edges) {
+      for my $id ($g->get_multiedge_ids(@$e)) {
+        $gc->add_edge_by_id(@$e, $id);
+        $gc->add_edge_by_id(reverse(@$e), $id) if $mirror;
+      }
+    }
+  } else {
+    $gc->add_edges(@edges, !$mirror ? () : map [reverse @$_], @edges);
+  }
+}
+
 sub _undirected_copy_compute {
-  Graph->new(directed => 0, vertices => [&isolated_vertices], edges => [&_edges05]);
+  my $gc = $_[0]->new(undirected=>1);
+  _copy_vertices($_[0], $gc);
+  _copy_edges($_[0], $gc);
+  $gc;
 }
 
 sub undirected_copy {
@@ -1752,9 +1779,10 @@ sub undirected_copy {
 *undirected_copy_graph = \&undirected_copy;
 
 sub _directed_copy_compute {
-  my @edges = &_edges05;
-  Graph->new(directed => 1, vertices => [&isolated_vertices],
-      edges => [@edges, map [reverse @$_], @edges]);
+  my $gc = $_[0]->new(undirected=>0);
+  _copy_vertices($_[0], $gc);
+  _copy_edges($_[0], $gc, 1);
+  $gc;
 }
 
 sub directed_copy {

@@ -36,12 +36,26 @@ is $g3->transpose, "a=b,a=c,b=c,c=d";
 is $g4->transpose, "a-b,b-a,c-b";
 is $g5->transpose, "a=b,b=c";
 
-$g0 = Graph::Directed->new(multiedged=>1);
-$g1 = Graph::Undirected->new(multiedged=>1);
+$g0 = Graph::Directed->new(multivertexed=>1, multiedged=>1);
+$g1 = Graph::Undirected->new(multivertexed=>1, multiedged=>1);
 $_->add_path_by_id(qw(a b c), 'id') for $g0, $g1;
 $_->add_path_by_id(qw(d b e), 'id') for $g0, $g1;
 is $g0, "a-b,b-c,b-e,d-b";
 is $g1, "a=b,b=c,b=d,b=e";
+is_deeply [$g0->undirected_copy->as_hashes], [$g1->as_hashes], 'undirected_copy preserve multi'
+  or diag 'got: ', explain([$g0->undirected_copy->as_hashes]),
+    'expected: ', explain([$g1->as_hashes]);
+my $expected = [$g0->as_hashes];
+$expected->[1]{$_->[0]}{$_->[1]}{id} = {} for [qw(b a)],[qw(b d)],[qw(c b)],[qw(e b)];
+is_deeply [$g1->directed_copy->as_hashes], $expected, 'directed_copy preserve multi'
+  or diag 'got: ', explain([$g1->directed_copy->as_hashes]),
+    'expected: ', explain($expected);
+is_deeply [$g0->copy->as_hashes], [$g0->as_hashes], 'copy of directed preserve multi'
+  or diag 'got: ', explain([$g0->copy->as_hashes]),
+    'expected: ', explain([$g0->as_hashes]);
+is_deeply [$g1->copy->as_hashes], [$g1->as_hashes], 'copy of undirected preserve multi'
+  or diag 'got: ', explain([$g1->copy->as_hashes]),
+    'expected: ', explain([$g1->as_hashes]);
 
 my $g6 = Graph->new;
 is($g6->complete->edges, 0);
