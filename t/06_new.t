@@ -1,47 +1,46 @@
 use strict; use warnings;
-use Test::More tests => 49;
+use Test::More;
 
 use Graph;
 
-test_prop(@$_) for (
-    # 2nd is whether default is true, then aliases, then opposites
-    [refvertexed => 0, [], []],
-    [countvertexed => 0, [], []],
-    [multivertexed => 0, [], []],
-    [undirected => 0, [], [qw(directed)]],
-    [directed => 1, [], [qw(undirected)]],
-    [countedged => 0, [], []],
-    [multiedged => 0, [], []],
-    [hyperedged => 0, [], []],
+for my $c (qw(Graph Graph::Directed Graph::Undirected)) {
+test_prop($c, @$_) for (
+    # 2nd is whether default is true, then opposites
+    [refvertexed => 0, []],
+    [countvertexed => 0, []],
+    [multivertexed => 0, []],
+    [undirected => $c eq 'Graph::Undirected', [qw(directed)]],
+    [directed => $c ne 'Graph::Undirected', [qw(undirected)]],
+    [countedged => 0, []],
+    [multiedged => 0, []],
+    [hyperedged => 0, []],
 );
+}
 
 sub test_prop {
-    my ($prop, $true_by_default, $aliases, $opposites) = @_;
-    my $g = Graph->new;
+    my ($class, $prop, $true_by_default, $opposites) = @_;
+    my $g = $class->new;
     my $got = $g->$prop;
     $got = !$got if !$true_by_default;
     ok $got, "$prop correct default value";
-    $g = Graph->new( $prop => 0 );
+    $g = $class->new( $prop => 0 );
     ok !$g->$prop, "$prop reflects given false value";
+    ok !$g->new->$prop, "$prop survives $class->new with false value";
     ok $g->$_, "$prop opposite=$_ right" for @$opposites;
-    $g = Graph->new( $prop => 1 );
+    $g = $class->new( $prop => 1 );
     ok $g->$prop, "$prop reflects given true value";
-    ok $g->$_, "$prop alias=$_ right" for @$aliases;
+    ok $g->new->$prop, "$prop survives $class->new with true value";
     ok !$g->$_, "$prop opposite=$_ right" for @$opposites;
     $g = $g->copy;
     ok $g->$prop, "$prop survives copy";
 }
 
 {
-    local $SIG{__DIE__} = sub { $@ = shift };
-
-    eval { my $gna = Graph->new(foobar => 1) };
+    eval { Graph->new(foobar => 1) };
     like($@, qr/Graph::new: Unknown option: 'foobar' /);
-
-    eval { my $gna = Graph->new(foobar => 0) };
+    eval { Graph->new(foobar => 0) };
     like($@, qr/Graph::new: Unknown option: 'foobar' /);
-
-    eval { my $gna = Graph->new(foobar => 1, barfoo => 1) };
+    eval { Graph->new(foobar => 1, barfoo => 1) };
     like($@, qr/Graph::new: Unknown options: 'barfoo' 'foobar' /);
 }
 
@@ -78,3 +77,5 @@ is(ref $d, 'Graph::Directed');
 use Graph::Undirected;
 my $u = Graph::Undirected->new;
 is(ref $u, 'Graph::Undirected');
+
+done_testing;

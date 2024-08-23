@@ -1,4 +1,5 @@
 - add add_{edges,path}_by_id
+- fix calling "new" on Graph::Undirected object
 
 0.9730 2024-08-22
 - add get_edge_attribute_all

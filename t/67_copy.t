@@ -10,11 +10,9 @@ my ($g1, $g3, $g5) = map Graph::Undirected->new, 1..3;
 $_->add_path(qw(a b c)) for $g0, $g1;
 $_->add_path(qw(d b e)) for $g0, $g1;
 
-$_->add_path(qw(a b c d)) for $g2, $g3;
-$_->add_path(qw(c a)) for $g2, $g3;
+$_->add_path(qw(c a b c d)) for $g2, $g3;
 
-$_->add_path(qw(a b c)) for $g4, $g5;
-$_->add_path(qw(b a)) for $g4, $g5;
+$_->add_path(qw(b a b c)) for $g4, $g5;
 
 is $g0->copy, "a-b,b-c,b-e,d-b";
 is $g1->copy, "a=b,b=c,b=d,b=e";

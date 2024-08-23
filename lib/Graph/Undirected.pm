@@ -44,7 +44,7 @@ This module is licensed under the same terms as Perl itself.
 
 sub new {
     my $class = shift;
-    bless Graph->new(undirected => 1, @_), ref $class || $class;
+    $class->SUPER::new((ref $class && $class->directed) ? () : (undirected => 1), @_);
 }
 
 1;
