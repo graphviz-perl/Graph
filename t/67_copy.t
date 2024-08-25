@@ -46,7 +46,7 @@ is $g0, "a-b,b-c,b-e,d-b";
 is $g1, "a=b,b=c,b=d,b=e";
 my $expected = Graph::_deep_copy_best([$g1->as_hashes]);
 delete $expected->[0]{$_->[0]}{$_->[1]}{$_->[2]} for [qw(d 0 height)];
-delete $expected->[1]{$_->[0]}{$_->[1]}{$_->[2]}{$_->[3]} for [qw(d b id weight)];
+delete $expected->[1]{$_->[0]}{$_->[1]}{$_->[2]}{$_->[3]} for [qw(d b id weight)], [qw(b d id weight)];
 is_deeply [$g0->undirected_copy->as_hashes], $expected, 'undirected_copy preserve multi'
   or diag 'got: ', explain([$g0->undirected_copy->as_hashes]),
     'expected: ', explain($expected);
@@ -73,7 +73,7 @@ is_deeply [$g0->copy->as_hashes], $expected, 'copy of directed preserve multi'
     'expected: ', explain($expected);
 $expected = Graph::_deep_copy_best([$g1->as_hashes]);
 delete $expected->[0]{$_->[0]}{$_->[1]}{$_->[2]} for [qw(d 0 height)];
-delete $expected->[1]{$_->[0]}{$_->[1]}{$_->[2]}{$_->[3]} for [qw(d b id weight)];
+delete $expected->[1]{$_->[0]}{$_->[1]}{$_->[2]}{$_->[3]} for [qw(d b id weight)], [qw(b d id weight)];
 is_deeply [$g1->copy->as_hashes], $expected, 'copy of undirected preserve multi'
   or diag 'got: ', explain([$g1->copy->as_hashes]),
     'expected: ', explain($expected);
