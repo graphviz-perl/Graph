@@ -204,7 +204,7 @@ sub next {
 	}
 	return if !@next and !$self->{ next_root };
 	return if !@next and !(@next = $self->{ next_root }->( $self, { map +($_=>$_), $self->unseen } ));
-	return if $self->{ seen }->contains($next[0]); # Sanity check.
+	return if !defined $next[0] or $self->{ seen }->contains($next[0]); # Sanity check.
 	push @{ $self->{ roots } }, $next[0];
     }
     $self->visit_preorder( @next ) if @next;
