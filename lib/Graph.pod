@@ -197,6 +197,12 @@ As of 0.9731 this preserves C<multiedged> and C<multivertexed> IDs.
 
 See L</"Clearing cached results">.
 
+=item weak_connectivity_undirected_graph_clear_cache
+
+    $g->weak_connectivity_undirected_graph_clear_cache;
+
+See L</"Clearing cached results">.
+
 =item undirected_copy_attributes
 
 Added in 0.9731. Like L</undirected_copy> but also sets the copy's

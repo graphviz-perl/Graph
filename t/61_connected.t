@@ -24,6 +24,7 @@ test_graph(@$_) for (
 
 sub test_graph {
     my ($class, $args) = @_;
+    my $label = "$class {".join(',', map "$_=>$args->{$_}", sort keys %$args)."}";
     my $g0 = $class->new(%$args);
     my $methmap = $mapping{$class};
     ok(!$g0->${ \$methmap->{is_connected} });
@@ -44,22 +45,22 @@ sub test_graph {
 
     $g0->add_vertex('b');
 
-    ok(!$g0->${ \$methmap->{is_connected} });
-    is( $g0->${ \$methmap->{connected_components} }(), 2);
-    isnt($g0->${ \$methmap->{connected_component_by_vertex} }($_), undef) for qw(a b);
-    isnt($g0->${ \$methmap->{connected_component_by_vertex} }('a'),
-	 $g0->${ \$methmap->{connected_component_by_vertex} }('b'));
+    ok(!$g0->${ \$methmap->{is_connected} }, $label);
+    is( $g0->${ \$methmap->{connected_components} }(), 2, $label);
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }($_), undef, $label) for qw(a b);
+    isnt $g0->${ \$methmap->{connected_component_by_vertex} }('a'),
+	 $g0->${ \$methmap->{connected_component_by_vertex} }('b'), $label;
     my @c0 = map [ $g0->${ \$methmap->{connected_component_by_index} }(0) ], (1..3);
-    is( @$_, 1 ) for @c0;
-    is( "@{$c0[0]}", "@{$c0[$_]}" ) for 1, 2;
+    is( @$_, 1, $label ) for @c0;
+    is( "@{$c0[0]}", "@{$c0[$_]}", $label ) for 1, 2;
     my @c1 = map [ $g0->${ \$methmap->{connected_component_by_index} }(1) ], (1..3);
-    is( @$_, 1 ) for @c1;
-    is( "@{$c1[0]}", "@{$c1[$_]}" ) for 1, 2;
-    isnt( "@{$c0[0]}", "@{$c1[0]}" );
+    is( @$_, 1, $label ) for @c1;
+    is( "@{$c1[0]}", "@{$c1[$_]}", $label ) for 1, 2;
+    isnt( "@{$c0[0]}", "@{$c1[0]}", $label );
     ok( ("@{$c0[0]}" eq "a" && "@{$c1[0]}" eq "b") ||
-	("@{$c0[0]}" eq "b" && "@{$c1[0]}" eq "a") );
-    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'b'));
-    is($g0->${ \$methmap->{connected_graph} }, 'a,b');
+	("@{$c0[0]}" eq "b" && "@{$c1[0]}" eq "a"), $label );
+    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'b'), $label);
+    is($g0->${ \$methmap->{connected_graph} }, 'a,b', $label);
 
     $g0->add_edge(qw(a b));
 
@@ -69,10 +70,10 @@ sub test_graph {
     is($g0->${ \$methmap->{connected_component_by_vertex} }('a'), $g0->${ \$methmap->{connected_component_by_vertex} }('b'));
     @c0 = map [ $g0->${ \$methmap->{connected_component_by_index} }(0) ], (1..3);
     is( @$_, 2 ) for @c0;
-    is( "@{$c0[0]}", "@{$c0[$_]}" ) for 1, 2;
+    is( "@{$c0[0]}", "@{$c0[$_]}", $label ) for 1, 2;
     @c1 = map [ $g0->${ \$methmap->{connected_component_by_index} }(1) ], (1..3);
-    is( @$_, 0 ) for @c1;
-    is( "@{[ sort @{$c0[0]} ]}", "a b" );
+    is( @$_, 0, $label ) for @c1;
+    is( "@{[ sort @{$c0[0]} ]}", "a b", $label );
     ok( $g0->${ \$methmap->{same_connected_components} }('a', 'b'));
     is($g0->${ \$methmap->{connected_graph} }, 'a+b');
 
@@ -81,10 +82,10 @@ sub test_graph {
     ok(!$g0->${ \$methmap->{is_connected} });
     is( $g0->${ \$methmap->{connected_components} }(), 2);
     isnt($g0->${ \$methmap->{connected_component_by_vertex} }($_), undef) for qw(a b c d);
-    is($g0->${ \$methmap->{connected_component_by_vertex} }($_->[0]), $g0->${ \$methmap->{connected_component_by_vertex} }($_->[1])) for [qw(a b)], [qw(c d)];
-    isnt($g0->${ \$methmap->{connected_component_by_vertex} }('a'), $g0->${ \$methmap->{connected_component_by_vertex} }('d'));
-    ok( $g0->${ \$methmap->{same_connected_components} }(@$_)) for [qw(a b)], [qw(c d)];
-    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'c'));
+    is($g0->${ \$methmap->{connected_component_by_vertex} }($_->[0]), $g0->${ \$methmap->{connected_component_by_vertex} }($_->[1]), $label) for [qw(a b)], [qw(c d)];
+    isnt($g0->${ \$methmap->{connected_component_by_vertex} }('a'), $g0->${ \$methmap->{connected_component_by_vertex} }('d'), $label);
+    ok( $g0->${ \$methmap->{same_connected_components} }(@$_), $label) for [qw(a b)], [qw(c d)];
+    ok(!$g0->${ \$methmap->{same_connected_components} }('a', 'c'), $label);
     my $g0c = $g0->${ \$methmap->{connected_graph} };
     is($g0c, 'a+b,c+d');
     is("@{[sort @{ $g0c->get_vertex_attribute('a+b', 'subvertices') }]}", "a b");

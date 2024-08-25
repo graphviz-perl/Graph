@@ -1807,16 +1807,12 @@ sub _copy_edges {
   }
 }
 
-sub _undirected_copy_compute {
+sub undirected_copy {
+  &expect_directed;
   my $gc = $_[0]->new(undirected=>1);
   _copy_vertices($_[0], $gc);
   _copy_edges($_[0], $gc);
   $gc;
-}
-
-sub undirected_copy {
-  &expect_directed;
-  _check_cache($_[0], 'undirected_copy', [], \&_undirected_copy_compute);
 }
 
 *undirected_copy_graph = \&undirected_copy;
@@ -1830,16 +1826,12 @@ sub undirected_copy_attributes {
   $gc;
 }
 
-sub _directed_copy_compute {
+sub directed_copy {
+  &expect_undirected;
   my $gc = $_[0]->new(undirected=>0);
   _copy_vertices($_[0], $gc);
   _copy_edges($_[0], $gc, 0, 1);
   $gc;
-}
-
-sub directed_copy {
-  &expect_undirected;
-  _check_cache($_[0], 'directed_copy', [], \&_directed_copy_compute);
 }
 
 *directed_copy_graph = \&directed_copy;
@@ -1909,11 +1901,10 @@ my %_cache_type =
     (
      'connectivity'        => ['_ccc'],
      'strong_connectivity' => ['_scc'],
+     'weak_connectivity_undirected_graph' => ['_wcug'],
      'biconnectivity'      => ['_bcc'],
      'SPT_Dijkstra'        => ['_spt_di', 'SPT_Dijkstra_root'],
      'SPT_Bellman_Ford'    => ['_spt_bf', 'SPT_Bellman_Ford_root'],
-     'undirected_copy'     => ['_undirected'],
-     'directed_copy'       => ['_directed'],
      'transitive_closure_matrix' => ['_tcm'],
     );
 
@@ -2059,33 +2050,40 @@ sub is_weakly_connected {
 
 *weakly_connected = \&is_weakly_connected;
 
+# because recreating undirected copy every time has different hash ordering
+# so weakly_connected_component_by_index etc would be unstable
+sub _weakly_connected_undir_graph {
+    _check_cache($_[0], 'weak_connectivity_undirected_graph', [],
+			   \&undirected_copy);
+}
+
 sub weakly_connected_components {
     &expect_directed;
-    splice @_, 0, 1, &undirected_copy;
+    splice @_, 0, 1, &_weakly_connected_undir_graph;
     goto &connected_components;
 }
 
 sub weakly_connected_component_by_vertex {
     &expect_directed;
-    splice @_, 0, 1, &undirected_copy;
+    splice @_, 0, 1, &_weakly_connected_undir_graph;
     goto &connected_component_by_vertex;
 }
 
 sub weakly_connected_component_by_index {
     &expect_directed;
-    splice @_, 0, 1, &undirected_copy;
+    splice @_, 0, 1, &_weakly_connected_undir_graph;
     goto &connected_component_by_index;
 }
 
 sub same_weakly_connected_components {
     &expect_directed;
-    splice @_, 0, 1, &undirected_copy;
+    splice @_, 0, 1, &_weakly_connected_undir_graph;
     goto &same_connected_components;
 }
 
 sub weakly_connected_graph {
     &expect_directed;
-    splice @_, 0, 1, &undirected_copy;
+    splice @_, 0, 1, &_weakly_connected_undir_graph;
     goto &connected_graph;
 }
 

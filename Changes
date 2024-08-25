@@ -1,5 +1,6 @@
 - delete_vertex_by_id now deletes edges if vertex multiness to 0
 - add filter_{vertic,edg}es
+- {un,}directed_copy no longer use caching mechanism so can mutate copies
 
 0.9731 2024-08-24
 - add add_{edges,path}_by_id

@@ -22,9 +22,13 @@ is $g4->copy, "a-b,b-a,b-c";
 is $g5->copy, "a=b,b=c";
 
 is $g0->undirected_copy, $g1;
+$g0->undirected_copy->delete_vertex('a');
+is $g0->undirected_copy, $g1;
 is $g2->undirected_copy, $g3;
 is $g4->undirected_copy, $g5;
 
+is $g1->directed_copy, "a-b,b-a,b-c,b-d,b-e,c-b,d-b,e-b";
+$g1->directed_copy->delete_vertex('a');
 is $g1->directed_copy, "a-b,b-a,b-c,b-d,b-e,c-b,d-b,e-b";
 is $g3->directed_copy, "a-b,a-c,b-a,b-c,c-a,c-b,c-d,d-c";
 is $g5->directed_copy, "a-b,b-a,b-c,c-b";
