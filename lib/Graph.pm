@@ -421,8 +421,15 @@ sub delete_vertex_by_id {
     &expect_non_unionfind;
     my ($g, $v, $id) = @_;
     return $g unless &has_vertex_by_id;
-    # TODO: what to about the edges at this vertex?
-    # If the multiness of this vertex goes to zero, delete the edges?
+    if ($g->[ _V ]->get_multi_ids( $v ) == 1) {
+      # only incarnation, zap edges
+      my @i = &_vertex_ids_multi;
+      pop @i; # the id
+      my $E = $g->[ _E ];
+      my @edges = $E->paths_from(@i);
+      push @edges, $E->paths_to(@i) if !&is_undirected;
+      $E->del_path( $_ ) for @edges;
+    }
     $g->[ _V ]->del_path_by_multi_id( $v, $id );
     $g->[ _G ]++;
     return $g;

@@ -1,5 +1,5 @@
 use strict; use warnings;
-use Test::More tests => 50;
+use Test::More;
 
 use Graph;
 my $g = Graph->new(multivertexed => 1);
@@ -46,6 +46,7 @@ is_deeply $got, [ qw(0 1 2 3) ] or diag explain $got;
 is( $g->get_vertex_count('a'), 4 );
 
 ok $g->add_edge('a', 'b');
+is $g, "a-b";
 $got = [ $g->successors('a') ];
 is_deeply $got, [ 'b' ] or diag explain $got;
 $got = [ $g->predecessors('b') ];
@@ -54,6 +55,15 @@ is_deeply $got, [ 'a' ] or diag explain $got;
 is( $g->delete_vertex('a'), 'b' );
 ok(!$g->has_vertex_by_id('a', $_) ) for 0..3;
 is( $g->get_multivertex_ids('a'), undef );
+
+ok $g->add_edge('a', 'b');
+is $g, "a-b";
+ok( $g->add_vertex_by_id('b', 'bob') );
+is $g, "a-b";
+ok( $g->delete_vertex_by_id('b', '0') );
+is $g, "a-b";
+ok( $g->delete_vertex_by_id('b', 'bob') );
+is $g, "a";
 
 my $h = Graph->new;
 
@@ -71,3 +81,5 @@ like($@, qr/delete_vertex_by_id: expected multivertexed/);
 
 eval { Graph->new( multivertexed => 1, countvertexed => 1 ) };
 like ( $@, qr/both countvertexed and multivertexed/ );
+
+done_testing;

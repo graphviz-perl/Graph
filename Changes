@@ -1,3 +1,5 @@
+- delete_vertex_by_id now deletes edges if vertex multiness to 0
+
 0.9731 2024-08-24
 - add add_{edges,path}_by_id
 - fix calling "new" on Graph::Undirected object
