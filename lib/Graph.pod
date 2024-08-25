@@ -692,6 +692,26 @@ Calls a function for each vertex-name, renaming it to the return value.
 
 Returns the graph.
 
+=item filter_vertices
+
+    $g->filter_vertices(sub { my ($g, $v)=@_; $v =~ /^a/i })
+
+Calls a function for each vertex; if it returns false, the vertex
+is deleted. Passed the graph, the vertex, and if C<multivertexed>, the ID
+(called once per "incarnation", i.e. ID).
+
+Returns the graph.
+
+=item filter_edges
+
+    $g->filter_edges(sub { my ($g, $u, $v, $id)=@_; $id eq 'Bakerloo' })
+
+Calls a function for each edge; if it returns false, the edge
+is deleted. Passed the graph, the vertices, and if C<multiedged>, the ID
+(called once per "incarnation", i.e. ID).
+
+Returns the graph.
+
 =item ingest
 
     $g->ingest($g2)

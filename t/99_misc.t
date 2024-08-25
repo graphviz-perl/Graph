@@ -29,6 +29,17 @@ for ({}, {countvertexed => 1}, {multivertexed => 1}) {
   is $gr, "A-B1,A-C,B1-D,B1-E,C-F,C-G", $label;
 }
 
+for ({}, {multivertexed => 1}, {multiedged => 1}) {
+  my $g = Graph::Directed->new(%$_);
+  $g->add_edge(@$_) for @E;
+  my $label = ref($g->[ 2 ]) . ' {' . join('=>', %$_) . '}';
+  is $g, "a-b,a-c,b-d,b-e,c-f,c-g", $label;
+  $g->filter_edges(sub {$_[2] ne 'g'});
+  is $g, "a-b,a-c,b-d,b-e,c-f,g", $label;
+  $g->filter_vertices(sub {$_[1] !~ /[fg]/});
+  is $g, "a-b,a-c,b-d,b-e", $label;
+}
+
 my $g2 = Graph->new;
 is_deeply [ $g2->clustering_coefficient ], [],
   'clustering_coefficient with no vertices = empty list';

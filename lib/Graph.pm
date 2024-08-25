@@ -991,6 +991,34 @@ sub rename_vertices {
     return $g;
 }
 
+sub filter_vertices {
+  my ($g, $code) = @_;
+  my @v = &_vertices05;
+  if (&is_multivertexed) {
+    for my $v (@v) {
+      $g->delete_vertex_by_id($v, $_) for
+        grep !$code->($g, $v, $_), $g->get_multivertex_ids($v);
+    }
+  } else {
+    $g->delete_vertices(grep !$code->($g, $_), @v);
+  }
+  $g;
+}
+
+sub filter_edges {
+  my ($g, $code) = @_;
+  my @e = &_edges05;
+  if (&is_multiedged) {
+    for my $e (@e) {
+      $g->delete_edge_by_id(@$e, $_) for
+        grep !$code->($g, @$e, $_), $g->get_multiedge_ids(@$e);
+    }
+  } else {
+    $g->delete_edges(map @$_, grep !$code->($g, @$_), @e);
+  }
+  $g;
+}
+
 sub as_hashes {
     my ($g) = @_;
     my (%v, %e, @e);
