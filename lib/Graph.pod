@@ -261,6 +261,14 @@ You can also transpose a single edge with
 Create a complete graph that has the same vertices as the original graph.
 A complete graph has an edge between every pair of vertices.
 
+=item max_cliques
+
+  my @cliques = $g->max_cliques;
+
+Returns an array (or reference in scalar context), each of its
+elements is an annonymous array of vertices forming a maximal clique
+in the graph. The implementation uses Bron-Kerbosch pivot algorithm.
+
 =item complement_graph
 
 =item complement

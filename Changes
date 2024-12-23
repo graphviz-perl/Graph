@@ -1,3 +1,5 @@
+- added max_cliques (#34) - thanks @choroba
+
 0.9732 2024-09-02
 - delete_vertex_by_id now deletes edges if vertex multiness to 0
 - add filter_{vertic,edg}es

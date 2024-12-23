@@ -1147,6 +1147,32 @@ sub complete_graph {
     return $c;
 }
 
+sub max_cliques {
+    my ($g) = @_;
+    &expect_undirected;
+    $g->bron_kerbosch_pivot([], [$g->vertices], [], \ my @cliques);
+    return wantarray ? @cliques : \@cliques
+}
+
+sub bron_kerbosch_pivot {
+    my ($g, $r, $p, $x, $max_cliques) = @_;
+    if (! @$p && ! @$x && @$r) {
+        push @$max_cliques, [@$r];
+        return;
+    }
+    my $pivot = (@$p, @$x)[0];
+    for my $v (my @p = @$p) {
+        next if $g->has_edge($pivot, $v);
+        $g->bron_kerbosch_pivot(
+            [@$r, $v],
+            [grep { my $w = $_; grep $_ eq $w, @$p } $g->neighbours($v)],
+            [grep { my $w = $_; grep $_ eq $w, @$x } $g->neighbours($v)],
+            $max_cliques);
+        @$p = grep $_ ne $v, @$p;
+        push @$x, $v;
+    }
+}
+
 *complement = \&complement_graph;
 
 sub complement_graph {
