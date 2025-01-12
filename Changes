@@ -1,4 +1,5 @@
 - added max_cliques (#33,#34) - thanks @choroba
+- restore 0.9716 behaviour of random_graph (#32) - thanks @kester-habermann for report
 
 0.9732 2024-09-02
 - delete_vertex_by_id now deletes edges if vertex multiness to 0
