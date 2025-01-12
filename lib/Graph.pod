@@ -265,9 +265,16 @@ A complete graph has an edge between every pair of vertices.
 
   my @cliques = $g->max_cliques;
 
-Returns an array (or reference in scalar context), each of its
-elements is an annonymous array of vertices forming a maximal clique
-in the graph. The implementation uses Bron-Kerbosch pivot algorithm.
+Returns a list (or array reference in scalar context), each of its
+elements is an anonymous array of vertices forming a maximal clique
+in the graph. The implementation uses the Bron-Kerbosch pivot algorithm.
+
+=item bron_kerbosch_pivot
+
+  $g->bron_kerbosch_pivot([], [$g->vertices], [], \ my @cliques);
+
+Implements the Bron-Kerbosch pivot algorithm, mutating its fourth
+argument with the result.
 
 =item complement_graph
 
