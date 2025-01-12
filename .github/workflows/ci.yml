@@ -39,6 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config --global --add safe.directory /__w/Graph/Graph
           cpanm -n Devel::Cover::Report::Coveralls
           HARNESS_OPTIONS='j4' cover -test -report Coveralls
   non-linux:
