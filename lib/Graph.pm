@@ -2901,4 +2901,23 @@ sub betweenness {
     return %Cb;
 }
 
+sub connected_subgraphs {
+    my $g = shift;
+    require Set::Object;
+    my @subgraphs = ( [ map { Set::Object->new($_) } $g->vertices ] );
+    for (2..scalar $g->vertices) {
+        my %seen;
+        for my $subgraph (@{$subgraphs[-1]}) {
+            for my $neighbour ((Set::Object->new( map { $g->neighbours($_) } $subgraph->members ) - $subgraph)->members) {
+                my $new_subgraph = Set::Object->new($subgraph->members, $neighbour);
+                my $key = join '|', @$new_subgraph;
+                next if exists $seen{$key};
+                $seen{$key} = $new_subgraph;
+            }
+        }
+        push @subgraphs, [values %seen];
+    }
+    return map { $g->subgraph([$_->members]) } map { @$_ } @subgraphs;
+}
+
 1;
