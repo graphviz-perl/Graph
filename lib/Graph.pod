@@ -2784,6 +2784,12 @@ coefficients.
 Returns an empty list (and therefore undefined in scalar context) if
 the graph has no vertices.
 
+=item connected_subgraphs
+
+    @s = $g->connected_subgraphs;
+
+Returns all connected subgraphs of $g.
+
 =item subgraph_by_radius
 
     $s = $g->subgraph_by_radius(@v, $radius);
