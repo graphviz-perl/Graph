@@ -24,9 +24,6 @@ Undirected graphs
   - find_all_paths($u, $v)?
   - find_all_cycles()? NP-complete; equivalent to finding all Hamiltonians
 - Euler tour
-- bipartite matching: Hopcroft - Kraft
-- 2-colorability (see above)
-- planarity
 
 Digraphs
 - disallow_selfloops => 1?
