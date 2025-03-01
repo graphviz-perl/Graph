@@ -1,3 +1,6 @@
+0.9734 2025-03-01
+- add connected_subgraphs (#35) - thanks @merkys
+
 0.9733 2025-01-12
 - added max_cliques (#33,#34) - thanks @choroba
 - restore 0.9716 behaviour of random_graph (#32) - thanks @kester-habermann for report
