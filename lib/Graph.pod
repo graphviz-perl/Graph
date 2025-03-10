@@ -917,7 +917,7 @@ For an undirected graph, return true if the graph is edge-connected
 (if it has no bridges).
 
 Note: more precisely, this would be called is_edge_biconnected,
-since there is a more general concept of being k-connected. 
+since there is a more general concept of being k-connected.
 
 =item is_edge_separable
 
@@ -927,7 +927,7 @@ For an undirected graph, return true if the graph is edge-separable
 (if it has bridges).
 
 Note: more precisely, this would be called is_edge_biseparable,
-since there is a more general concept of being k-connected. 
+since there is a more general concept of being k-connected.
 
 =item articulation_points
 
@@ -1068,7 +1068,14 @@ See L</"Clearing cached results">.
 For a directed graph, return true if the directed graph is weakly
 connected, false if not.
 
-Weakly connected graph is also known as I<semiconnected> graph.
+A weakly connected graph is also known as a I<semiconnected> graph.
+
+Note that there are two mutually incompatible definitions of "weakly
+connected". The definition used here is based on connectedness in the
+underlying undirected graph, hence this is also sometimes called
+"undirected-connected". -- The other definition, proposed by Graham,
+Knuth, and Motzkin in 1972, is currently not available within the
+Graph module.
 
 See also L</is_strongly_connected>.
 
@@ -1467,7 +1474,7 @@ I<connected graphs>, I<biconnected graphs>, and I<strongly
 connected graphs>.
 
 B<NOTE>: if the vertices of the original graph are Perl objects,
-(in other words, references, so you must be using C<refvertexed>) 
+(in other words, references, so you must be using C<refvertexed>)
 the vertices of the I<connected graph> are NOT by default usable
 as Perl objects because they are blessed into a package with
 a rather unusable name.
@@ -2729,7 +2736,7 @@ is possible via the method
 
 =item could_be_isomorphic
 
-    $g0->could_be_isomorphic($g1)    
+    $g0->could_be_isomorphic($g1)
 
 =back
 
@@ -2760,13 +2767,20 @@ Returns a map of vertices to their Freeman's betweennesses:
 
   C_b(v) = \sum_{s \neq v \neq t \in V} \frac{\sigma_{s,t}(v)}{\sigma_{s,t}}
 
-It is described in:
+It is described in
 
-    Freeman, A set of measures of centrality based on betweenness, http://arxiv.org/pdf/cond-mat/0309045
+    Freeman LC. A set of measures of centrality based on betweenness. 1977.
+    https://www.scribd.com/document/580201172/A-Set-of-Measures-of-Centrality-Based-on-Betweenness
 
-and based on the algorithm from:
+and in
 
-    "A Faster Algorithm for Betweenness Centrality"
+    Newman MEJ. A measure of betweenness centrality based on random walks. 2003.
+    http://arxiv.org/pdf/cond-mat/0309045
+
+The implementation is based on the algorithm from:
+
+    Brandes U. A faster algorithm for betweenness centrality. 2000.
+    https://doi.org/10.1080/0022250X.2001.9990249.
 
 =item clustering_coefficient
 
