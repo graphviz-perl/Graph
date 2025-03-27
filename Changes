@@ -1,3 +1,6 @@
+0.9735 2025-03-27
+- better connectedness docs (#36 #37) - thanks @gwselke
+
 0.9734 2025-03-01
 - add connected_subgraphs (#35) - thanks @merkys
 
